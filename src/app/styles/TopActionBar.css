@@ -1,0 +1,58 @@
+.top-action-bar-container {
+  /* === BACKGROUND COLOR CHANGE === */
+  background-color: #ef9243; /* Teal color */
+  
+  /* === TEXT COLOR CHANGE (for better contrast) === */
+  color: white; /* White text */
+
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  display: flex;
+  overflow: hidden;
+  
+  /* === HEIGHT CHANGE === */
+  /* padding ko hata kar fixed height di gayi hai */
+  height: 1.3rem; /* Tailwind class h-6 ke barabar */
+  align-items: center; /* Content ko is height ke andar vertically center karein */
+}
+
+.top-action-bar-track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  
+  /* Aap gap ko yahan se control kar sakte hain */
+  gap: 2rem; 
+  padding: 0 1.5rem;
+  
+  animation: marquee-scroll 40s linear infinite;
+}
+
+.top-action-bar-container:hover .top-action-bar-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.top-action-bar-item {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* === SEPARATOR COLOR CHANGE === */
+.separator {
+  margin: 0 1.5rem;
+  font-size: 1rem;
+  color: #1e3c6e; /* Golden color */
+}

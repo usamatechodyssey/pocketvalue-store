@@ -1,0 +1,92 @@
+/* src/app/styles/ProductCarousel.css (FINAL VERSION WITH PERFECT SPACING) */
+
+.product-carousel-container {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+
+.product-carousel-scroller {
+  display: flex;
+  width: max-content;
+  flex-wrap: nowrap;
+  animation: scroll 35s linear infinite;
+
+  /* === YEH HAI PEHLA AUR ZAROORI FIX === */
+  /* Dono tracks ke beech mein barabar ka faasla rakhein */
+  /* Yeh value neeche track ke gap se bilkul match honi chahiye */
+  gap: 1.5rem; /* e.g., 24px */
+}
+
+.product-carousel-container:hover .product-carousel-scroller {
+  animation-play-state: paused;
+}
+
+@keyframes scroll {
+  to {
+    transform: translateX(calc(-50% - 0.75rem)); /* Adjust for half the gap */
+  }
+}
+
+.product-carousel-track {
+  display: flex;
+  flex-wrap: nowrap;
+
+  /* === YEH HAI DOOSRA FIX === */
+  /* Cards ke beech mein barabar ka faasla rakhein */
+  /* Is se sab cards ke darmiyan ek jaisa faasla hoga */
+  gap: 1.5rem; /* e.g., 24px, bilkul upar wali value jaisa */
+}
+
+/* === YEH HAI FINAL STYLING FIX === */
+.product-card-wrapper {
+  flex-shrink: 0;
+  /* Aapke New Arrivals section se match karne ke liye width ko adjust karein */
+  /* Tailwind ke 'lg' breakpoint (1024px) par 5 cards fit karne ke liye yeh behtareen hai */
+  width: calc((100vw - 6rem) / 5); /* (Viewport - padding) / items */
+  max-width: 260px; /* Ek max width dein taake cards zyada bade na hon */
+
+  /* REMOVED: Padding ab 'gap' se handle ho raha hai */
+  /* padding: 0 0.5rem;  <-- Isko hata diya gaya hai */
+  box-sizing: border-box;
+}
+
+/* Responsive Design ko bhi 'gap' ke hisab se behtar banaya gaya hai */
+@media (max-width: 1280px) {
+  .product-card-wrapper {
+    width: calc((100vw - 5rem) / 4);
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .product-card-wrapper {
+    width: calc((100vw - 4rem) / 3);
+    max-width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-card-wrapper {
+    width: calc((100vw - 3rem) / 2);
+    max-width: 230px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-card-wrapper {
+    width: calc(100vw / 1.5);
+  }
+}

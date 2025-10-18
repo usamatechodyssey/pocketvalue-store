@@ -1,26 +1,178 @@
+/* src/app/globals.css (FINAL UPDATED WITH NEW BRAND COLORS) */
+
+/* Core Tailwind imports */
 @import "tailwindcss";
+@import "./styles/ProductCarousel.css";
+@import "./styles/CategoryCarousel.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* src/app/globals.css (REPLACE THE OLD SWIPER FIXES WITH THIS) */
 
-@media (prefers-color-scheme: dark) {
+
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* === FONTS (No Changes) === */
+@layer base {
+  @font-face {
+    font-family: 'Satoshi';
+    src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
+    font-weight: 300 900;
+    font-display: swap;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
+    font-weight: 200 700;
+    font-display: swap;
+    font-style: normal;
+  }
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --font-satoshi: 'Satoshi', sans-serif;
+    --font-clash-display: 'Clash Display', sans-serif;
+  }
+  html {
+    scroll-behavior: smooth;
+    font-size: 13px;
+  }
+  body {
+    font-family: var(--font-satoshi);
+    @apply bg-gray-50 text-gray-600 antialiased font-medium dark:bg-gray-950 dark:text-gray-300;
+  }
+  /* === UPDATED LINK COLOR TO USE THEME VARIABLES === */
+  a {
+    @apply text-brand-primary hover:text-brand-primary-hover transition-colors duration-200;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-clash-display);
+    @apply text-gray-800 font-medium dark:text-gray-200;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* === === === YOUR NEW COLOR THEME === === === */
+@theme {
+  /* Colors */
+  --color-brand-primary: #FF8F32; /* Your Bright Orange */
+  --color-brand-primary-hover: #E86627; /* Your Darker Orange */
+  --color-brand-secondary: #10589E; /* Your Deep Blue */
+  --color-brand-accent: #10589E; /* Blue is also good for accents */
+  --color-brand-danger: #E11D48;
+  --color-brand-success: #16A34A;
+
+  /* Surface colors (These remain the same for a clean look) */
+  --color-surface-base: #FFFFFF; /* white */
+  --color-surface-ground: #F9FAFB; /* gray-50 */
+  --color-surface-input: #F3F4F6; /* gray-100 */
+  --color-surface-border: #E5E7EB; /* gray-200 */
+  --color-surface-border-darker: #D1D5DB;
+  --color-surface-footer: #1F2937; /* gray-800 */
+
+  /* Text colors (These remain the same for readability) */
+  --color-text-primary: #1F2937; /* gray-800 */
+  --color-text-secondary: #4B5563; /* gray-600 */
+  --color-text-subtle: #6B7280; /* gray-500 */
+   --color-text-on-primary: #FFFFFF; /* From white to a professional dark blue/gray */
+  --color-text-on-accent: #FFFFFF;
+  --color-text-on-dark: #D1D5DB;
 }
+/* === === === END OF COLOR THEME === === === */
+
+
+/* Scrollbar styles (Updated) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #F9FAFB; }
+.dark ::-webkit-scrollbar-track { background: #111827; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; border: 2px solid #F9FAFB; }
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; border-color: #111827; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* Animations (No Changes) */
+@layer utilities {
+  .brand-gradient-bg {
+    background-color: #f9fafb;
+    /* Gradient color ko naye theme se match karne ke liye thora update kiya hai */
+    background-image: linear-gradient(180deg, #FFF7ED 0%, #F9FAFB 100%);
+
+  }
+   .dark .brand-gradient-bg {
+    /* Dark mode ke liye alag gradient */
+    background-image: linear-gradient(180deg, #1F2937 0%, #111827 100%);
+  }
+}
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes marquee2 {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+.animate-marquee2 {
+  animation: marquee2 40s linear infinite;
+  will-change: transform;
+}
+
+/* Custom Component Styles (No Changes) */
+@layer utilities {
+  .hero-carousel-slider {
+    height: 125px; 
+  }
+  @media (min-width: 412px) {
+    .hero-carousel-slider {
+      height: 135.5px;
+    }
+  }
+  @media (min-width: 768px) {
+    .hero-carousel-slider {
+      height: 250px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero-carousel-slider {
+      height: 300px;
+    }
+  }
+  @media (min-width: 1280px) {
+    .hero-carousel-slider {
+      height: 400px;
+    }
+  }
+}
+
+/* === NEW "LIQUID FLOW" ANIMATION FOR FLASH SALE === */
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-brand-gradient {
+  /* Gradient mein aapke dono brand colors istemal kiye gaye hain */
+  background: linear-gradient(-45deg, #10589E, #083B6A, #E86627, #FF8F32);
+  background-size: 400% 400%;
+  animation: gradient-flow 15s ease-in-out infinite;
+}
+/* @media (min-width: 375px) { */
+  /*
+     Define custom utility classes that behave like Tailwind's
+     responsive utilities for 'sm' screens (480px and up).
+     You need to define the CSS property and value.
+  */
+  /* .sm\:h-110 {
+    height: 27.5rem; /* 27.5 * 16px = 440px. Tailwind's h-110 is 440px. */
+  /* } */ 
+
+  /*
+     Agar aapko future mein aur bhi `sm:` utilities ki zarurat ho,
+     aap unhe yahan define kar sakte hain.
+     Misal ke tor par:
+     .sm\:h-64 { height: 16rem; } // h-64 = 256px
+     .sm\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+     .sm\:flex { display: flex; }
+  */
+/* } */
