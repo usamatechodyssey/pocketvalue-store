@@ -1,15 +1,11 @@
-// app/components/layout/NewRightDock.tsx (MUKAMMAL FINAL CODE)
+// /src/app/components/layout/NewRightDock.tsx
 
 "use client";
 
-import React from "react";
-// import { FiSettings, FiBell, FiHelpCircle } from "react-icons/fi";
 import ThemeSwitcher from "./ThemeSwitcher";
-import Chatbot from "../Chatbot";
 import BackToTopButton from "../ui/BackToTopButton";
-import {  Bell, HelpCircle } from "lucide-react";
+import { Bell, HelpCircle } from "lucide-react";
 import Link from "next/link";
-
 
 interface NewRightDockProps {
   topOffset: number;
@@ -27,30 +23,26 @@ export default function NewRightDock({ topOffset }: NewRightDockProps) {
       }}
     >
       {/* Top Icons */}
-      <div className="flex-grow p-2 pt-8 flex flex-col items-center gap-2">
-       
+      <div className="grow p-2 pt-8 flex flex-col items-center gap-2">
+        {/* === LANGUAGE SWITCHER YAHAN ADD KIYA GAYA HAI === */}
+        {/* Iska design baaki icons se a a a haat kar hoga taake a a a saaf nazar aaye */}
+
         <button className="h-12 w-12 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 hover:text-brand-primary">
           <Bell size={20} />
         </button>
-       <Link
+        <Link
           href="/faq"
           aria-label="Help Center"
           className="h-12 w-12 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 hover:text-brand-primary"
         >
-          {/* Naya HelpCircle Icon */}
           <HelpCircle size={20} />
         </Link>
       </div>
 
       {/* Bottom Utility Icons */}
-      <div className="flex-shrink-0 p-2 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center gap-2">
-        {/* BackToTopButton ko yahan add kiya gaya hai */}
+      <div className="shrink-0 p-2 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center gap-2">
         <BackToTopButton />
-
-        <Chatbot />
         <ThemeSwitcher />
-
-        {/* Chatbot ko yahan add kiya gaya hai */}
       </div>
     </aside>
   );

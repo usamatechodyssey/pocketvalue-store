@@ -41,7 +41,7 @@ export default function NewSidebar({ categories, onCategoryHover }: { categories
 
   return (
     <aside className="h-full w-16 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-30">
-      <nav className="flex-grow pt-8 flex flex-col items-center gap-2">
+      <nav className="grow pt-8 flex flex-col items-center gap-2">
         {sortedCategories.map((category) => (
           <div key={category._id} onMouseEnter={() => onCategoryHover(category)} className="w-full">
             <Link
@@ -57,7 +57,7 @@ export default function NewSidebar({ categories, onCategoryHover }: { categories
           </div>
         ))}
       </nav>
-      <div className="flex-shrink-0 p-2 border-t border-gray-200 dark:border-gray-800"></div>
+      <div className="shrink-0 p-2 border-t border-gray-200 dark:border-gray-800"></div>
     </aside>
   );
 }

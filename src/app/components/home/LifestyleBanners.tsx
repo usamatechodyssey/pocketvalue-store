@@ -23,7 +23,7 @@ const BannerCard = ({
         <BannerMedia banner={banner} />
       </div>
       {/* Overlay Layer */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent transition-all duration-300 group-hover:from-black/70" /> 
+      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent transition-all duration-300 group-hover:from-black/70" /> 
       {/* Content Layer */}
       <div className="relative z-10 flex h-full flex-col items-start justify-end p-6 text-left text-white">
         <h3 className="text-2xl font-bold md:text-3xl tracking-tight drop-shadow-lg">{banner.title}</h3>

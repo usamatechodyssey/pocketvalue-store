@@ -1,57 +1,56 @@
+// /src/app/actions/contactActions.ts (REFACTORED FOR CENTRAL SCHEMA)
+
 "use server";
 
 import nodemailer from "nodemailer";
+// === THE FIX IS HERE: Import Zod and our new central schema ===
 import { z } from "zod";
-// --- NAYA IMPORT ---
+import { ContactFormSchema } from "@/app/lib/zodSchemas";
 import { createContactFormAdminEmail } from "@/email_templates/contactFormAdminEmail";
 
-const ContactFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  subject: z.string().min(5, { message: "Subject must be at least 5 characters." }),
-  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
-});
+// The local schema definition has been removed from here.
 
-export async function sendContactEmail(formData: {
-    name: string;
-    email: string;
-    subject: string;
-    message: string;
-}) {
+const EMAIL_FROM = `"${process.env.EMAIL_FROM_NAME} Contact" <${process.env.EMAIL_FROM_ADDRESS}>`;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
+// Infer the type from the central schema
+type ContactFormData = z.infer<typeof ContactFormSchema>;
+
+export async function sendContactEmail(formData: ContactFormData) {
     const validatedFields = ContactFormSchema.safeParse(formData);
+    
     if (!validatedFields.success) {
         return {
             success: false,
-            message: validatedFields.error.errors[0].message,
+            message: validatedFields.error.issues[0].message,
         };
     }
     const { name, email, subject, message } = validatedFields.data;
 
     const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
+        host: process.env.SMTP_HOST!,
+        port: Number(process.env.SMTP_PORT!),
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: process.env.SMTP_USER!,
+            pass: process.env.SMTP_PASS!,
         },
     });
 
-    // --- TEMPLATE YAHAN ISTEMAL HO RAHA HAI ---
     const emailHtml = createContactFormAdminEmail({ name, email, subject, message });
 
     try {
         await transporter.sendMail({
-            from: `"PocketValue Contact" <support@pocketvalue.pk>`, 
-            to: process.env.ADMIN_EMAIL,
+            from: EMAIL_FROM,
+            to: ADMIN_EMAIL,
             replyTo: email,
             subject: `[Contact Form] New Message from ${name}: ${subject}`,
-            html: emailHtml, // Naya, khoobsurat HTML yahan pass karein
+            html: emailHtml,
         });
 
         return { success: true, message: "Thank you! Your message has been sent successfully." };
 
     } catch (error) {
-        console.error("Mailjet Send Error [Contact Form]:", error);
+        console.error("Email Send Error [Contact Form]:", error);
         return { success: false, message: "Sorry, we couldn't send your message right now." };
     }
 }

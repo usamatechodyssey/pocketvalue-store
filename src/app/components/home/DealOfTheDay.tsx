@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useKeenSlider, KeenSliderPlugin } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
@@ -179,7 +179,7 @@ function DealOfTheDay({ dealData }: { dealData: DealData }) {
     <section className="w-full bg-surface-ground py-8 md:py-12">
       <div className="mx-auto max-w-7xl px-4">
         {/* Nayi, behtar height ke liye padding kam ki gayi hai (p-6 md:p-10) */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-2 items-center gap-8 rounded-2xl shadow-2xl bg-gradient-to-br from-brand-primary via-teal-600 to-cyan-700 text-white p-6 md:p-10">
+        <div className="relative grid grid-cols-1 lg:grid-cols-2 items-center gap-8 rounded-2xl shadow-2xl bg-linear-to-br from-brand-primary via-teal-600 to-cyan-700 text-white p-6 md:p-10">
           <div className="flex flex-col text-center lg:text-left z-10 order-2 lg:order-1">
             {/* Nayi, behtar animation */}
             <span className="animate-pulse rounded-full bg-yellow-400 px-4 py-1 text-sm font-bold text-gray-900 self-center lg:self-start">

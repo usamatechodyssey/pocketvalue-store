@@ -1,92 +1,214 @@
+// // /src/app/account/orders/[orderId]/page.tsx
+
+// import { auth } from "@/app/auth";
+// import { notFound, redirect } from "next/navigation";
+// import Link from "next/link";
+// import { ArrowLeft } from "lucide-react";
+// import { findOneWithId } from "@/app/lib/mongodb";
+// import { Order } from "@/types";
+
+// // Import the new, smaller components
+// import StatusTimeline from "./_components/StatusTimeline";
+// import OrderItemsList from "./_components/OrderItemsList";
+// import {
+//   ShippingAddressCard,
+//   PaymentDetailsCard,
+// } from "./_components/OrderInfoCards";
+// import OrderActions from "./_components/OrderActions";
+
+// // --- Server-side function to fetch a single, specific order for a user ---
+// async function getSingleUserOrder(
+//   orderId: string,
+//   userId: string
+// ): Promise<Order | null> {
+//   try {
+//     const order = await findOneWithId("orders", orderId);
+
+//     // Security Check: Ensure the fetched order belongs to the logged-in user
+//     if (!order || order.userId !== userId) {
+//       return null;
+//     }
+
+//     // Serialize the BSON data to be client-component friendly
+//     return JSON.parse(JSON.stringify(order));
+//   } catch (error) {
+//     console.error("Failed to fetch single user order:", error);
+//     return null;
+//   }
+// }
+
+// // === Main Page Component (Server Component, Refactored) ===
+// type UserOrderDetailPageProps = {
+//   params: Promise<{ orderId: string }>;
+// };
+
+// export default async function UserOrderDetailPage(
+//   props: UserOrderDetailPageProps
+// ) {
+//   const session = await auth();
+//   if (!session?.user?.id) {
+//     redirect("/login?callbackUrl=/account/orders");
+//   }
+
+//   const { orderId } = await props.params;
+//   const order = await getSingleUserOrder(orderId, session.user.id);
+
+//   if (!order) {
+//     notFound();
+//   }
+//   // === NAYI LINE: Order Number Banana ===
+//   // Hum Option B (Quick Fix) use kar rahe hain abhi ke liye
+//   const orderNumber = `PV-${order._id.toString().slice(-6).toUpperCase()}`;
+
+//   return (
+//     <div className="space-y-8">
+//       {/* --- Page Header --- */}
+//       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+//         <div>
+//           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
+//             Order Details
+//           </h1>
+//           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+//             Order ID:{" "}
+//             <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">
+//               #{order._id.toString().slice(-6).toUpperCase()}
+//             </span>
+//             <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+//             <span>
+//               {new Date(order.orderDate).toLocaleDateString("en-US", {
+//                 year: "numeric",
+//                 month: "long",
+//                 day: "numeric",
+//               })}
+//             </span>
+//           </p>
+//         </div>
+//         <Link
+//           href="/account/orders"
+//           className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:underline"
+//         >
+//           <ArrowLeft size={16} /> Back to My Orders
+//         </Link>
+//       </div>
+
+//       {/* --- Main Content --- */}
+//       {/* Each section is now its own self-contained component */}
+
+//       <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+//         <h2 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">
+//           Order Status
+//         </h2>
+//         <StatusTimeline status={order.status} />
+//       </div>
+
+//       <OrderItemsList products={order.products} />
+
+//       {/* === YAHAN CHANGE HAI === */}
+//       <OrderActions
+//         orderId={order._id.toString()}
+//         orderNumber={orderNumber} // Pass the new order number
+//         currentStatus={order.status}
+//         products={order.products} // Pass the products array
+//       />
+
+//       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+//         <ShippingAddressCard shippingAddress={order.shippingAddress} />
+//         {/* --- THE FIX IS HERE: Pass ALL required price details --- */}
+//         <PaymentDetailsCard
+//           paymentDetails={{
+//             paymentMethod: order.paymentMethod,
+//             paymentStatus: order.paymentStatus,
+//             subtotal: order.subtotal, // Pass subtotal
+//             shippingCost: order.shippingCost, // Pass shippingCost
+//             totalPrice: order.totalPrice, // This is the grandTotal
+//           }}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+// /src/app/account/orders/[orderId]/page.tsx (UPDATED TO USE DTO)
 
 import { auth } from "@/app/auth";
 import { notFound, redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { SanityImageObject } from "@/sanity/types/product_types";
-import { ArrowLeft, MapPin, CreditCard, Check, X, Package } from "lucide-react";
-import clientPromise from "@/app/lib/mongodb";
-import { ObjectId } from "mongodb";
-import OrderActions from "../_components/OrderActions";
-import { urlFor } from "@/sanity/lib/image";
+import { ArrowLeft } from "lucide-react";
+import connectMongoose from "@/app/lib/mongoose";
+import Order, { IOrder } from "@/models/Order";
+// --- THE FIX IS HERE: Import the new DTO type ---
+import { ClientOrder } from "@/app/actions/orderActions";
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-// Interfaces (No change)
-interface OrderProduct {
-  name: string; price: number; quantity: number; image: SanityImageObject; slug: string; variant?: { key: string; name: string };
-}
-interface OrderDetails {
-  _id: ObjectId; orderDate: Date; products: OrderProduct[];
-  shippingAddress: { fullName: string; address: string; area: string; city: string; province: string; phone: string; };
-  status: string; totalPrice: number; paymentMethod: string; paymentStatus: string;
-}
+import StatusTimeline from "./_components/StatusTimeline";
+import OrderItemsList from "./_components/OrderItemsList";
+import {
+  ShippingAddressCard,
+  PaymentDetailsCard,
+} from "./_components/OrderInfoCards";
+import OrderActions from "./_components/OrderActions";
 
-// StatusTimeline Component
-const StatusTimeline = ({ status }: { status: string }) => {
-  const statuses = ["Pending", "Processing", "Shipped", "Delivered"];
-  const currentStatusIndex = statuses.indexOf(status);
-
-  if (status === "Cancelled") {
-    return (
-      <div className="p-4 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-lg text-center font-semibold flex items-center justify-center gap-2">
-        <X size={18} /> This order has been cancelled.
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative pt-2 pb-8">
-      <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200 dark:bg-gray-700" />
-      <div className="relative flex justify-between">
-        {statuses.map((s, index) => (
-          <div key={s} className="relative flex flex-col items-center text-center w-1/4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 z-10 transition-all duration-300 ${
-                index <= currentStatusIndex
-                  ? "bg-brand-primary border-brand-primary"
-                  : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-              }`}
-            >
-              {index <= currentStatusIndex && <Check className="h-5 w-5 text-white" />}
-            </div>
-            <p className={`mt-2 text-xs font-semibold whitespace-nowrap ${
-                index <= currentStatusIndex
-                  ? "text-brand-primary"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {s}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Database function (No change)
-async function getSingleUserOrderFromDB(orderId: string, userId: string): Promise<OrderDetails | null> {
+// This function now returns a plain, safe ClientOrder object
+async function getSingleUserOrder(
+  orderId: string,
+  userId: string
+): Promise<ClientOrder | null> {
   try {
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-    if (!ObjectId.isValid(orderId)) return null;
-    const order = await db.collection("orders").findOne({ _id: new ObjectId(orderId), userId: userId });
-    if (!order) return null;
-    return JSON.parse(JSON.stringify(order)) as OrderDetails;
+    await connectMongoose();
+    
+    const order = await Order.findOne({
+      $or: [{ _id: orderId }, { orderId: orderId }],
+      userId: userId
+    }).lean<IOrder>();
+
+    if (!order) {
+      return null;
+    }
+
+    // Manually convert the Mongoose object to a plain ClientOrder object
+    const clientOrder: ClientOrder = {
+        _id: order._id.toString(),
+        orderId: order.orderId,
+        userId: order.userId,
+        totalPrice: order.totalPrice,
+        status: order.status,
+        createdAt: new Date(order.createdAt).toISOString(),
+        products: order.products.map(p => ({
+            _id: p._id,
+            cartItemId: p.cartItemId,
+            name: p.name,
+            price: p.price,
+            quantity: p.quantity,
+            slug: p.slug,
+            image: p.image,
+            variant: p.variant
+        })),
+        shippingAddress: order.shippingAddress,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+    };
+
+    return clientOrder;
+
   } catch (error) {
-    console.error("Failed to fetch single user order from DB:", error);
+    console.error("Failed to fetch single user order:", error);
     return null;
   }
 }
 
-// Main Page Component
-export default async function UserOrderDetailPage({ params }: { params: { orderId: string } }) {
+type UserOrderDetailPageProps = {
+  params: { orderId: string }; // params is a direct object here, not a promise
+};
+
+export default async function UserOrderDetailPage({ params }: UserOrderDetailPageProps) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/login?redirect=/account/orders");
+    redirect("/login?callbackUrl=/account/orders");
   }
 
   const { orderId } = params;
-  const order = await getSingleUserOrderFromDB(orderId, session.user.id);
+  // The 'order' variable is now a clean ClientOrder object
+  const order = await getSingleUserOrder(orderId, session.user.id);
 
   if (!order) {
     notFound();
@@ -96,83 +218,191 @@ export default async function UserOrderDetailPage({ params }: { params: { orderI
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">Order Details</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
+            Order Details
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Order ID:{" "}
             <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">
-              #{order._id.toString().slice(-6).toUpperCase()}
+              {order.orderId}
             </span>
             <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
             <span>
-              {new Date(order.orderDate).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date(order.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </span>
           </p>
         </div>
-        <Link href="/account/orders" className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:underline">
+        <Link
+          href="/account/orders"
+          className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:underline"
+        >
           <ArrowLeft size={16} /> Back to My Orders
         </Link>
       </div>
 
+      {/* All child components will now receive clean, plain data */}
       <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-        <h2 className="font-bold text-lg mb-6 text-gray-800 dark:text-gray-200">Order Status</h2>
+        <h2 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">
+          Order Status
+        </h2>
         <StatusTimeline status={order.status} />
       </div>
 
-      <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-        <h2 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-            <Package size={20} /> Items Ordered ({order.products.length})
-        </h2>
-        <div className="space-y-4 divide-y divide-gray-200 dark:divide-gray-700">
-          {order.products.map((product, index) => (
-            <div key={product.slug + index} className="flex items-start sm:items-center gap-4 pt-4 first:pt-0 flex-col sm:flex-row">
-              <div className="relative w-20 h-20 rounded-lg bg-gray-100 dark:bg-gray-800 flex-shrink-0">
-                <Image src={urlFor(product.image).url()} alt={product.name} fill className="object-contain p-1" />
-              </div>
-              <div className="flex-grow">
-                <Link href={`/product/${product.slug}`} className="font-semibold text-gray-800 dark:text-gray-200 hover:text-brand-primary hover:underline line-clamp-2">
-                  {product.name}
-                </Link>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {product.quantity}</p>
-              </div>
-              <p className="font-bold text-gray-800 dark:text-gray-200 self-end sm:self-center">
-                Rs. {(product.price * product.quantity).toLocaleString()}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <OrderActions orderId={order._id.toString()} currentStatus={order.status} />
+      <OrderItemsList products={order.products} />
+
+      <OrderActions
+        orderId={order._id} // _id is now a string
+        orderNumber={order.orderId}
+        currentStatus={order.status}
+        products={order.products} // Pass the clean products array
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-          <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-gray-200">
-            <MapPin size={20} /> Shipping Address
-          </h2>
-          <address className="not-italic text-gray-600 dark:text-gray-300 text-sm space-y-1">
-            <p className="font-semibold text-gray-800 dark:text-gray-100">{order.shippingAddress.fullName}</p>
-            <p>{order.shippingAddress.address}, {order.shippingAddress.area}</p>
-            <p>{order.shippingAddress.city}, {order.shippingAddress.province}</p>
-            <p>Phone: {order.shippingAddress.phone}</p>
-          </address>
-        </div>
-        <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-          <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-gray-200">
-            <CreditCard size={20} /> Payment Details
-          </h2>
-          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-            <div className="flex justify-between">
-              <span>Payment Method:</span> <span className="font-semibold text-gray-800 dark:text-gray-200">{order.paymentMethod}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Payment Status:</span> <span className="font-semibold text-gray-800 dark:text-gray-200">{order.paymentStatus}</span>
-            </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4 flex justify-between font-bold text-base text-gray-800 dark:text-gray-100">
-              <span>Total Amount:</span> <span>Rs. {order.totalPrice.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
+        <ShippingAddressCard shippingAddress={order.shippingAddress} />
+        <PaymentDetailsCard
+          paymentDetails={{
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            subtotal: order.subtotal,
+            shippingCost: order.shippingCost,
+            totalPrice: order.totalPrice,
+          }}
+        />
       </div>
     </div>
   );
 }
+
+// // /src/app/account/orders/[orderId]/page.tsx
+
+// import { auth } from "@/app/auth";
+// import { notFound, redirect } from "next/navigation";
+// import Link from "next/link";
+// import { ArrowLeft } from "lucide-react";
+// import connectMongoose from "@/app/lib/mongoose";
+// import Order, { IOrder } from "@/models/Order";
+
+// import StatusTimeline from "./_components/StatusTimeline";
+// import OrderItemsList from "./_components/OrderItemsList";
+// import {
+//   ShippingAddressCard,
+//   PaymentDetailsCard,
+// } from "./_components/OrderInfoCards";
+// import OrderActions from "./_components/OrderActions";
+
+// async function getSingleUserOrder(
+//   orderId: string,
+//   userId: string
+// ): Promise<IOrder | null> {
+//   try {
+//     await connectMongoose();
+    
+//     const order = await Order.findOne({
+//       $or: [{ _id: orderId }, { orderId: orderId }],
+//       userId: userId
+//     }).lean();
+
+//     if (!order) {
+//       return null;
+//     }
+
+//     return JSON.parse(JSON.stringify(order));
+//   } catch (error) {
+//     console.error("Failed to fetch single user order:", error);
+//     return null;
+//   }
+// }
+
+// // --- BUG FIX IS HERE ---
+// // Type for the page props, updated for Next.js 16+
+// type UserOrderDetailPageProps = {
+//   params: Promise<{ orderId: string }>;
+// };
+
+// export default async function UserOrderDetailPage(
+//   props: UserOrderDetailPageProps
+// ) {
+//   const session = await auth();
+//   if (!session?.user?.id) {
+//     redirect("/login?callbackUrl=/account/orders");
+//   }
+
+//   // --- BUG FIX IS HERE: Correctly await the params promise ---
+//   const { orderId } = await props.params;
+//   const order = await getSingleUserOrder(orderId, session.user.id);
+
+//   if (!order) {
+//     notFound();
+//   }
+
+//   return (
+//     <div className="space-y-8">
+//       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+//         <div>
+//           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
+//             Order Details
+//           </h1>
+//           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+//             Order ID:{" "}
+//             <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">
+//               {order.orderId}
+//             </span>
+//             <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+//             <span>
+//               {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                 year: "numeric",
+//                 month: "long",
+//                 day: "numeric",
+//               })}
+//             </span>
+//           </p>
+//         </div>
+//         <Link
+//           href="/account/orders"
+//           className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:underline"
+//         >
+//           <ArrowLeft size={16} /> Back to My Orders
+//         </Link>
+//       </div>
+
+//       <div className="p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+//         <h2 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">
+//           Order Status
+//         </h2>
+//         <StatusTimeline status={order.status} />
+//       </div>
+
+//       <OrderItemsList products={order.products} />
+
+//       <OrderActions
+//         orderId={order._id.toString()}
+//         orderNumber={order.orderId}
+//         currentStatus={order.status}
+//         products={order.products}
+//       />
+
+//       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+//         <ShippingAddressCard shippingAddress={order.shippingAddress} />
+//         <PaymentDetailsCard
+//           paymentDetails={{
+//             paymentMethod: order.paymentMethod,
+//             paymentStatus: order.paymentStatus,
+//             subtotal: order.subtotal,
+//             shippingCost: order.shippingCost,
+//             totalPrice: order.totalPrice,
+//           }}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+// // --- SUMMARY OF CHANGES ---
+// // - **Next.js 16+ Compliance:** Corrected the component to adhere to Rule #8. The `params` prop is now correctly typed as a `Promise` and is handled with `await` before being used, ensuring forward-compatibility.
+// // - **Mongoose Refactor:** The `getSingleUserOrder` function has been refactored to use the centralized `Order` Mongoose model.
+// // - **Backward Compatible Query:** The query `Order.findOne({ $or: [{ _id: orderId }, { orderId: orderId }]... })` ensures both old and new ID formats work in the URL.
+// // - **`orderId` Integration:** The page now displays the correct `orderId` and passes it down to child components.

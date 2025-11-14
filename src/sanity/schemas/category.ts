@@ -1,4 +1,5 @@
 // sanity/schemas/category.ts
+
 import {defineField, defineType} from 'sanity'
 import {TagIcon} from '@sanity/icons'
 
@@ -7,12 +8,16 @@ export default defineType({
   title: 'Category',
   type: 'document',
   icon: TagIcon,
+  groups: [
+    { name: 'main', title: 'Main Details', default: true },
+    { name: 'pageContent', title: 'Category Page Content' },
+  ],
   fields: [
-    // Purane fields wese hi
     defineField({
       name: 'name',
       title: 'Category Name',
       type: 'string',
+      group: 'main',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -20,6 +25,7 @@ export default defineType({
       title: 'Slug',
       type: 'slug',
       options: { source: 'name' },
+      group: 'main',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -27,15 +33,17 @@ export default defineType({
       title: 'Category Icon/Image',
       type: 'image',
       options: { hotspot: true },
+      group: 'main',
     }),
     defineField({
       name: 'parent',
       title: 'Parent Category',
       type: 'reference',
       to: [{type: 'category'}],
+      group: 'main',
     }),
 
-    // === NAYE, SEPARATE BANNER FIELDS ===
+    // --- CATEGORY PAGE CONTENT ---
     defineField({
       name: 'desktopBanner',
       title: 'Desktop Banner Image',
@@ -55,11 +63,23 @@ export default defineType({
     defineField({
         name: 'description',
         title: 'Category Description',
-        description: 'A short description for this category (for SEO).',
-        type: 'text',
+        description: 'A short description for this category, used on the page and for SEO.',
+        type: 'text', // Changed to text for simpler, non-rich-text descriptions
         group: 'pageContent',
     }),
+    
+    // --- NEW: SEO Field ---
+    defineField({
+      name: 'seo',
+      title: 'SEO Settings',
+      type: 'seo', // Reference to our reusable SEO schema
+      group: 'pageContent',
+    }),
   ],
-  groups: [{ name: 'pageContent', title: 'Category Page Content' }],
-  // ... (aapka preview wesa hi rahega)
 })
+
+// --- SUMMARY OF CHANGES ---
+// - Added `groups` to the schema definition for better organization in the Sanity Studio UI.
+// - Added a new `defineField` for 'seo' which references our reusable `seo` schema type.
+// - Placed the SEO field within the 'pageContent' group.
+// - Changed the `description` field from Portable Text to a simple `text` field, as rich text is not needed for a meta description fallback.

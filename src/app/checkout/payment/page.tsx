@@ -1,122 +1,156 @@
+// /src/app/checkout/payment/page.tsx
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStateContext } from "@/app/context/StateContext";
-import { toast } from "react-hot-toast";
-import { CreditCard, Truck, Edit3, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { toastError } from "@/app/_components/shared/CustomToasts";
+import { Loader2, ShieldCheck } from "lucide-react";
 
+// --- NAYE IMPORTS ---
+// Chotay, focused components ko import karein
+import ShippingSummary from "./_components/ShippingSummary";
+import PaymentMethodSelector from "./_components/PaymentMethodSelector";
+
+// === Main Component (REFACTORED & SIMPLIFIED) ===
 export default function PaymentPage() {
   const router = useRouter();
-  const { cartItems, totalPrice, shippingAddress, clearCart } = useStateContext();
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const { cartItems, grandTotal, shippingAddress, clearCart, appliedCoupon } =
+    useStateContext();
+
+  const [selectedGateway, setSelectedGateway] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Yeh useEffects ahtiyati tadabeer (safeguards) ke liye zaroori hain
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!shippingAddress) {
+        router.replace("/checkout");
+      } else if (
+        cartItems.length === 0 &&
+        !window.location.pathname.startsWith("/order-success")
+      ) {
+        router.replace("/cart");
+      }
+    }
+  }, [shippingAddress, cartItems, router]);
 
   const handlePlaceOrder = async () => {
-    setIsLoading(true);
-    if (!shippingAddress) {
-      toast.error("Shipping address is missing.");
-      router.push('/checkout');
-      setIsLoading(false);
+    if (!shippingAddress || !selectedGateway) {
+      toastError("Please select a payment method.");
       return;
     }
+    setIsProcessing(true);
+    let orderId = ""; // Order ID ko yahan store karein
 
     try {
-      const res = await fetch("/api/checkout-cod", {
+      // Step 1: Order create karein
+      const orderRes = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shippingAddress, cartItems, totalPrice }),
+        body: JSON.stringify({
+          shippingAddress,
+          cartItems,
+          totalPrice: grandTotal,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Order placed successfully!");
-        clearCart(); // Order place hone ke baad cart khali kar do
-        router.push(`/order-success/${data.orderId}`);
+      const orderData = await orderRes.json();
+      if (!orderRes.ok)
+        throw new Error(orderData.message || "Failed to create order.");
+
+      orderId = orderData.orderId;
+
+      // Step 2: Payment process shuru karein
+      const paymentRes = await fetch("/api/payment/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, gatewayKey: selectedGateway }),
+      });
+      const paymentData = await paymentRes.json();
+      if (!paymentRes.ok)
+        throw new Error(paymentData.message || "Payment initiation failed.");
+
+      // Step 3: Response ke mutabiq action lein
+      if (paymentData.redirectUrl) {
+        // External gateway par redirect karein
+        clearCart();
+        window.location.href = paymentData.redirectUrl;
+      } else if (paymentData.success) {
+        // Internal gateways (COD, Bank Transfer) ke liye verify karein
+        const verifyRes = await fetch(
+          `/api/payment/verify/${selectedGateway}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId, ...paymentData.data }),
+          }
+        );
+        if (verifyRes.ok && verifyRes.redirected) {
+          clearCart();
+          window.location.href = verifyRes.url; // Success page par redirect
+        } else {
+          const errorData = await verifyRes.json();
+          throw new Error(
+            errorData.message || "Failed to finalize your order."
+          );
+        }
       } else {
-        toast.error(data.message || "Something went wrong.");
-        setIsLoading(false);
+        throw new Error("An unknown error occurred during payment initiation.");
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred.");
-      setIsLoading(false);
+    } catch (error: any) {
+      toastError(
+        error.message || "An unexpected error occurred.",
+        "Order Failed"
+      );
+      setIsProcessing(false);
     }
   };
 
-  if (!shippingAddress) {
-    // Agar address na ho, to user ko wapis bhejo, lekin client-side per
-    if(typeof window !== 'undefined') {
-        router.replace('/checkout');
-    }
-    return null; // Render hone se pehle redirect ho jayega
+  // Loading state jab tak ke address ya cart load na ho jaye
+  if (!shippingAddress || cartItems.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8 min-h-[300px]">
+        <Loader2 className="animate-spin text-brand-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-8">
-      <section>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Shipping To</h2>
-          <Link href="/checkout" className="text-sm text-brand-primary hover:underline flex items-center gap-1 font-semibold">
-            <Edit3 size={14} /> Change
-          </Link>
-        </div>
-        <div className="text-gray-800 dark:text-gray-200 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-bold">{shippingAddress.fullName}</p>
-          <address className="text-sm text-gray-600 dark:text-gray-400 mt-1 not-italic">
-            {shippingAddress.address}, {shippingAddress.area},<br />
-            {shippingAddress.city}, {shippingAddress.province}
-          </address>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Phone: {shippingAddress.phone}
-          </p>
-        </div>
-      </section>
+    <div className="space-y-8">
+      {/* 1. Shipping Summary Component */}
+      <ShippingSummary />
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Payment Method</h2>
-        <div className="space-y-4">
-          <div onClick={() => setPaymentMethod("cod")} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === "cod" ? "border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10" : "border-gray-300 dark:border-gray-600 hover:border-brand-primary/50"}`}>
-            <div className="flex items-center">
-              <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all "
-                style={{borderColor: paymentMethod === 'cod' ? '#f97316' : '#d1d5db',
-                        backgroundColor: paymentMethod === 'cod' ? '#f97316' : 'transparent'}}>
-                 {paymentMethod === 'cod' && <div className="h-2 w-2 rounded-full bg-white"/>}
-              </div>
-              <div className="ml-4">
-                <h3 className="font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                  <Truck size={18} /> Cash on Delivery
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Pay with cash when your order is delivered.</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-not-allowed bg-gray-100 dark:bg-gray-800 opacity-60">
-            <div className="flex items-center">
-                <div className="h-5 w-5 rounded-full border-2 border-gray-300 dark:border-gray-600"/>
-                <div className="ml-4">
-                    <h3 className="font-semibold flex items-center gap-2 text-gray-400 dark:text-gray-500">
-                        <CreditCard size={18} /> Pay with Credit/Debit Card
-                    </h3>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">This option is temporarily unavailable.</p>
-                </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 2. Payment Method Selector Component */}
+      <PaymentMethodSelector
+        selectedGateway={selectedGateway}
+        onGatewaySelect={setSelectedGateway}
+      />
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+      {/* 3. Final Action Section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <ShieldCheck size={16} />
+          <span>Secure SSL Encrypted Payment</span>
+        </div>
         <button
           onClick={handlePlaceOrder}
-          disabled={isLoading}
-          className="w-full h-12 flex items-center justify-center gap-2 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={isProcessing || !selectedGateway}
+          className="w-full h-12 flex items-center justify-center gap-2 bg-brand-primary text-white font-bold text-lg rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-gray-400"
         >
-          {isLoading ? (
+          {isProcessing ? (
             <Loader2 className="animate-spin" size={24} />
           ) : (
-            <span>Place Order (COD)</span>
+            `Pay Rs. ${grandTotal.toLocaleString()}`
           )}
         </button>
       </div>
     </div>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - **Architectural Improvement (Rule #5):** Yeh component ab ek saaf suthra "orchestrator" hai. Isne tamam UI logic ko `ShippingSummary` aur `PaymentMethodSelector` components ko de diya hai.
+// - **Code Simplification:** Component ka size bohot chota ho gaya hai. Iski zimmedariyan ab wazeh hain: page ki hifazat karna (redirects), state (selectedGateway, isProcessing) manage karna, aur `handlePlaceOrder` ke ahem action ko trigger karna.
+// - **Improved Maintainability:** Ab agar aapko shipping summary ya payment list ke UI mein koi tabdeeli karni hai, to aapko is file ko cherne ki zaroorat nahi. Aap direct `ShippingSummary.tsx` ya `PaymentMethodSelector.tsx` mein ja kar kaam kar sakte hain.

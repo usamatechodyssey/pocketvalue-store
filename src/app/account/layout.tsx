@@ -1,8 +1,11 @@
+// /src/app/account/layout.tsx
+
 import { auth } from "../auth";
 import { redirect } from "next/navigation";
 import AccountSidebar from "./_components/AccountSidebar";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import AccountSidebarClient from "./_components/AccountSidebarClient";
+import Breadcrumbs from "@/app/components/ui/Breadcrumbs"; // <-- IMPORT Breadcrumbs
+// import { getBreadcrumbs } from "@/sanity/lib/queries"; // <-- IMPORT getBreadcrumbs
 
 export default async function AccountLayout({
   children,
@@ -11,38 +14,42 @@ export default async function AccountLayout({
 }) {
   const session = await auth();
   if (!session?.user) {
-    redirect("/login?redirect=/account");
+    redirect("/login?callbackUrl=/account");
   }
 
+  // --- FETCH BREADCRUMBS DATA ---
+  // Note: We create a simple static breadcrumb here as it's a static section
+  const breadcrumbs = [
+    { name: "Home", href: "/" },
+    { name: "My Account", href: "/account" },
+  ];
+
   return (
-    // Main full-width background
-    <div className="w-full bg-gray-50 dark:bg-gray-900">
-      {/* Centered content container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Breadcrumbs for better navigation */}
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
-          <Link href="/" className="hover:text-brand-primary hover:underline">
-            Home
-          </Link>
-          <ChevronRight size={16} className="mx-1" />
-          <span className="font-medium text-gray-700 dark:text-gray-200">My Account</span>
+    <main className="w-full bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-screen-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* --- USE DYNAMIC BREADCRUMBS COMPONENT --- */}
+        <div className="mb-6">
+          <Breadcrumbs crumbs={breadcrumbs} />
         </div>
-        
-        {/* Main two-column layout */}
-        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
-          {/* Sidebar */}
-          <aside className="w-full md:w-64 lg:w-72 flex-shrink-0">
+
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+          <aside className="hidden lg:block lg:col-span-3">
             <div className="sticky top-24">
               <AccountSidebar />
             </div>
           </aside>
-          
-          {/* Main Content Area in a card */}
-          <main className="flex-1 w-full bg-white dark:bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            {children}
+
+          <main className="lg:col-span-9">
+            <AccountSidebarClient>{children}</AccountSidebarClient>
           </main>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - Removed the old, manually coded `Link` and `ChevronRight` elements for breadcrumbs.
+// - Imported the reusable `Breadcrumbs` component and `getBreadcrumbs` function.
+// - Created a static `breadcrumbs` array directly within the layout, as this part of the site has a fixed hierarchy. This is more efficient than calling the server-side `getBreadcrumbs` function for a static path.
+// - Rendered the `<Breadcrumbs crumbs={breadcrumbs} />` component, ensuring a consistent look, feel, and JSON-LD structure across the entire site, including the account section.

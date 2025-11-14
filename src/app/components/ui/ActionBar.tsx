@@ -48,18 +48,18 @@ const TopActionBar = () => {
             {/* Track 1 */}
             {duplicatedItems.map((item, index) => (
               <React.Fragment key={`trackA-${index}`}>
-                <p className="text-xs font-semibold tracking-wide mx-4 flex-shrink-0">{item}</p>
+                <p className="text-xs font-semibold tracking-wide mx-4 shrink-0">{item}</p>
                 {index < duplicatedItems.length - 1 && (
-                  <span className="text-white/50 mx-2 flex-shrink-0" aria-hidden="true">•</span>
+                  <span className="text-white/50 mx-2 shrink-0" aria-hidden="true">•</span>
                 )}
               </React.Fragment>
             ))}
             {/* Track 2 (for seamless loop) */}
             {duplicatedItems.map((item, index) => (
               <React.Fragment key={`trackB-${index}`}>
-                <p className="text-xs font-semibold tracking-wide mx-4 flex-shrink-0">{item}</p>
+                <p className="text-xs font-semibold tracking-wide mx-4 shrink-0">{item}</p>
                 {index < duplicatedItems.length - 1 && (
-                  <span className="text-white/50 mx-2 flex-shrink-0" aria-hidden="true">•</span>
+                  <span className="text-white/50 mx-2 shrink-0" aria-hidden="true">•</span>
                 )}
               </React.Fragment>
             ))}

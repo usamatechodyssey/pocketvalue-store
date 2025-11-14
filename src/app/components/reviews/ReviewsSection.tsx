@@ -220,7 +220,7 @@ export default function ReviewsSection({
             </h2>
             <button
               onClick={openModal}
-              className="flex-shrink-0 flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover transition-all duration-300 transform hover:scale-105"
+              className="shrink-0 flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover transition-all duration-300 transform hover:scale-105"
             >
               <MessageSquarePlus size={20} />
               Write a Review

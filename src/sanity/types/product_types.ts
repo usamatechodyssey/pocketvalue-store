@@ -4,6 +4,11 @@ export interface SanityImageObject {
   asset: { _ref: string; _type: 'reference'; };
 }
 
+// === NEW INTERFACE FOR BREADCRUMBS ===
+export interface BreadcrumbItem {
+  name: string;
+  href: string;
+}
 export interface VariantAttribute {
   _key: string;
   name: string;
@@ -15,6 +20,8 @@ export interface Dimension {
   width?: number;
   depth?: number;
 }
+
+
 // === SUPERCHARGED INTERFACE: YEH MUKAMMAL TOR PAR NAYI HAI ===
 // Yeh ab har variant ki mukammal details rakhegi.
 export interface ProductVariant {
@@ -155,6 +162,8 @@ export interface CleanCartItem {
     slug: string;
     quantity: number;
     // Variant ki details
+       // === YEH NAYI LINE ADD HUI HAI ===
+    categoryIds?: string[]; // Product ki categories ke IDs
     variant?: {
       _key: string;
       name: string;
@@ -193,6 +202,7 @@ export interface PortableTextBlock {
 
 // Ab `Post` interface mein `any` ke bajaye is nayi type ko use karein
 export interface Post {
+  _updatedAt: string | number | Date;
   _id: string;
   title: string;
   slug: string; // Isay simple string kar diya hai, kyunke hum query mein ".current" use kar rahe hain

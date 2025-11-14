@@ -64,7 +64,7 @@ export default function MobileMenu({
                 <FiX size={24} className="text-gray-500 dark:text-gray-400" />
               </button>
             </div>
-            <nav className="flex-grow overflow-y-auto p-4">
+            <nav className="grow overflow-y-auto p-4">
               <ul className="space-y-2">
                 {categories.map((cat) => (
                   <li

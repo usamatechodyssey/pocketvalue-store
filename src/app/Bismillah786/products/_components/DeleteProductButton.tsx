@@ -1,60 +1,45 @@
-// /app/admin/products/_components/DeleteProductButton.tsx
 "use client";
 
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { deleteProduct } from "../_actions/productActions";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 
 interface DeleteProductButtonProps {
   productId: string;
   productTitle: string;
 }
 
-export default function DeleteProductButton({
-  productId,
-  productTitle,
-}: DeleteProductButtonProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function DeleteProductButton({ productId, productTitle }: DeleteProductButtonProps) {
+  // Using useTransition for better UX during server action calls
+  const [isPending, startTransition] = useTransition();
 
-  const handleDelete = async () => {
-    // Confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${productTitle}"? This action cannot be undone.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    toast.loading("Deleting product...");
-
-    try {
-      const result = await deleteProduct(productId);
-      toast.dismiss();
-      if (result.success) {
-        toast.success(result.message);
-        // Page revalidation server action mein ho raha hai
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      toast.dismiss();
-      toast.error("An unexpected error occurred.");
-    } finally {
-      setIsSubmitting(false);
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete "${productTitle}"? This action cannot be undone.`)) {
+      startTransition(async () => {
+        const result = await deleteProduct(productId);
+        if (result.success) {
+          toast.success(result.message);
+          // Revalidation is handled by the server action
+        } else {
+          toast.error(result.message);
+        }
+      });
     }
   };
 
   return (
     <button
       onClick={handleDelete}
-      disabled={isSubmitting}
-      className="text-red-600 hover:text-red-900 disabled:text-gray-400"
+      disabled={isPending}
+      className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-500/10 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
       aria-label={`Delete ${productTitle}`}
     >
-      <Trash2 size={16} />
+      {isPending ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Trash2 size={16} />
+      )}
     </button>
   );
 }

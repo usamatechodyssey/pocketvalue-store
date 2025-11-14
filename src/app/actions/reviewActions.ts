@@ -1,34 +1,43 @@
-// app/actions/reviewActions.ts - FINAL CODE
+// /app/actions/reviewActions.ts (REFACTORED WITH ZOD)
 
 "use server";
 
 import { auth } from "@/app/auth";
 import { client } from "@/sanity/lib/client";
 import { revalidatePath } from "next/cache";
-import { ProductReview } from "@/sanity/types/product_types"; // Type import karna zaroori hai
+import { ProductReview } from "@/sanity/types/product_types";
+// === THE FIX IS HERE: Import Zod and our new schema ===
+import { z } from "zod";
+import { SubmitReviewSchema } from "@/app/lib/zodSchemas";
 
-interface ReviewData {
-  productId: string;
-  rating: number;
-  comment: string;
-  reviewImageUrl?: string;
-}
+// Infer the ReviewData type directly from the Zod schema
+type ReviewData = z.infer<typeof SubmitReviewSchema>;
 
-// Function ki return type ko update kiya gaya hai
 export async function submitReview(data: ReviewData): Promise<{
     success: boolean;
     message: string;
-    review?: ProductReview; // Yeh naya review object bhi wapis bhejega
+    review?: ProductReview;
 }> {
   const session = await auth();
   if (!session?.user?.id || !session.user.name) {
     return { success: false, message: "You must be logged in to post a review." };
   }
 
+  // --- Step 1: Validate with Zod ---
+  const validatedFields = SubmitReviewSchema.safeParse(data);
+  if (!validatedFields.success) {
+      return {
+          success: false,
+          message: validatedFields.error.issues[0].message,
+      };
+  }
+  // Use the clean, validated data from here
+  const { productId, rating, comment, reviewImageUrl } = validatedFields.data;
+
   try {
     let reviewImagePayload;
-    if (data.reviewImageUrl) {
-      const imageAsset = await client.assets.upload('image', await fetch(data.reviewImageUrl).then(res => res.blob()));
+    if (reviewImageUrl) { // Use the validated variable
+      const imageAsset = await client.assets.upload('image', await fetch(reviewImageUrl).then(res => res.blob()));
       reviewImagePayload = {
         _type: 'image',
         asset: { _type: 'reference', _ref: imageAsset._id }
@@ -45,24 +54,21 @@ export async function submitReview(data: ReviewData): Promise<{
       },
       product: {
         _type: 'reference',
-        _ref: data.productId,
+        _ref: productId, // Use the validated variable
       },
-      rating: data.rating,
-      comment: data.comment,
+      rating: rating, // Use the validated variable
+      comment: comment, // Use the validated variable
       ...(reviewImagePayload && { reviewImage: reviewImagePayload }),
       isApproved: true,
     };
 
-    // 'create' function naya document wapis bhejta hai, usay 'createdReview' mein save karein
     const createdReview = await client.create(newReview);
 
-    // Path ko revalidate karein taake agle visitors ko naya data mile
-    const product = await client.getDocument(data.productId);
+    const product = await client.getDocument(productId);
     if (product && 'slug' in product && typeof (product as any).slug.current === 'string') {
       revalidatePath(`/product/${(product as any).slug.current}`);
     }
 
-    // Kamyabi ke response ke saath poora review object bhi wapis bhejein
     return {
       success: true,
       message: "Thank you! Your review has been submitted.",

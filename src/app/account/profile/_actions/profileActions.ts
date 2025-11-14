@@ -1,63 +1,111 @@
-// app/account/profile/_actions/profileActions.ts
+// /src/app/account/profile/_actions/profileActions.ts (REFACTORED WITH ZOD)
+
 "use server";
 
-import { auth } from "@/app/auth"; // signOut yahan se hata dein
-import clientPromise from "@/app/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { auth } from "@/app/auth";
 import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
+import connectMongoose from "@/app/lib/mongoose";
+import User from "@/models/User";
+// === THE FIX IS HERE: Import Zod and our new schemas ===
+import { z } from "zod";
+import { UpdateNameSchema, UpdatePasswordSchema } from "@/app/lib/zodSchemas";
 
-// Types
-interface UpdateProfileData { name: string; }
-interface UpdatePasswordData { currentPassword_1: string; newPassword_1: string; }
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-// Naam update karne ka action
-export async function updateProfile(data: UpdateProfileData) {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, message: "Not authenticated." };
+// We no longer need the old TypeScript interfaces
+// interface UpdateProfileData { ... }
+// interface UpdatePasswordData { ... }
 
-    try {
-        const client = await clientPromise;
-        const db = client.db(DB_NAME);
-
-        await db.collection("users").updateOne(
-            { _id: new ObjectId(session.user.id) },
-            { $set: { name: data.name } }
-        );
-
-        // Ab hum sirf success message bhejenge. Logout ka kaam client karega.
-        return { success: true, message: "Profile updated successfully! Please log in again to see the changes." };
-
-    } catch (error) {
-        return { success: false, message: "Failed to update profile." };
-    }
+interface ServerResponse {
+  success: boolean;
+  message: string;
 }
 
-// Password update karne ka action (yeh pehle se theek hai)
-export async function updatePassword(data: UpdatePasswordData) {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, message: "Not authenticated." };
+// Infer the data types directly from our Zod schemas
+type UpdateNameData = z.infer<typeof UpdateNameSchema>;
+type UpdatePasswordData = z.infer<typeof UpdatePasswordSchema>;
 
-    try {
-        const client = await clientPromise;
-        const db = client.db(DB_NAME);
-        const user = await db.collection("users").findOne({ _id: new ObjectId(session.user.id) });
+// === Action #1: Update User Profile Name (Refactored with Zod) ===
+export async function updateProfile(data: UpdateNameData): Promise<ServerResponse> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Not authenticated." };
+  }
 
-        if (!user) return { success: false, message: "User not found." };
+  // --- Step 1: Validate with Zod ---
+  const validatedFields = UpdateNameSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.issues[0].message,
+    };
+  }
+  // From here on, we use the clean, validated data
+  const { name } = validatedFields.data;
 
-        const passwordsMatch = await bcrypt.compare(data.currentPassword_1, user.password);
-        if (!passwordsMatch) {
-            return { success: false, message: "Incorrect current password." };
-        }
-
-        const hashedNewPassword = await bcrypt.hash(data.newPassword_1, 10);
-        await db.collection("users").updateOne(
-            { _id: new ObjectId(session.user.id) },
-            { $set: { password: hashedNewPassword } }
-        );
-
-        return { success: true, message: "Password updated successfully! Please log in again." };
-
-    } catch (error) {
-        return { success: false, message: "Failed to update password." };
+  try {
+    await connectMongoose();
+    const user = await User.findById(session.user.id);
+    if (!user) {
+      return { success: false, message: "User not found." };
     }
+
+    if (user.name === name) { // No .trim() needed, Zod handles strings
+        return { success: true, message: "No changes were made." };
+    }
+
+    user.name = name;
+    await user.save();
+    
+    revalidatePath("/account");
+
+    return { success: true, message: "Profile updated successfully!" };
+
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return { success: false, message: "Failed to update profile." };
+  }
+}
+
+// === Action #2: Update User Password (Refactored with Zod) ===
+export async function updatePassword(data: UpdatePasswordData): Promise<ServerResponse> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Not authenticated." };
+  }
+
+  // --- Step 1: Validate with Zod ---
+  const validatedFields = UpdatePasswordSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.issues[0].message,
+    };
+  }
+  const { currentPassword, newPassword } = validatedFields.data;
+
+  try {
+    await connectMongoose();
+    const user = await User.findById(session.user.id);
+
+    if (!user) {
+      return { success: false, message: "User not found." };
+    }
+    if (!user.password) {
+      return { success: false, message: "Password cannot be changed for social media accounts." };
+    }
+
+    const passwordsMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordsMatch) {
+      return { success: false, message: "Incorrect current password." };
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return { success: true, message: "Password updated successfully! Please log in again with your new password." };
+
+  } catch (error) {
+    console.error("Error updating password:", error);
+    return { success: false, message: "Failed to update password due to a server error." };
+  }
 }

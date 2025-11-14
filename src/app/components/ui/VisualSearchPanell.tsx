@@ -144,9 +144,9 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
         </div>
 
         {/* Results Column */}
-        <div className="md:col-span-2 relative flex flex-col min-h-[12rem]">
+        <div className="md:col-span-2 relative flex flex-col min-h-48">
           {isLoading ? (
-            <div className="flex-grow flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="grow flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <Search className="animate-pulse text-brand-primary" size={24} />
               <p className="mt-2 text-sm font-medium">Finding similar products...</p>
             </div>
@@ -183,7 +183,7 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
               )}
             </div>
           ) : (
-            <div className="flex-grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 dark:text-gray-400 text-center p-4">
+            <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 dark:text-gray-400 text-center p-4">
               <ImageIcon size={32} className="mb-2" />
               <p className="text-sm font-medium">{selectedFile ? "No similar products found." : "Upload an image to see similar items."}</p>
             </div>

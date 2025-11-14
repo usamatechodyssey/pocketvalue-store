@@ -1,22 +1,30 @@
+// sanity/schemas/post.ts
+
 import {defineField, defineType} from 'sanity'
-import {BookText} from 'lucide-react' // Acha sa icon
+import {BookText} from 'lucide-react'
 
 export default defineType({
   name: 'post',
   title: 'Blog Post',
   type: 'document',
   icon: BookText,
+  groups: [ // <-- NEW: Added groups for better organization
+    { name: 'content', title: 'Content', default: true },
+    { name: 'seo', title: 'SEO Settings' },
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
+      group: 'content',
       validation: (Rule) => Rule.required().max(80),
     }),
     defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
+      group: 'content',
       options: {
         source: 'title',
         maxLength: 96,
@@ -27,12 +35,14 @@ export default defineType({
       name: 'author',
       title: 'Author',
       type: 'reference',
-      to: {type: 'author'}, // Hum aek naya 'author' schema bhi banayenge
+      group: 'content',
+      to: {type: 'author'},
     }),
     defineField({
       name: 'mainImage',
       title: 'Main image',
       type: 'image',
+      group: 'content',
       options: {
         hotspot: true,
       },
@@ -42,27 +52,39 @@ export default defineType({
       name: 'categories',
       title: 'Categories',
       type: 'array',
+      group: 'content',
       of: [{type: 'reference', to: {type: 'category'}}],
     }),
     defineField({
       name: 'publishedAt',
       title: 'Published at',
       type: 'datetime',
+      group: 'content',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'excerpt',
       title: 'Excerpt',
-      description: 'A short summary of the post (for card views).',
+      description: 'A short summary of the post (for card views and SEO description fallback).',
       type: 'text',
       rows: 3,
+      group: 'content',
       validation: (Rule) => Rule.required().max(200),
     }),
     defineField({
       name: 'body',
       title: 'Body',
-      type: 'blockContent', // Hum aek naya 'blockContent' object bhi banayenge
+      type: 'blockContent',
+      group: 'content',
       validation: (Rule) => Rule.required(),
+    }),
+    
+    // --- NEW: SEO Field ---
+    defineField({
+      name: 'seo',
+      title: 'SEO Settings',
+      type: 'seo', // Reference to our reusable SEO schema
+      group: 'seo',
     }),
   ],
   preview: {
@@ -77,3 +99,8 @@ export default defineType({
     },
   },
 })
+
+// --- SUMMARY OF CHANGES ---
+// - Added a `groups` array to create "Content" and "SEO Settings" tabs in the Sanity Studio UI.
+// - Moved all existing fields into the "Content" group.
+// - Added a new `defineField` for 'seo' and placed it in the new "SEO Settings" group.

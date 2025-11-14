@@ -3,7 +3,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useMemo } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 import { X } from "lucide-react";
 import SanityProduct, { ProductVariant } from "@/sanity/types/product_types";
 import ProductGallery from "./ProductGallery";
@@ -58,7 +58,7 @@ export default function QuickViewModal({
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -68,11 +68,11 @@ export default function QuickViewModal({
           leaveTo="opacity-0"
         >
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-        </Transition.Child>
+        </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -81,7 +81,7 @@ export default function QuickViewModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-surface-base text-left align-middle shadow-xl transition-all">
+              <DialogPanel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-surface-base text-left align-middle shadow-xl transition-all">
                 <button
                   onClick={onClose}
                   className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface-base/80 hover:bg-surface-ground"
@@ -91,7 +91,7 @@ export default function QuickViewModal({
                 <div className="grid grid-cols-1 lg:grid-cols-2">
                   <div className="p-4">
                     {/* Gallery ko ab dynamic 'imagesToShow' mil rahi hain */}
-                    <ProductGallery images={imagesToShow} />
+                    <ProductGallery images={imagesToShow} productTitle={""} />
                   </div>
                   <div className="p-6">
                     {/* ProductInfo ko ab state aur usay update karne wala function mil raha hai */}
@@ -107,8 +107,8 @@ export default function QuickViewModal({
                     />
                   </div>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

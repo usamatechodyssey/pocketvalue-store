@@ -37,7 +37,7 @@ export default function FeaturedCategoryGrid({ title, categories }: Props) {
               href={`/category/${item.category.slug}`}
               className="group relative block overflow-hidden"
             >
-              <div className="relative aspect-[3/4] w-full">
+              <div className="relative aspect-3/4 w-full">
                 {item.category.image ? (
                   <Image
                     src={urlFor(item.category.image)

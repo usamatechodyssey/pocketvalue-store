@@ -1,3 +1,5 @@
+// sanity/schemas/page.ts
+
 import {defineField, defineType} from 'sanity'
 import {FileText} from 'lucide-react'
 
@@ -6,11 +8,16 @@ export default defineType({
   title: 'Informational Page',
   type: 'document',
   icon: FileText,
+  groups: [ // <-- NEW: Added groups for organization
+    { name: 'content', title: 'Page Content', default: true },
+    { name: 'seo', title: 'SEO Settings' },
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Page Title',
       type: 'string',
+      group: 'content',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -20,13 +27,15 @@ export default defineType({
       options: {
         source: 'title',
       },
-      description: 'e.g., "about-us", "terms-of-service". Yeh page ka URL banega.',
+      group: 'content',
+      description: 'e.g., "about-us", "terms-of-service". This will become the page URL.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'body',
       title: 'Page Content',
       type: 'array',
+      group: 'content',
       of: [
         {
           type: 'block',
@@ -65,6 +74,14 @@ export default defineType({
       ],
       validation: (Rule) => Rule.required(),
     }),
+
+    // --- NEW: SEO Field ---
+    defineField({
+      name: 'seo',
+      title: 'SEO Settings',
+      type: 'seo', // Reference to our reusable SEO schema
+      group: 'seo',
+    }),
   ],
   preview: {
     select: {
@@ -79,3 +96,8 @@ export default defineType({
     },
   },
 })
+
+// --- SUMMARY OF CHANGES ---
+// - Added a `groups` array to create "Page Content" and "SEO Settings" tabs in the Sanity Studio UI.
+// - Moved all existing fields into the "Page Content" group.
+// - Added a new `defineField` for 'seo' and placed it in the new "SEO Settings" group.

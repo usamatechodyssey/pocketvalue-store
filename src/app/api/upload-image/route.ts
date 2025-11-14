@@ -1,5 +1,5 @@
 // /app/api/upload-image/route.ts
-import { writeClient } from '@/sanity/lib/writeClient';
+import { client } from "@/sanity/lib/client";
 import { NextRequest, NextResponse } from 'next/server';
 
 // POST request ko handle karne ka function
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sanity mein asset upload karein
-    const imageAsset = await writeClient.assets.upload('image', file, {
+    const imageAsset = await client.assets.upload('image', file, {
       contentType: file.type,
       filename: file.name,
     });

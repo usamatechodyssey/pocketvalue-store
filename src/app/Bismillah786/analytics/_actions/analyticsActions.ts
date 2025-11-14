@@ -1,67 +1,96 @@
-// /app/admin/analytics/_actions/analyticsActions.ts
+// /app/Bismillah786/analytics/_actions/analyticsActions.ts
+
 "use server";
 
-import clientPromise from "@/app/lib/mongodb";
-import { startOfDay, subDays } from 'date-fns';
-import { ObjectId } from 'mongodb'; // ObjectId ko import karein
+import { connectToDatabase } from "@/app/lib/mongodb";
+import { startOfDay, subDays, format } from 'date-fns';
 
-// --- Type Definitions ---
-interface SourceData {
-  source: string;
-  sales: number;
-  orders: number;
-}
-interface AnalyticsData {
+// --- TYPE DEFINITIONS ---
+export interface SourceData { source: string; sales: number; orders: number; }
+export interface SalesTrendData { name: string; sales: number; }
+export interface TopProductData { productId: string; name: string; totalQuantity: number; totalSales: number; }
+export interface AnalyticsData {
   salesBySource: SourceData[];
-  overall: { totalSales: number; totalOrders: number };
+  overall: { totalSales: number; totalOrders: number; averageOrderValue: number; };
   newUsers: number;
+  salesTrend: SalesTrendData[];
+  topProducts: TopProductData[];
 }
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
 export async function getAnalyticsData(days: number = 30): Promise<AnalyticsData> {
   try {
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
+    const { db } = await connectToDatabase();
     
     const endDate = new Date();
-    const startDate = startOfDay(subDays(endDate, days));
+    const startDateForPeriod = startOfDay(subDays(endDate, days));
 
-    // --- Sales aur Orders ka logic bilkul perfect hai, koi change nahi ---
-    const pipeline = [
-      { $match: { orderDate: { $gte: startDate, $lte: endDate } } },
-      { $group: { _id: "$trafficSource.source", totalSales: { $sum: "$totalPrice" }, totalOrders: { $sum: 1 } } },
-      { $project: { _id: 0, source: "$_id", sales: "$totalSales", orders: "$totalOrders" } },
-      { $sort: { sales: -1 } }
-    ];
-    const salesBySource = await db.collection("orders").aggregate(pipeline).toArray() as SourceData[];
-    
-    const overallStatsPipeline = [
-        { $match: { orderDate: { $gte: startDate, $lte: endDate } } },
-        { $group: { _id: null, totalSales: { $sum: "$totalPrice" }, totalOrders: { $sum: 1 } } }
-    ];
-    const overallStatsData = await db.collection("orders").aggregate(overallStatsPipeline).toArray();
+    // --- FINAL FIX IS HERE ---
+    const [overallStats, periodAnalytics, newUsers, salesTrendRaw] = await Promise.all([
+        // Query 1: Get OVERALL stats from ALL TIME (This one is correct)
+        db.collection("orders").aggregate([
+            { $match: { status: { $ne: "Cancelled" } } },
+            { $group: { _id: null, totalSales: { $sum: "$totalPrice" }, totalOrders: { $sum: 1 } } }
+        ]).next(),
+
+        // Query 2: Get stats for the SELECTED PERIOD (7, 30, 90 days)
+        db.collection("orders").aggregate([
+            // THIS $match STAGE WAS MISSING IN THE PREVIOUS FIX
+            { $match: { 
+                orderDate: { $gte: startDateForPeriod, $lte: endDate }, 
+                status: { $ne: "Cancelled" } 
+            }},
+            { $facet: {
+                salesBySource: [
+                    { $group: { _id: "$trafficSource.source", totalSales: { $sum: "$totalPrice" }, totalOrders: { $sum: 1 } } },
+                    { $project: { _id: 0, source: { $ifNull: ["$_id", "Direct"] }, sales: "$totalSales", orders: "$totalOrders" } },
+                    { $sort: { sales: -1 } }
+                ],
+                topProducts: [
+                    { $unwind: "$products" },
+                    { $group: { _id: "$products.productId", name: { $first: "$products.name" }, totalQuantity: { $sum: "$products.quantity" }, totalSales: { $sum: { $multiply: ["$products.price", "$products.quantity"] } } } },
+                    { $sort: { totalQuantity: -1 } }, { $limit: 5 },
+                    { $project: { _id: 0, productId: "$_id", name: 1, totalQuantity: 1, totalSales: 1 } }
+                ]
+            }}
+        ]).next(),
+
+        // Query 3: Get new users for the SELECTED period
+        db.collection("users").countDocuments({ createdAt: { $gte: startDateForPeriod } }),
+
+        // Query 4: Get sales trend for LAST 7 DAYS (always 7 days)
+        db.collection("orders").aggregate([
+            { $match: { orderDate: { $gte: subDays(new Date(), 6) }, status: { $ne: "Cancelled" } } },
+            { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } }, dailySales: { $sum: "$totalPrice" } } },
+            { $sort: { _id: 1 } }
+        ]).toArray(),
+    ]);
+
+    // --- Process the results ---
     const overall = {
-      totalSales: overallStatsData[0]?.totalSales || 0,
-      totalOrders: overallStatsData[0]?.totalOrders || 0,
+        totalSales: overallStats?.totalSales || 0,
+        totalOrders: overallStats?.totalOrders || 0,
+        averageOrderValue: (overallStats?.totalOrders || 0) > 0 ? (overallStats?.totalSales || 0) / (overallStats?.totalOrders || 0) : 0,
     };
-
-    // === THE FIX IS HERE: NEW USERS LOGIC ===
-    // Hum `_id` se timestamp nikal kar usay filter karenge
-    const startTimestamp = Math.floor(startDate.getTime() / 1000).toString(16) + "0000000000000000";
-    const startObjectId = new ObjectId(startTimestamp);
-
-    const totalUsers = await db.collection("users").countDocuments({
-        _id: { $gte: startObjectId }
-    });
+    
+    // Fill in missing days for sales trend
+    const salesTrend: SalesTrendData[] = [];
+    for (let i = 6; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const dateString = format(date, 'yyyy-MM-dd');
+        const dayName = format(date, 'EEE');
+        const found = salesTrendRaw.find(d => d._id === dateString);
+        salesTrend.push({ name: dayName, sales: found?.dailySales || 0 });
+    }
 
     return {
-      salesBySource,
-      overall,
-      newUsers: totalUsers,
+      salesBySource: periodAnalytics?.salesBySource || [],
+      overall, // Yeh ab hamesha all-time data hoga
+      newUsers,
+      salesTrend,
+      topProducts: periodAnalytics?.topProducts || [],
     };
-
   } catch (error) {
     console.error("Failed to fetch analytics data:", error);
-    return { salesBySource: [], overall: { totalSales: 0, totalOrders: 0 }, newUsers: 0 };
+    return { salesBySource: [], overall: { totalSales: 0, totalOrders: 0, averageOrderValue: 0 }, newUsers: 0, salesTrend: [], topProducts: [] };
   }
 }

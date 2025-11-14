@@ -61,7 +61,7 @@ export default function FlashSaleProductCard({ product }: Props) {
         </div>
 
         {/* === CONTENT SECTION (WITH PADDING) === */}
-        <div className="p-4 flex flex-col flex-grow">
+        <div className="p-4 flex flex-col grow">
           <h3 className="text-sm text-text-primary dark:text-gray-200 font-semibold line-clamp-2 h-10">
             {product.title}
           </h3>
@@ -81,7 +81,7 @@ export default function FlashSaleProductCard({ product }: Props) {
           <div className="mt-auto">
             <div className="relative w-full h-2.5 bg-orange-100 dark:bg-gray-700 rounded-full">
               <div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                className="absolute top-0 left-0 h-full bg-linear-to-r from-yellow-400 to-orange-500 rounded-full"
                 style={{ width: `${percentageClaimed}%` }}
               />
             </div>

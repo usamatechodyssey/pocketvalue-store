@@ -21,9 +21,10 @@ import featuredCategory from '../schemas/featuredCategory'
 import flashSale from '../schemas/flashSale'
 import settings from '../schemas/settings'
 import coupon from '../schemas/coupon'
+import seo from '../schemas/seo'
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,dealOfTheDay,brand,couponBanner,featuredCategory,flashSale,settings,coupon],
+  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,dealOfTheDay,brand,couponBanner,featuredCategory,flashSale,settings,coupon,seo],
 }
 

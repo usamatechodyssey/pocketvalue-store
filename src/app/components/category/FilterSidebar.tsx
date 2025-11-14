@@ -65,10 +65,10 @@ const CategoryNode = ({ category, parentPath }: { category: SanityCategory; pare
   return (
     <li>
       <div className="flex items-center justify-between group">
-        <Link href={currentPath} className={`block text-sm py-1.5 px-2 rounded-md flex-grow transition-colors ${isActive ? "font-semibold text-brand-primary bg-brand-primary/10" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}>
+        <Link href={currentPath} className={`block text-sm py-1.5 px-2 rounded-md grow transition-colors ${isActive ? "font-semibold text-brand-primary bg-brand-primary/10" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}>
           {category.name}
         </Link>
-        {hasChildren && (<button onClick={() => setIsOpen(!isOpen)} className="p-1.5 flex-shrink-0" aria-label={`Expand ${category.name}`}><ChevronDown className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-all ${isOpen ? "rotate-180" : ""}`} /></button>)}
+        {hasChildren && (<button onClick={() => setIsOpen(!isOpen)} className="p-1.5 shrink-0" aria-label={`Expand ${category.name}`}><ChevronDown className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-all ${isOpen ? "rotate-180" : ""}`} /></button>)}
       </div>
       {hasChildren && (<div className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}><ul className="overflow-hidden pl-4 mt-1 border-l border-gray-200 dark:border-gray-600">{category.subCategories?.map((subCat) => (<CategoryNode key={subCat._id} category={subCat} parentPath={currentPath} />))}</ul></div>)}
     </li>
@@ -97,12 +97,12 @@ const FilterSidebar = memo(function FilterSidebar({
 
   const sidebarContentJsx = (
     <div className="h-full bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
         <h2 className="text-lg font-bold">Filters</h2>
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Close filters"><X size={20} /></button>
       </div>
 
-      <div className="px-5 flex-grow overflow-y-auto">
+      <div className="px-5 grow overflow-y-auto">
         {/* === YAHAN ASAL TABDEELI HAI === */}
         {/* Yeh section sirf tab nazar aayega jab 'categoryTree' mojood ho */}
         {categoryTree && (
@@ -147,7 +147,7 @@ const FilterSidebar = memo(function FilterSidebar({
         {attributes.map((attr) => (<FilterSection title={attr.name} key={attr.name} defaultOpen={true}><div className="space-y-3 max-h-60 overflow-y-auto pr-2">{attr.values.map((value) => {const groupKey = attr.name.toLowerCase(); const isChecked = appliedFilters[groupKey]?.includes(value) || false; return (<label key={value} className="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={isChecked} onChange={() => onFilterChange(groupKey, value)} className="h-4 w-4 rounded-sm text-brand-primary focus:ring-brand-primary/50 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700" /><span>{value}</span></label>);})}</div></FilterSection>))}
       </div>
 
-      <div className="p-5 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-5 shrink-0 border-t border-gray-200 dark:border-gray-700">
         <button onClick={() => { setPriceValues({ min: "", max: "" }); onClearFilters(); }} className="w-full text-sm font-semibold text-red-600 hover:underline">Clear All Filters</button>
       </div>
     </div>
@@ -156,7 +156,7 @@ const FilterSidebar = memo(function FilterSidebar({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-72 flex-shrink-0 sticky top-24 h-fit">
+      <aside className="hidden lg:block w-72 shrink-0 sticky top-24 h-fit">
         <div className="rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {sidebarContentJsx}
         </div>
@@ -167,7 +167,7 @@ const FilterSidebar = memo(function FilterSidebar({
         {isOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} onClick={onClose} className="fixed inset-0 bg-black/50 z-40 lg:hidden" aria-hidden="true" />
-            <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed top-0 left-0 h-[100dvh] w-80 max-w-[calc(100%-4rem)] bg-white dark:bg-gray-900 z-50 flex flex-col lg:hidden">
+            <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed top-0 left-0 h-dvh w-80 max-w-[calc(100%-4rem)] bg-white dark:bg-gray-900 z-50 flex flex-col lg:hidden">
               {sidebarContentJsx}
             </motion.div>
           </>

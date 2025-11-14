@@ -10,18 +10,18 @@
 // import SanityProduct from "@/sanity/types/product_types";
 // import { FLASH_SALE_QUERY } from "@/sanity/lib/queries"; // Nayi query import karein
 // import { FlashSaleData } from "@/sanity/types/product_types"; // Nayi type import karein
-// import HeroCarousel from "./components/home/Hero Carousel Slider";
-// import FeaturedProduct from "./components/home/ProductCarousel";
-// import TripleBanner from "./components/home/TripleBanner";
-// import DealOfTheDay from "./components/home/DealOfTheDay";
+// import HeroCarousel from "../components/home/Hero Carousel Slider";
+// import FeaturedProduct from "../components/home/ProductCarousel";
+// import TripleBanner from "../components/home/TripleBanner";
+// import DealOfTheDay from "../components/home/DealOfTheDay";
 // import BrandShowcase from "@/app/components/home/BrandShowcase";
-// import TrustBar from "./components/home/TrustBar";
-// import InstagramWall from "./components/home/InstagramWall";
+// import TrustBar from "../components/home/TrustBar";
+// import InstagramWall from "../components/home/InstagramWall";
 // import LifestyleBanners from "@/app/components/home/LifestyleBanners";
-// import Coupon from "./components/ui/Coupon";
-// import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
-// import CategoryShowcase from "./components/home/CategoryShowcase";
-// import FlashSaleSection from "./components/home/FlashSaleSection";
+// import Coupon from "../components/ui/Coupon";
+// import FeaturedCategoryGrid from "../components/home/FeaturedCategoryGrid";
+// import CategoryShowcase from "../components/home/CategoryShowcase";
+// import FlashSaleSection from "../components/home/FlashSaleSection";
 // import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
 // import { getPaginatedProducts } from "@/sanity/lib/queries";
 // const BATCH_SIZE = 10;
@@ -64,7 +64,6 @@
 //             banner={sectionBanners.find((b) => b.tag === "new-arrivals")}
 //           />
 //         )}
-
 //         {/* <ImageGallery /> */}
 //         <DealOfTheDay />
 //         {/* Best Sellers Section */}
@@ -92,7 +91,7 @@
 //           />
 //         )}
 //         {/* <ShopByBrand /> */}
-//         {/* // <BrandShowcase brands={topBrands} /> */}
+//         <BrandShowcase brands={topBrands} />
 //         <InstagramWall data={instagramData} />
 //         {/* The Final Section */}
 //         <TripleBanner banners={promoBanners} />
@@ -104,6 +103,8 @@
 //     </main>
 //   );
 // }
+// /src/app/page.tsx
+
 import { client } from "@/sanity/lib/client";
 import {
   HERO_CAROUSEL_QUERY,
@@ -114,7 +115,7 @@ import {
   FLASH_SALE_QUERY,
   getPaginatedProducts,
 } from "@/sanity/lib/queries";
-import { FlashSaleData } from "@/sanity/types/product_types";
+import { FlashSaleData, SanityImageObject } from "@/sanity/types/product_types";
 
 import HeroCarousel from "./components/home/Hero Carousel Slider";
 import ProductCarousel from "./components/home/ProductCarousel";
@@ -126,6 +127,23 @@ import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
 import CategoryShowcase from "./components/home/CategoryShowcase";
 import FlashSaleSection from "./components/home/FlashSaleSection";
 import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
+import { generateBaseMetadata } from "@/utils/metadata"; // <-- IMPORT METADATA UTILITY
+import type { Metadata } from "next"; // <-- IMPORT METADATA TYPE
+
+// --- NEW: Dynamic generateMetadata function for the homepage ---
+// This serves as the root metadata for the site.
+export async function generateMetadata(): Promise<Metadata> {
+  // We don't need to pass specific title or description here,
+  // as the utility will automatically use the global defaults from Sanity.
+  return generateBaseMetadata({
+    path: "/", // The canonical path for the homepage
+  });
+}
+
+interface SectionBanner {
+  tag: string;
+  bannerImage: SanityImageObject;
+}
 
 const BATCH_SIZE = 10;
 
@@ -149,23 +167,18 @@ export default async function Home() {
   ]);
 
   const featuredCategoriesData = homepageData?.featuredCategoriesData;
-  const sectionBanners = homepageData?.sectionBanners || [];
+  const sectionBanners: SectionBanner[] = homepageData?.sectionBanners || [];
 
   return (
-    // Main container full-width hai
     <main className="w-full">
-      {/* Hero Carousel - full width */}
       <div className="w-full mt-8 mb-4">
         <HeroCarousel banners={banners} />
       </div>
 
-      {/* Coupon Banner - container ke andar */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <Coupon />
       </div>
 
-      {/* --- FINAL FIX IS HERE: `container mx-auto` is removed from this div --- */}
-      {/* Ab har section apni width khud control karega */}
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {featuredCategoriesData?.featuredCategories?.length > 0 && (
           <CategoryShowcase
@@ -180,7 +193,9 @@ export default async function Home() {
           <ProductCarousel
             title={homepageData.newArrivalsTitle || "New Arrivals"}
             products={homepageData.newArrivals}
-            banner={sectionBanners.find((b) => b.tag === "new-arrivals")}
+            banner={sectionBanners.find(
+              (b: SectionBanner) => b.tag === "new-arrivals"
+            )}
           />
         )}
 
@@ -190,7 +205,9 @@ export default async function Home() {
           <ProductCarousel
             title={homepageData.bestSellersTitle || "Best Sellers"}
             products={homepageData.bestSellers}
-            banner={sectionBanners.find((b) => b.tag === "best-sellers")}
+            banner={sectionBanners.find(
+              (b: SectionBanner) => b.tag === "best-sellers"
+            )}
           />
         )}
 
@@ -198,7 +215,9 @@ export default async function Home() {
           <ProductCarousel
             title={homepageData.featuredProductsTitle || "Featured Products"}
             products={homepageData.featuredProducts}
-            banner={sectionBanners.find((b) => b.tag === "featured-products")}
+            banner={sectionBanners.find(
+              (b: SectionBanner) => b.tag === "featured-products"
+            )}
           />
         )}
 
@@ -211,7 +230,6 @@ export default async function Home() {
 
         <InstagramWall data={instagramData} />
 
-        {/* TripleBanner ko alag se container denge taake woh a_chi tarah align ho */}
         <div className="container mx-auto">
           <TripleBanner banners={promoBanners} />
         </div>
@@ -221,3 +239,130 @@ export default async function Home() {
     </main>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - Imported the `generateBaseMetadata` utility and `Metadata` type.
+// - Added an `async function generateMetadata()` that calls our central utility to set the root SEO metadata for the site.
+
+// import { client } from "@/sanity/lib/client";
+// import {
+//   HERO_CAROUSEL_QUERY,
+//   HOMEPAGE_DATA_QUERY,
+//   PROMO_BANNERS_QUERY,
+//   INSTAGRAM_QUERY,
+//   getTopBrands,
+//   FLASH_SALE_QUERY,
+//   getPaginatedProducts,
+// } from "@/sanity/lib/queries";
+// import { FlashSaleData } from "@/sanity/types/product_types";
+
+// import HeroCarousel from "./components/home/Hero Carousel Slider";
+// import ProductCarousel from "./components/home/ProductCarousel";
+// import TripleBanner from "./components/home/TripleBanner";
+// import DealOfTheDay from "./components/home/DealOfTheDay";
+// import InstagramWall from "./components/home/InstagramWall";
+// import Coupon from "./components/ui/Coupon";
+// import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
+// import CategoryShowcase from "./components/home/CategoryShowcase";
+// import FlashSaleSection from "./components/home/FlashSaleSection";
+// import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
+// // import SentryTestButton from "./components/ui/SentryTestButton";
+
+// const BATCH_SIZE = 10;
+
+// export default async function Home() {
+//   const [
+//     banners,
+//     homepageData,
+//     promoBanners,
+//     instagramData,
+//     topBrands,
+//     flashSaleData,
+//     initialGridProducts,
+//   ] = await Promise.all([
+//     client.fetch(HERO_CAROUSEL_QUERY),
+//     client.fetch(HOMEPAGE_DATA_QUERY),
+//     client.fetch(PROMO_BANNERS_QUERY),
+//     client.fetch(INSTAGRAM_QUERY),
+//     getTopBrands(),
+//     client.fetch<FlashSaleData | null>(FLASH_SALE_QUERY),
+//     getPaginatedProducts(1, BATCH_SIZE),
+//   ]);
+
+//   const featuredCategoriesData = homepageData?.featuredCategoriesData;
+//   const sectionBanners = homepageData?.sectionBanners || [];
+
+//   return (
+//     // Main container full-width hai
+//     <main className="w-full">
+//       {/* Sentry Test Button (Temporary) */}
+//       {/* We place it at the top for easy access during testing. */}
+//       {/* It will only render in development mode. */}
+//       {/* <SentryTestButton /> */}
+//       {/* Hero Carousel - full width */}
+//       <div className="w-full mt-8 mb-4">
+//         <HeroCarousel banners={banners} />
+//       </div>
+
+//       {/* Coupon Banner - container ke andar */}
+//       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+//         <Coupon />
+//       </div>
+
+//       {/* --- FINAL FIX IS HERE: `container mx-auto` is removed from this div --- */}
+//       {/* Ab har section apni width khud control karega */}
+//       <div className="w-full px-4 sm:px-6 lg:px-8">
+//         {featuredCategoriesData?.featuredCategories?.length > 0 && (
+//           <CategoryShowcase
+//             title={featuredCategoriesData.featuredCategoriesTitle}
+//             categories={featuredCategoriesData.featuredCategories}
+//           />
+//         )}
+
+//         <FlashSaleSection data={flashSaleData} />
+
+//         {homepageData?.newArrivals?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.newArrivalsTitle || "New Arrivals"}
+//             products={homepageData.newArrivals}
+//             banner={sectionBanners.find((b) => b.tag === "new-arrivals")}
+//           />
+//         )}
+
+//         <DealOfTheDay />
+
+//         {homepageData?.bestSellers?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.bestSellersTitle || "Best Sellers"}
+//             products={homepageData.bestSellers}
+//             banner={sectionBanners.find((b) => b.tag === "best-sellers")}
+//           />
+//         )}
+
+//         {homepageData?.featuredProducts?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.featuredProductsTitle || "Featured Products"}
+//             products={homepageData.featuredProducts}
+//             banner={sectionBanners.find((b) => b.tag === "featured-products")}
+//           />
+//         )}
+
+//         {featuredCategoriesData?.categoryGrid?.length > 0 && (
+//           <FeaturedCategoryGrid
+//             title={featuredCategoriesData.categoryGridTitle}
+//             categories={featuredCategoriesData.categoryGrid}
+//           />
+//         )}
+
+//         <InstagramWall data={instagramData} />
+
+//         {/* TripleBanner ko alag se container denge taake woh a_chi tarah align ho */}
+//         <div className="container mx-auto">
+//           <TripleBanner banners={promoBanners} />
+//         </div>
+
+//         <InfiniteProductGrid initialProducts={initialGridProducts} />
+//       </div>
+//     </main>
+//   );
+// }

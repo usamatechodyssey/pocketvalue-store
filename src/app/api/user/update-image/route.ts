@@ -1,9 +1,14 @@
+
+// /src/app/api/user/update-image/route.ts
+
 import { NextResponse } from 'next/server';
 import { auth } from '@/app/auth';
 import { v2 as cloudinary } from 'cloudinary';
-import clientPromise from '@/app/lib/mongodb';
-import { ObjectId } from 'mongodb';
 import { Readable } from 'stream';
+
+// --- NAYE IMPORTS ---
+import connectMongoose from '@/app/lib/mongoose';
+import User from '@/models/User'; // Hamara naya, mustanad User model
 
 // Cloudinary config
 cloudinary.config({
@@ -12,8 +17,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-// Convert Blob to Buffer
+// Helper function to convert Blob to Buffer
 const blobToBuffer = async (blob: Blob): Promise<Buffer> => {
   const arrayBuffer = await blob.arrayBuffer();
   return Buffer.from(arrayBuffer);
@@ -27,7 +31,7 @@ export const POST = async (req: Request) => {
 
   try {
     const formData = await req.formData();
-    const file = formData.get('image') as File;
+    const file = formData.get('image') as File | null;
 
     if (!file) {
       return NextResponse.json({ success: false, message: 'No file uploaded' }, { status: 400 });
@@ -42,7 +46,7 @@ export const POST = async (req: Request) => {
         (err, result) => {
           if (err) {
             console.error('Cloudinary Error:', err);
-            reject(err);
+            return reject(err);
           }
           resolve(result);
         }
@@ -50,33 +54,41 @@ export const POST = async (req: Request) => {
       Readable.from(buffer).pipe(stream);
     });
 
-    console.log('✅ Cloudinary Upload Result:', uploadResult);
-
     const imageUrl = uploadResult.secure_url;
-
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-
-    console.log('🧩 Updating user with ID:', session.user.id);
-
-    const updateResult = await db.collection('users').updateOne(
-      { _id: new ObjectId(session.user.id) },
-      { $set: { image: imageUrl } }
-    );
-
-    console.log('🛠️ MongoDB Update Result:', updateResult);
-
-    if (updateResult.modifiedCount === 0) {
-      return NextResponse.json({ success: false, message: 'Failed to update image in DB' }, { status: 500 });
+    if (!imageUrl) {
+        throw new Error("Image URL not returned from Cloudinary.");
     }
+
+    // --- YAHAN BEHTARI KI GAYI HAI ---
+    
+    // 1. Mongoose se connect karein
+    await connectMongoose();
+
+    // 2. Mongoose ke zariye user dhoondein
+    const user = await User.findById(session.user.id);
+    if (!user) {
+        return NextResponse.json({ success: false, message: 'User not found in database' }, { status: 404 });
+    }
+
+    // 3. User ki image update karein aur save karein
+    user.image = imageUrl;
+    await user.save();
+    
+    console.log(`✅ Image updated for user: ${session.user.id}`);
 
     return NextResponse.json({
       success: true,
       message: 'Image uploaded successfully!',
       imageUrl,
     });
+
   } catch (error) {
     console.error('❌ Upload Error:', error);
-    return NextResponse.json({ success: false, message: 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Upload failed due to a server error.' }, { status: 500 });
   }
 };
+
+// --- SUMMARY OF CHANGES ---
+// - **Architectural Consistency (Rule #5):** `mongodb` native driver ka istemal mukammal taur par Mongoose `User` model se replace kar diya gaya hai. `updateOne` aur `new ObjectId()` jaisi commands ke bajaye ab Mongoose ka simple `User.findById`, `user.image = ...`, aur `user.save()` ka tareeqa istemal ho raha hai.
+// - **Code Readability & Simplicity:** Data update karne ka logic ab bohot saaf suthra, parhne mein aasan, aur ghaltiyon se paak hai.
+// - **Robust Error Handling:** Agar Cloudinary se image URL wapas na aaye to us soorat mein error ko behtar tareeqe se handle kiya gaya hai.

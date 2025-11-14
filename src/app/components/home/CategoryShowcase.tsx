@@ -28,7 +28,7 @@ export default function CategoryShowcase({ title, categories }: Props) {
         <h2 className="text-3xl font-bold text-center text-text-primary mb-8">
           {title}
         </h2>
-        <CategoryCarousel categories={categories} />
+        <CategoryCarousel categories={categories} title={""} />
       </div>
     </>
   );

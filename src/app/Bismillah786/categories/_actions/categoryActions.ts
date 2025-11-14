@@ -1,177 +1,225 @@
+// /app/Bismillah786/categories/_actions/categoryActions.ts (REFACTORED WITH ZOD)
+
 "use server";
 
-import { client } from '@/sanity/lib/client';
-import { writeClient } from '@/sanity/lib/writeClient';
+import { client, writeClient } from '@/sanity/lib/client'; // Import writeClient for mutations
 import { revalidatePath } from 'next/cache';
 import groq from 'groq';
+import { auth } from "@/app/auth";
+// === THE FIX IS HERE: Import Zod and our new schemas ===
+import { z } from 'zod';
+import { UpsertCategorySchema, DeleteCategorySchema, CategoryCsvRowSchema } from '@/app/lib/zodSchemas';
 
-// --- TYPE DEFINITION (NO CHANGE) ---
-export interface Category {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  parent?: { _id: string; name: string };
-  subCategoryCount: number;
+async function verifyAdmin(allowedRoles: string[]): Promise<string> {
+    const session = await auth();
+    const userRole = session?.user?.role;
+    if (!userRole || !allowedRoles.includes(userRole)) {
+        throw new Error("Permission Denied: You do not have access to perform this action.");
+    }
+    return userRole;
 }
 
-// === ACTION #1: GET ALL CATEGORIES (NO CHANGE) ===
-export async function getAllCategories(): Promise<Category[]> {
+// Type Definitions
+export interface Category {
+  _id: string; name: string; slug: string;
+  parent?: { _id: string; name: string };
+  subCategoryCount: number; productCount: number;
+}
+// This type is now inferred from the Zod schema
+export type UpsertCategoryPayload = z.infer<typeof UpsertCategorySchema>;
+
+export async function getPaginatedCategories({ 
+    page = 1, 
+    limit = 15, 
+    searchTerm = '' 
+}): Promise<{ categories: Category[], totalPages: number }> {
   try {
-    const query = groq`
-      *[_type == "category"] | order(name asc) {
-        _id,
-        name,
-        slug,
-        "parent": parent->{ _id, name },
-        "subCategoryCount": count(*[_type == "category" && parent._ref == ^._id])
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const params: { [key: string]: string } = {};
+    let filter = '*[_type == "category"';
+    if (searchTerm) {
+        filter += ` && name match $searchTerm `;
+        params.searchTerm = `*${searchTerm}*`;
+    }
+    const fullQuery = groq`${filter}]`;
+    const categoriesQuery = groq`
+      ${fullQuery} | order(name asc) [${start}...${end}] {
+        _id, name, "slug": slug.current, "parent": parent->{ _id, name },
+        "subCategoryCount": count(*[_type == "category" && parent._ref == ^._id]),
+        "productCount": count(*[_type == "product" && references(^._id)])
       }
     `;
-    return await client.fetch(query);
+    const totalCountQuery = groq`count(${fullQuery})`;
+    const [categories, totalCount] = await Promise.all([
+        client.fetch(categoriesQuery, params),
+        client.fetch(totalCountQuery, params),
+    ]);
+    return { categories, totalPages: Math.ceil(totalCount / limit) };
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    return [];
+    console.error("Failed to fetch paginated categories:", error);
+    return { categories: [], totalPages: 0 };
   }
 }
 
-// === ACTION #2: CREATE/UPDATE A CATEGORY (NO CHANGE) ===
-export async function upsertCategory(formData: FormData) {
+export async function getAllCategoriesForForm(): Promise<{ _id: string; name: string }[]> {
   try {
-    const id = formData.get('id') as string | null;
-    const name = formData.get('name') as string;
-    const slug = formData.get('slug') as string;
-    const parentId = formData.get('parentId') as string | null;
-
-    const data: any = {
-      _type: 'category',
-      name,
-      slug: { _type: 'slug', current: slug },
+    const query = groq`*[_type == "category"] | order(name asc) { _id, name }`;
+    return await client.fetch(query);
+  } catch (error) {
+    console.error("Failed to fetch all categories for form:", error);
+    return [];
+  }
+}
+// === ACTION #3: CREATE/UPDATE A CATEGORY (Refactored with Zod) ===
+export async function upsertCategory(payload: UpsertCategoryPayload): Promise<{ success: boolean; message: string }> {
+  const validation = UpsertCategorySchema.safeParse(payload);
+  if (!validation.success) {
+      return { success: false, message: validation.error.issues[0].message };
+  }
+  const { id, name, slug, parentId } = validation.data;
+  
+  try {
+    await verifyAdmin(['Super Admin', 'Content Editor']);
+    
+    const data = {
+      _type: 'category', name, slug: { _type: 'slug', current: slug },
+      parent: parentId ? { _type: 'reference', _ref: parentId } : undefined,
     };
     
+    // Use the secure writeClient for all mutations
     if (id) {
-      const patch = writeClient.patch(id).set(data);
-      if (parentId) {
-        patch.set({ parent: { _type: 'reference', _ref: parentId } });
-      } else {
-        patch.unset(['parent']);
-      }
-      await patch.commit();
+      const patch = writeClient.patch(id).set({ name: data.name, 'slug.current': data.slug.current });
+      if (parentId) patch.set({ parent: { _type: 'reference', _ref: parentId } });
+      else patch.unset(['parent']);
+      await patch.commit({ autoGenerateArrayKeys: true });
     } else {
-      if(parentId) {
-        data.parent = { _type: 'reference', _ref: parentId };
-      }
       await writeClient.create(data);
     }
 
     revalidatePath('/Bismillah786/categories');
     return { success: true, message: `Category ${id ? 'updated' : 'created'} successfully!` };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to upsert category:", error);
-    return { success: false, message: 'Operation failed.' };
+    if (error.message?.includes('slug')) {
+      return { success: false, message: 'Operation failed. The slug might already be in use.' };
+    }
+    return { success: false, message: 'An unexpected error occurred.' };
   }
 }
 
-// === ACTION #3: DELETE A CATEGORY (NO CHANGE) ===
-export async function deleteCategory(categoryId: string) {
-  try {
-    const subCategoryCountQuery = groq`count(*[_type == "category" && parent._ref == $categoryId])`;
-    const subCategoryCount = await client.fetch(subCategoryCountQuery, { categoryId });
-    if (subCategoryCount > 0) return { success: false, message: 'Cannot delete. This category has sub-categories.' };
+// === ACTION #4: DELETE A CATEGORY (Refactored with Zod) ===
+export async function deleteCategory(categoryId: string): Promise<{ success: boolean; message: string }> {
+  const validation = DeleteCategorySchema.safeParse({ categoryId });
+  if (!validation.success) {
+      return { success: false, message: validation.error.issues[0].message };
+  }
+  const { categoryId: validatedId } = validation.data;
 
-    await writeClient.delete(categoryId);
+  try {
+    const userRole = await verifyAdmin(['Super Admin', 'Content Editor']);
+    const checksQuery = groq`{
+      "subCategoryCount": count(*[_type == "category" && parent._ref == $categoryId]),
+      "productCount": count(*[_type == "product" && references($categoryId)])
+    }`;
+    const { subCategoryCount, productCount } = await client.fetch(checksQuery, { categoryId: validatedId });
+    if (subCategoryCount > 0) return { success: false, message: 'Cannot delete. This category has sub-categories.' };
+    if (productCount > 0) return { success: false, message: `Cannot delete. ${productCount} product(s) are linked to this category.` };
+    if (userRole !== 'Super Admin') {
+        return { success: false, message: "Permission Denied: Only a Super Admin can delete categories." };
+    }
+    
+    await writeClient.delete(validatedId); // Use writeClient
     revalidatePath('/Bismillah786/categories');
     return { success: true, message: 'Category deleted successfully!' };
   } catch (error) {
     console.error("Failed to delete category:", error);
-    return { success: false, message: 'Deletion failed.' };
+    return { success: false, message: 'Deletion failed due to an unexpected error.' };
   }
 }
 
-// === ACTION #4: BATCH CREATE CATEGORIES (UPGRADED WITH IMAGE UPLOAD) ===
-export async function batchCreateCategories(categories: { name: string, slug: string, parent_slug: string, image_url: string }[]) {
+// /app/Bismillah786/categories/_actions/categoryActions.ts (REPLACE THIS FUNCTION)
+
+// === ACTION #5: BATCH CREATE CATEGORIES (CORRECTED & TYPE-SAFE) ===
+export async function batchCreateCategories(categories: unknown[]) {
+  await verifyAdmin(['Super Admin', 'Content Editor']);
+
   let successfulCount = 0;
   let failedCount = 0;
   const errors: string[] = [];
+  const validCategories: z.infer<typeof CategoryCsvRowSchema>[] = [];
 
-  const transaction = writeClient.transaction();
-
-  // PASS 1: Saari categories ko aek-aek karke banayein aur image upload karein
-  for (const cat of categories) {
-    try {
-      let imageAssetRef = null;
-
-      // Agar image_url maujood hai to usay process karein
-      if (cat.image_url && cat.image_url.startsWith('http')) {
-        const imageResponse = await fetch(cat.image_url);
-        if (!imageResponse.ok) throw new Error(`Failed to download image from ${cat.image_url}`);
-        const imageBuffer = await imageResponse.arrayBuffer();
-        const asset = await writeClient.assets.upload('image', Buffer.from(imageBuffer), { filename: cat.slug || 'category-image' });
-        imageAssetRef = {
-          _type: 'image',
-          asset: {
-            _type: 'reference',
-            _ref: asset._id,
-          },
-        };
+  // --- THE FIX IS HERE: Two-step validation for type safety ---
+  // Step 1: Validate each row and separate valid data from errors.
+  categories.forEach((cat, index) => {
+      const result = CategoryCsvRowSchema.safeParse(cat);
+      if (result.success) {
+          validCategories.push(result.data);
+      } else {
+          failedCount++;
+          errors.push(`Row ${index + 2}: ${result.error.issues[0].message}`);
       }
+  });
 
-      // Nayi category ka data tayyar karein
-      const newCategory = {
-        _id: cat.slug, // Hum slug ko document ID ke taur par istemal kar rahe hain taake linking asaan ho
-        _type: 'category',
-        name: cat.name,
-        slug: { _type: 'slug', current: cat.slug },
-        image: imageAssetRef || undefined, // Agar image hai to link karein, warna undefined
-      };
-
-      transaction.createIfNotExists(newCategory);
-
-    } catch (error: any) {
-      failedCount++;
-      errors.push(`Category "${cat.name}": ${error.message}`);
-    }
+  if (validCategories.length === 0) {
+      return { success: false, message: "No valid category data found in the file.", errors };
   }
   
+  // Step 2: Now, operate only on the `validCategories` array.
+  // TypeScript knows for certain that `cat` cannot be null inside this loop.
+  const createTransaction = writeClient.transaction();
+  for (const cat of validCategories) {
+    createTransaction.createIfNotExists({
+      _id: `category-${cat.slug}`,
+      _type: 'category',
+      name: cat.name,
+      slug: { _type: 'slug', current: cat.slug },
+    });
+  }
   try {
-    await transaction.commit({ autoGenerateArrayKeys: true });
+    await createTransaction.commit({ autoGenerateArrayKeys: true });
   } catch (error: any) {
     return { success: false, message: `Initial category creation failed: ${error.message}`, errors };
   }
 
-  // PASS 2: Ab parent relationships set karein
-  const patchTransaction = writeClient.transaction();
-  const allCreatedCategories = await client.fetch(groq`*[_type == "category"]{_id, "slug": slug.current}`);
+  const allCreatedCategories: {_id: string, slug: string}[] = await client.fetch(groq`*[_type == "category"]{_id, "slug": slug.current}`);
   
-  for (const cat of categories) {
-    if (cat.parent_slug) {
-      const child = allCreatedCategories.find((c: any) => c.slug === cat.slug);
-      const parent = allCreatedCategories.find((p: any) => p.slug === cat.parent_slug);
+  const linkTransaction = writeClient.transaction();
+  let linksToCreate = 0;
 
+  for (const cat of validCategories) { // Loop over the guaranteed valid array
+    if (cat.parent_slug) {
+      const child = allCreatedCategories.find(c => c.slug === cat.slug);
+      const parent = allCreatedCategories.find(p => p.slug === cat.parent_slug);
       if (child && parent) {
-        patchTransaction.patch(child._id, {
-          set: { parent: { _type: 'reference', _ref: parent._id } }
-        });
-      } else {
-        // Yeh error ab sirf tab aayega agar parent slug ghalat ho
-        if (!errors.some(e => e.includes(cat.name))) {
-          failedCount++;
-          errors.push(`Could not link "${cat.name}" to parent "${cat.parent_slug}". Parent slug might be missing or incorrect.`);
+        linkTransaction.patch(child._id, { set: { parent: { _type: 'reference', _ref: parent._id } } });
+        linksToCreate++;
+      } else if (!parent) {
+        const errorMsg = `Could not link "${cat.name}" because parent slug "${cat.parent_slug}" was not found.`;
+        if (!errors.includes(errorMsg)) {
+            errors.push(errorMsg);
+            failedCount++;
         }
       }
     }
   }
-
+  
   try {
-    await patchTransaction.commit({ autoGenerateArrayKeys: true });
-    successfulCount = categories.length - failedCount;
+    if (linksToCreate > 0) {
+        await linkTransaction.commit({ autoGenerateArrayKeys: true });
+    }
+    // Correctly calculate successful count
+    successfulCount = validCategories.length - (errors.length - (categories.length - validCategories.length));
   } catch (error: any) {
     return { success: false, message: 'Setting parent relationships failed.', errors: [...errors, error.message] };
   }
 
   if (successfulCount > 0) {
     revalidatePath('/Bismillah786/categories');
-    revalidatePath('/'); // Homepage/navigation ko bhi update karein
+    revalidatePath('/');
   }
 
+  // Final report calculation is now simpler
   return {
     success: failedCount === 0,
     message: `Processed: ${categories.length}, Successful: ${successfulCount}, Failed: ${failedCount}`,

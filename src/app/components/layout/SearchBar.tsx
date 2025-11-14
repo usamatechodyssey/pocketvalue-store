@@ -220,7 +220,7 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
                           }}
                           className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                         >
-                          <div className="relative w-14 h-14 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md">
+                          <div className="relative w-14 h-14 shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md">
                             <Image
                               src={
                                 product.defaultVariant.images?.[0]
@@ -235,7 +235,7 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
                               sizes="56px"
                             />
                           </div>
-                          <div className="flex-grow overflow-hidden">
+                          <div className="grow overflow-hidden">
                             <p className="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
                               {product.title}
                             </p>

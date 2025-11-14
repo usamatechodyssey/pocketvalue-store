@@ -58,33 +58,50 @@ export default function HeaderActions({ isMobile = false }) {
 
   // === DESKTOP & TABLET VIEW LOGIC ===
   return (
+
     <div className="flex items-center space-x-6">
-      {/* Account Icon */}
+      {/* === ACCOUNT SECTION (THE FIX IS HERE) === */}
       <Link
         href={status === "authenticated" ? "/account" : "/login"}
         className="flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors group"
       >
+        {/* Icon hamesha nazar aayega */}
         <FiUser size={iconSize} />
-        {/* TEXT: Hidden on tablet (md), Visible on desktop (lg) and up */}
+
         <div className="hidden lg:flex flex-col text-sm">
           <span className="font-semibold leading-tight text-gray-800 dark:text-gray-200">
             Account
           </span>
-          <span className="text-xs text-gray-500 leading-tight group-hover:text-orange-500">
-            {status === "authenticated"
-              ? session?.user?.name?.split(" ")[0]
-              : "Hello, Sign in"}
+
+          {/* Is span par ab sirf tooltip rahegi */}
+          <span
+            className="text-xs text-gray-500 leading-tight group-hover:text-orange-500"
+            title={
+              status === "authenticated"
+                ? session?.user?.name || ""
+                : "Hello, Sign in"
+            }
+          >
+            {(() => {
+              if (status === "authenticated" && session?.user?.name) {
+                const firstName = session.user.name.split(" ")[0];
+                // Yahan hum check kar rahe hain ke naam 10 haroof se lamba hai ya nahi
+                return firstName.length > 10
+                  ? `${firstName.substring(0, 10)}...` // Agar lamba hai to kaat kar ... laga do
+                  : firstName; // Warna poora pehla naam dikha do
+              }
+              return "Hello, Sign in";
+            })()}
           </span>
         </div>
       </Link>
 
-      {/* Wishlist Icon */}
+      {/* === WISHLIST SECTION (No Changes) === */}
       <Link
         href="/wishlist"
         className="relative flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
       >
         <FiHeart size={iconSize} />
-        {/* TEXT: Hidden on tablet (md), Visible on desktop (lg) and up */}
         <div className="hidden lg:flex flex-col text-sm">
           <span className="font-semibold leading-tight text-gray-800 dark:text-gray-200">
             Wishlist
@@ -95,7 +112,7 @@ export default function HeaderActions({ isMobile = false }) {
         </div>
       </Link>
 
-      {/* Cart Icon */}
+      {/* === CART SECTION (No Changes) === */}
       <Link
         href="/cart"
         className="relative flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors pr-4"
@@ -106,7 +123,6 @@ export default function HeaderActions({ isMobile = false }) {
             {totalQuantities}
           </span>
         )}
-        {/* TEXT: Hidden on tablet (md), Visible on desktop (lg) and up */}
         <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 hidden lg:inline">
           Cart
         </span>

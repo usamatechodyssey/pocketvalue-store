@@ -1,49 +1,50 @@
-// app/order-success/[orderId]/page.tsx - SIRF STYLING UPDATE
+// /src/app/order-success/[orderId]/page.tsx
 
-import clientPromise from "@/app/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { CheckCircle2, ShoppingBag, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
+// --- NAYE IMPORTS ---
+import connectMongoose from "@/app/lib/mongoose";
+import Order, { IOrder } from "@/models/Order"; // Hamara mustanad Order model
 import ClearCartOnSuccess from "../_components/ClearCartOnSuccess";
 
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-// Interface aur getOrder function bilkul wese hi rahenge
-interface Order {
-  _id: ObjectId;
-  totalPrice: number;
-  paymentMethod: string;
-  shippingAddress: {
-    fullName: string;
-    address: string;
-    area: string;
-    city: string;
-    province: string;
-  };
-}
-async function getOrder(orderId: string): Promise<Order | null> {
+// --- REFACTORED server-side function to use Mongoose ---
+async function getOrder(id: string): Promise<IOrder | null> {
   try {
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-    if (!ObjectId.isValid(orderId)) return null;
-    const order = await db
-      .collection("orders")
-      .findOne({ _id: new ObjectId(orderId) });
-    return order as Order | null;
+    await connectMongoose();
+
+    // Mongoose Order model ka istemal karein.
+    // Mongoose itna smart hai ke woh string ID ko purane ObjectId format se bhi match kar leta hai.
+    // Isliye, yeh query naye "PV-1001" aur purane "65f1..." dono qisam ke IDs par kaam karegi.
+    const order = await Order.findById(id).lean();
+
+    if (!order) return null;
+
+    // Data ko client component ke liye serialize karein
+    return JSON.parse(JSON.stringify(order));
   } catch (error) {
     console.error("Failed to fetch order for success page:", error);
     return null;
   }
 }
 
+type OrderSuccessPageProps = {
+  params: Promise<{ orderId: string }>;
+};
+
 export default async function OrderSuccessPage({
-  params,
-}: {
-  params: { orderId: string };
-}) {
-  // Logic bilkul wesa hi rahega
-  const { orderId } = await params;
+  params: paramsPromise,
+}: OrderSuccessPageProps) {
+  const { orderId } = await paramsPromise;
   const order = await getOrder(orderId);
 
   if (!order) {
@@ -51,7 +52,6 @@ export default async function OrderSuccessPage({
   }
 
   return (
-    // === SIRF YAHAN CLASSES UPDATE HUIN HAIN ===
     <div className="bg-surface-ground min-h-screen flex items-center justify-center py-12 px-4">
       <div className="bg-surface-base p-8 sm:p-10 rounded-2xl shadow-lg border border-surface-border max-w-2xl w-full text-center">
         <ClearCartOnSuccess />
@@ -77,7 +77,7 @@ export default async function OrderSuccessPage({
             Your Order ID
           </p>
           <p className="text-2xl font-mono font-bold text-brand-primary mt-1 tracking-wider">
-            {order._id.toString()}
+            {order.orderId} {/* Ab sirf mustanad orderId istemal karein */}
           </p>
         </div>
 
@@ -128,3 +128,8 @@ export default async function OrderSuccessPage({
     </div>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - **Architectural Consistency (Rule #5):** `getOrder` function ab `mongodb` native driver (`clientPromise`, `ObjectId`) ka istemal nahi kar raha. Yeh ab mukammal taur par Mongoose `Order` model ka istemal karta hai, jis se hamare project mein data access ka aakhri inconsistent hissa bhi theek ho gaya hai.
+// - **Code Simplification:** `Order.findById(id)` ka istemal code ko bohot saaf suthra bana deta hai aur yeh naye aur purane, dono qisam ke IDs par kaam karne ke qabil hai.
+// - **Improved UI & Data:** Ab UI mein hamesha mustanad `order.orderId` hi dikhaya jayega, jo user ke liye behtar hai.

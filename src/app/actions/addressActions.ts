@@ -1,170 +1,211 @@
+
+// /src/app/actions/addressActions.ts (REFACTORED WITH ZOD)
+
 "use server";
 
 import { auth } from "@/app/auth";
-import clientPromise from "@/app/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
+import connectMongoose from "@/app/lib/mongoose";
+import User, { IAddress } from "@/models/User";
+// === THE FIX IS HERE: Import Zod and our new AddressSchema ===
+import { z } from "zod";
+import { AddressSchema } from "@/app/lib/zodSchemas";
 
-// Address ka structure define karein
-export interface Address {
-  _id?: ObjectId | string; // Allow string for client-side objects
-  fullName: string;
-  phone: string;
-  province: string;
-  city: string;
-  area: string;
-  address: string;
+// This is our DTO, which is now derived from the Zod schema
+export type ClientAddress = z.infer<typeof AddressSchema> & {
+  _id: string;
   isDefault: boolean;
+  lat?: number | null;
+  lng?: number | null;
+};
+// =======================================================
+
+interface ServerResponse {
+  success: boolean;
+  message: string;
 }
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-// Action #1: Naya Address Add Karna
-export async function addAddress(addressData: Omit<Address, '_id'>) {
+// === ACTION #1: SAVE A NEW ADDRESS (Refactored with Zod) ===
+export async function saveAddress(
+  addressData: Omit<ClientAddress, '_id' | 'isDefault' | 'lat' | 'lng'>,
+  isDefault: boolean
+): Promise<ServerResponse & { newAddress?: ClientAddress }> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, message: "User not authenticated." };
+    return { success: false, message: "Authentication required." };
+  }
+
+  // --- Step 1: Validate with Zod ---
+  const validatedFields = AddressSchema.safeParse(addressData);
+  if (!validatedFields.success) {
+      return {
+          success: false,
+          message: validatedFields.error.issues[0].message,
+      };
+  }
+  // From here, we use the clean, validated data
+  const { fullName, phone, province, city, area, address } = validatedFields.data;
+  
+  try {
+    await connectMongoose();
+    const user = await User.findById(session.user.id);
+    if (!user) return { success: false, message: "User not found." };
+
+    if (isDefault) {
+      user.addresses.forEach((addr: IAddress) => { addr.isDefault = false; });
+    }
+
+    // Use the validated data to create the new address
+    const newAddress = { fullName, phone, province, city, area, address, isDefault } as IAddress;
+    user.addresses.push(newAddress);
+
+    await user.save();
+
+    revalidatePath("/account/addresses");
+    revalidatePath("/checkout");
+    
+    const savedAddress = user.addresses[user.addresses.length - 1];
+    const newClientAddress: ClientAddress = {
+        _id: savedAddress._id.toString(),
+        fullName: savedAddress.fullName,
+        phone: savedAddress.phone,
+        province: savedAddress.province,
+        city: savedAddress.city,
+        area: savedAddress.area,
+        address: savedAddress.address,
+        isDefault: savedAddress.isDefault,
+        lat: savedAddress.lat,
+        lng: savedAddress.lng,
+    };
+
+    return { success: true, message: "Address saved successfully!", newAddress: newClientAddress };
+
+  } catch (error) {
+    console.error("Error in saveAddress:", error);
+    return { success: false, message: "An unexpected error occurred." };
+  }
+}
+
+// === ACTION #2: UPDATE AN EXISTING ADDRESS (Refactored with Zod) ===
+export async function updateAddress(
+  addressId: string, 
+  addressData: Omit<ClientAddress, '_id' | 'isDefault' | 'lat' | 'lng'>, 
+  isDefault: boolean
+): Promise<ServerResponse & { updatedAddress?: ClientAddress }> {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, message: "Authentication required." };
+
+    // --- Step 1: Validate with Zod ---
+    const validatedFields = AddressSchema.safeParse(addressData);
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: validatedFields.error.issues[0].message,
+        };
+    }
+    const { fullName, phone, province, city, area, address } = validatedFields.data;
+
+    try {
+        await connectMongoose();
+        const user = await User.findById(session.user.id);
+        if (!user) return { success: false, message: "User not found." };
+
+        const addressToUpdate = user.addresses.id(addressId);
+        if (!addressToUpdate) return { success: false, message: "Address not found." };
+
+        if (isDefault) {
+            user.addresses.forEach((addr: IAddress) => { addr.isDefault = false; });
+        }
+
+        // Use the validated data to update the address
+        Object.assign(addressToUpdate, { fullName, phone, province, city, area, address, isDefault });
+        
+        await user.save();
+
+        revalidatePath("/account/addresses");
+        revalidatePath("/checkout");
+
+        const updatedClientAddress: ClientAddress = {
+            _id: addressToUpdate._id.toString(),
+            fullName: addressToUpdate.fullName,
+            phone: addressToUpdate.phone,
+            province: addressToUpdate.province,
+            city: addressToUpdate.city,
+            area: addressToUpdate.area,
+            address: addressToUpdate.address,
+            isDefault: addressToUpdate.isDefault,
+            lat: addressToUpdate.lat,
+            lng: addressToUpdate.lng,
+        };
+
+        return { success: true, message: "Address updated successfully.", updatedAddress: updatedClientAddress };
+
+    } catch (error) {
+        console.error("Error in updateAddress:", error);
+        return { success: false, message: "An unexpected error occurred." };
+    }
+}
+// === ACTION #3: DELETE AN ADDRESS ===
+export async function deleteAddress(addressId: string): Promise<ServerResponse> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Authentication required." };
   }
 
   try {
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-    const usersCollection = db.collection("users");
+    await connectMongoose();
+    const user = await User.findById(session.user.id);
+    if (!user) return { success: false, message: "User not found." };
 
-    const newAddress = {
-      _id: new ObjectId(),
-      ...addressData,
-    };
+    const addressToDelete = user.addresses.id(addressId);
+    if (!addressToDelete) return { success: false, message: "Address not found." };
 
-    // Agar user isay default set kar raha hai, to pehle baaki sab ko non-default karein
-    if (newAddress.isDefault) {
-      await usersCollection.updateOne(
-        { _id: new ObjectId(session.user.id) },
-        { $set: { "addresses.$[].isDefault": false } }
-      );
+    const wasDefault = addressToDelete.isDefault;
+    addressToDelete.deleteOne();
+
+    if (wasDefault && user.addresses.length > 0) {
+        user.addresses[0].isDefault = true;
     }
-    
-    // Naya address user ke addresses array mein push karne ki koshish karein
-    const result = await usersCollection.updateOne(
-        { _id: new ObjectId(session.user.id) },
-        { $push: { addresses: newAddress } }
-    );
-        
-    // Agar 'addresses' array mojood nahi tha aur update fail hua (modifiedCount === 0)
-    if (result.modifiedCount === 0) {
-        // To naya 'addresses' array bana kar usmein pehla address daal do
-        await usersCollection.updateOne(
-            { _id: new ObjectId(session.user.id) },
-            { $set: { addresses: [newAddress] } },
-            // upsert: true yeh yaqeeni banata hai ke agar user ka document hi na ho to ban jaye
-            { upsert: true }
-        );
-    }
+
+    await user.save();
 
     revalidatePath("/account/addresses");
-    // Client ko plain object bhejein
-    return { 
-        success: true, 
-        message: "Address added successfully.", 
-        address: JSON.parse(JSON.stringify(newAddress)) as Address 
-    };
+    revalidatePath("/checkout");
+    return { success: true, message: "Address deleted successfully." };
 
   } catch (error) {
-    console.error("Error adding address:", error);
-    return { success: false, message: "Failed to add address." };
+    console.error("Error in deleteAddress:", error);
+    return { success: false, message: "An unexpected error occurred." };
   }
 }
 
-// Action #2: Mojooda Address Update Karna
-export async function updateAddress(addressId: string, addressData: Partial<Omit<Address, '_id'>>) {
+// === ACTION #4: SET A DEFAULT ADDRESS ===
+export async function setDefaultAddress(addressId: string): Promise<ServerResponse> {
     const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, message: "User not authenticated." };
-    }
-
+    if (!session?.user?.id) return { success: false, message: "Authentication required." };
+    
     try {
-        const client = await clientPromise;
-        const db = client.db(DB_NAME);
-        const usersCollection = db.collection("users");
-        
-        if (addressData.isDefault) {
-            await usersCollection.updateOne(
-                { _id: new ObjectId(session.user.id) },
-                { $set: { "addresses.$[].isDefault": false } }
-            );
+        await connectMongoose();
+        const user = await User.findById(session.user.id);
+        if (!user) return { success: false, message: "User not found." };
+
+        // --- FIX IS HERE: Explicitly type the 'addr' parameter ---
+        user.addresses.forEach((addr: IAddress) => { addr.isDefault = false; });
+
+        const newDefault = user.addresses.id(addressId);
+        if (newDefault) {
+            newDefault.isDefault = true;
+        } else {
+            return { success: false, message: "Address not found." };
         }
 
-        const updateFields: { [key: string]: any } = {};
-        for (const [key, value] of Object.entries(addressData)) {
-            updateFields[`addresses.$.${key}`] = value;
-        }
-
-        await usersCollection.updateOne(
-            { _id: new ObjectId(session.user.id), "addresses._id": new ObjectId(addressId) },
-            { $set: updateFields }
-        );
-
-        revalidatePath("/account/addresses");
-        return { success: true, message: "Address updated successfully." };
-
-    } catch (error) {
-        console.error("Error updating address:", error);
-        return { success: false, message: "Failed to update address." };
-    }
-}
-
-// Action #3: Address Delete Karna
-export async function deleteAddress(addressId: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, message: "User not authenticated." };
-    }
-
-    try {
-        const client = await clientPromise;
-        const db = client.db(DB_NAME);
+        await user.save();
         
-        await db.collection("users").updateOne(
-            { _id: new ObjectId(session.user.id) },
-            { $pull: { addresses: { _id: new ObjectId(addressId) } } }
-        );
-
         revalidatePath("/account/addresses");
-        return { success: true, message: "Address deleted successfully." };
-
-    } catch (error) {
-        console.error("Error deleting address:", error);
-        return { success: false, message: "Failed to delete address." };
-    }
-}
-
-
-// Action #4: Default Address Set Karna
-export async function setDefaultAddress(addressId: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, message: "User not authenticated." };
-    }
-
-    try {
-        const client = await clientPromise;
-        const db = client.db(DB_NAME);
-        const usersCollection = db.collection("users");
-        
-        await usersCollection.updateOne(
-            { _id: new ObjectId(session.user.id) },
-            { $set: { "addresses.$[].isDefault": false } }
-        );
-
-        await usersCollection.updateOne(
-            { _id: new ObjectId(session.user.id), "addresses._id": new ObjectId(addressId) },
-            { $set: { "addresses.$.isDefault": true } }
-        );
-
-        revalidatePath("/account/addresses");
-        return { success: true, message: "Default address updated." };
-
+        revalidatePath("/checkout");
+        return { success: true, message: "Default address has been set." };
     } catch (error) {
         console.error("Error setting default address:", error);
-        return { success: false, message: "Failed to set default address." };
+        return { success: false, message: "An unexpected error occurred." };
     }
 }

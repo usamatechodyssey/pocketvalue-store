@@ -1,20 +1,28 @@
 // /app/admin/products/_components/RichTextEditor.tsx
+
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import "./tiptap-styles.css"; // Hum yeh file abhi banayenge
+import "./tiptap-styles.css";
 
+// --- UPDATED INTERFACE ---
+// The component now handles JSON, not HTML strings.
 interface RichTextEditorProps {
-  value: string;
-  onChange: (richText: string) => void;
+  value: any; // Can be Tiptap JSON object or null
+  onChange: (richTextAsJson: any) => void;
 }
 
 const TiptapEditor = ({ value, onChange }: RichTextEditorProps) => {
   const editor = useEditor({
+    // === THE FIX IS HERE ===
+    // This setting tells Tiptap to wait for the client to render,
+    // preventing the SSR hydration error.
+    immediatelyRender: false,
+    // =======================
+
     extensions: [
       StarterKit.configure({
-        // Yahan aap features ko customize kar sakte hain
         heading: {
           levels: [2, 3, 4],
         },
@@ -28,19 +36,26 @@ const TiptapEditor = ({ value, onChange }: RichTextEditorProps) => {
         },
       }),
     ],
-    content: value,
+    content: value, // Tiptap can handle the JSON object directly
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none",
+          "prose prose-sm sm:prose-base dark:prose-invert rounded-b-md border border-t-0 p-4 min-h-[150px] focus:outline-none focus:border-brand-primary dark:border-gray-600 w-full",
       },
     },
     onUpdate({ editor }) {
-      onChange(editor.getHTML());
+      // --- IMPORTANT CHANGE ---
+      // We now output JSON to match the server action's expectation.
+      onChange(editor.getJSON());
     },
   });
 
-  return <EditorContent editor={editor} />;
+  return (
+    <div className="rounded-md border border-gray-300 dark:border-gray-600">
+      {/* We can add a simple toolbar here later if needed */}
+      <EditorContent editor={editor} />
+    </div>
+  );
 };
 
 export default TiptapEditor;

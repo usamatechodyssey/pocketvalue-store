@@ -7,9 +7,11 @@ import { SanityImageObject } from "@/sanity/types/product_types";
 import { PlayCircle, ZoomIn, ChevronUp, ChevronDown } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs, Mousewheel } from "swiper/modules";
+
+// Import Swiper styles (FINAL CORRECTED PATHS)
 import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/thumbs";
+import "swiper/css/navigation"; // <- CORRECTED PATH
+import "swiper/css/thumbs"; // <- CORRECTED PATH
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
@@ -139,7 +141,7 @@ export default function ProductGallery({
       <div className="relative w-full h-auto md:h-[500px] lg:h-[450px]">
         <div className="flex flex-col-reverse md:flex-row gap-4 h-full">
           {/* Thumbnails */}
-          <div className="w-full md:w-24 flex-shrink-0 relative">
+          <div className="w-full md:w-24 shrink-0 relative">
             <Swiper
               onSwiper={setThumbsSwiper}
               direction="horizontal"
@@ -165,7 +167,7 @@ export default function ProductGallery({
               {galleryItems.map((item, index) => (
                 <SwiperSlide
                   key={index}
-                  className="cursor-pointer !h-auto md:!h-24"
+                  className="cursor-pointer h-auto! md:h-24!"
                 >
                   <div className="thumb-border relative w-full aspect-square bg-white dark:bg-gray-700 rounded-md border-2 border-transparent overflow-hidden">
                     {item.image && (

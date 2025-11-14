@@ -1,50 +1,88 @@
-import React from 'react';
+// /src/app/checkout/layout.tsx (UPDATED TO USE DTO)
+
+import React from "react";
 import { auth } from "@/app/auth";
-import { redirect } from 'next/navigation';
-import clientPromise from '@/app/lib/mongodb';
-import { ObjectId } from 'mongodb';
-import { Address } from '@/app/actions/addressActions';
-import { CheckoutProvider } from './CheckoutContext'; // <-- NAYA IMPORT
-import OrderSummary from './_components/OrderSummary';
-import StepIndicator from './_components/StepIndicator';
+import { redirect } from "next/navigation";
+import { CheckoutProvider } from "./CheckoutContext";
+import OrderSummary from "./_components/OrderSummary";
+import StepIndicator from "./_components/StepIndicator";
+import type { Metadata } from "next";
+import connectMongoose from "@/app/lib/mongoose";
+import User, { IAddress } from "@/models/User";
+// --- THE FIX IS HERE: Import the plain object type ---
+import { ClientAddress } from "@/app/actions/addressActions";
 
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
-const DB_NAME = process.env.MONGODB_DB_NAME!;
-async function getUserAddresses(userId: string): Promise<Address[]> {
+// This server-side function will now return an array of our clean DTO
+async function getUserAddresses(userId: string): Promise<ClientAddress[]> {
   try {
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-    const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
-    if (!user || !user.addresses) return [];
-    return JSON.parse(JSON.stringify(user.addresses));
+    await connectMongoose();
+
+    const user = await User.findById(userId)
+      .select("addresses")
+      .lean<{ addresses?: IAddress[] }>();
+
+    if (!user || !user.addresses) {
+      return [];
+    }
+
+    // Manually convert the raw Mongoose data to clean, serializable ClientAddress objects
+    const plainAddresses: ClientAddress[] = user.addresses.map((addr) => ({
+      _id: addr._id.toString(),
+      fullName: addr.fullName,
+      phone: addr.phone,
+      province: addr.province,
+      city: addr.city,
+      area: addr.area,
+      address: addr.address,
+      isDefault: addr.isDefault,
+      lat: addr.lat || null,
+      lng: addr.lng || null,
+    }));
+
+    return plainAddresses;
   } catch (error) {
     console.error("Failed to fetch user addresses for checkout:", error);
     return [];
   }
 }
 
-export default async function CheckoutLayout({ children }: { children: React.ReactNode }) {
+export default async function CheckoutLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/login?redirect=/checkout");
+    redirect("/login?callbackUrl=/checkout");
   }
 
+  // 'addresses' is now a clean array of ClientAddress objects
   const addresses = await getUserAddresses(session.user.id);
 
   return (
-    // Yahan ab CheckoutProvider istemal hoga
+    // Pass the clean array to the provider
     <CheckoutProvider savedAddresses={addresses}>
-      <main className="w-full bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          <div className="pb-12 mb-8 border-b border-gray-200 dark:border-gray-700 flex justify-center">
+      <main className="w-full bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <StepIndicator />
           </div>
-          <div className="flex flex-col lg:flex-row-reverse gap-12 lg:gap-16 items-start">
-            <div className="w-full lg:w-[400px] lg:sticky lg:top-24 flex-shrink-0">
-              <OrderSummary />
-            </div>
-            <div className="w-full lg:flex-1">
-              {children}
+        </div>
+        <div className="max-w-none mx-auto lg:px-8 xl:px-16 2xl:px-24">
+          <div className="bg-white dark:bg-gray-800 lg:grid lg:grid-cols-2 lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-700 lg:shadow-lg lg:rounded-xl lg:my-12">
+            <div className="px-4 py-8 sm:px-6 lg:px-8 lg:py-12">{children}</div>
+            <div className="px-4 py-8 sm:px-6 lg:px-8 lg:py-12 bg-gray-50/50 dark:bg-gray-800/50 lg:bg-transparent dark:lg:bg-transparent border-t lg:border-t-0 border-gray-200 dark:border-gray-700">
+              <div className="lg:sticky lg:top-24">
+                <OrderSummary />
+              </div>
             </div>
           </div>
         </div>

@@ -1,59 +1,119 @@
+// /src/app/layout.tsx (CORRECTED - without next-intl)
+
 import type { Metadata } from "next";
-import { StateContext } from "./context/StateContext";
+import { AppStateProvider } from "./context/StateContext";
 import { Toaster } from "react-hot-toast";
 import AuthProvider from "./providers/AuthProvider";
-import Script from "next/script"; // Next.js ka script component import karein
+import Script from "next/script";
 import "./globals.css";
 
 import { ThemeProvider } from "next-themes";
 import MainLayoutClient from "./components/layout/MainLayoutClient";
-// --- NAYE IMPORTS ---
 import {
   getNavigationCategories,
   getSearchSuggestions,
+  getGlobalSettings,
 } from "@/sanity/lib/queries";
 import { SanityCategory } from "@/sanity/types/product_types";
 
-export const metadata: Metadata = {
-  title: "PocketValue | Modern Store",
-  description: "Your one-stop shop for amazing deals!",
-  icons: {
-    icon: "/usamabrand.svg",
-  },
-};
+// Removed next-intl related imports
+
+import { generateBaseMetadata } from "@/utils/metadata";
+import { urlFor } from "@/sanity/lib/image";
+
+// Removed generateStaticParams for locales
+
+// Updated generateMetadata to not expect a 'locale' param
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getGlobalSettings();
+
+  return generateBaseMetadata({
+    title: settings.seo?.metaTitle,
+    description: settings.seo?.metaDescription,
+    image: settings.seo?.ogImage,
+    path: `/`, // Set the canonical path for the homepage
+  });
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
+  // Removed 'params' as it's no longer needed for locales
 }>) {
-  // --- DATA FETCHING YAHAN HO RAHA HAI ---
-  const categories: SanityCategory[] = await getNavigationCategories();
-  const searchSuggestions = await getSearchSuggestions();
+  
+  // Removed 'locale' and 'getMessages' call
+  const [categories, searchSuggestions, globalSettings] =
+    await Promise.all([
+      getNavigationCategories() as Promise<SanityCategory[]>,
+      getSearchSuggestions(),
+      getGlobalSettings(),
+    ]);
 
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: globalSettings.siteName || "PocketValue",
+    url: siteUrl,
+    logo: globalSettings.siteLogo
+      ? urlFor(globalSettings.siteLogo).url()
+      : `${siteUrl}/icon.svg`,
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: globalSettings.storePhoneNumber || "",
+      contactType: "Customer Service",
+    },
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: globalSettings.siteName || "PocketValue",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  // The 'lang' attribute can be set to a default language, e.g., 'en'
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+
+        {/* Removed the NextIntlClientProvider wrapper */}
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
-            <StateContext>
+            <AppStateProvider>
               <Toaster />
-              {/* --- DATA AAGEY PASS HO RAHA HAI --- */}
               <MainLayoutClient
-                categories={categories}
+                categories={categories || []}
                 searchSuggestions={
                   searchSuggestions || {
                     trendingKeywords: [],
                     popularCategories: [],
                   }
                 }
+                globalSettings={globalSettings || {}}
               >
                 {children}
               </MainLayoutClient>
-            </StateContext>
+            </AppStateProvider>
           </AuthProvider>
         </ThemeProvider>
-        {/* --- YEH SCRIPT YAHAN ADD KAREIN --- */}
+
         <Script src="https://www.google.com/recaptcha/api.js" async defer />
       </body>
     </html>

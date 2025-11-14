@@ -29,7 +29,7 @@ const TabButton = ({
 }) => (
   <button
     onClick={() => onClick(id)}
-    className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition-all duration-200 border-b-2
+    className={`grow sm:grow-0 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition-all duration-200 border-b-2
     ${
       isActive
         ? "border-brand-primary text-text-primary dark:text-gray-100"
@@ -86,7 +86,7 @@ export default function ProductDetailsTabs({
               )}
             </div>
             {hasLongDescription && !isDescriptionExpanded && (
-              <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white dark:from-gray-800/50 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-full h-24 bg-linear-to-t from-white dark:from-gray-800/50 to-transparent pointer-events-none" />
             )}
             {hasLongDescription && (
               <div className="pt-4 text-center">

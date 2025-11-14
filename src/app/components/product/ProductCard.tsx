@@ -94,7 +94,7 @@ export default function ProductCard({
           </div>
 
           {/* Content Section */}
-          <div className="p-4 flex flex-col flex-grow">
+          <div className="p-4 flex flex-col grow">
             <h3 className="text-sm text-text-primary dark:text-gray-200 font-semibold line-clamp-2 h-10">
               {product.title}
             </h3>

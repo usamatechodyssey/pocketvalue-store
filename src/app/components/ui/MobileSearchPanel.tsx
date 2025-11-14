@@ -93,7 +93,7 @@ export default function SearchPanel({
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed inset-0 top-auto h-[calc(100dvh-5rem)] bg-gray-50 dark:bg-gray-900 z-50 flex flex-col rounded-t-2xl shadow-2xl md:hidden"
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                 Search Products
               </h2>
@@ -104,7 +104,7 @@ export default function SearchPanel({
                 <X size={24} />
               </button>
             </div>
-            <div className="p-4 flex-shrink-0">
+            <div className="p-4 shrink-0">
               <SearchBar
                 searchSuggestions={{
                   trendingKeywords: [],
@@ -112,7 +112,7 @@ export default function SearchPanel({
                 }}
               />
             </div>
-            <div className="flex-grow overflow-y-auto px-4 pb-20">
+            <div className="grow overflow-y-auto px-4 pb-20">
               <motion.div
                 className="space-y-8"
                 initial="hidden"

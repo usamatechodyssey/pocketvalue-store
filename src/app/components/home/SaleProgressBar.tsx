@@ -13,7 +13,7 @@ export default function SaleProgressBar({ stock }: { stock: number | undefined }
     <div className="w-full mt-2">
       <div className="relative w-full h-2.5 bg-red-100 dark:bg-gray-700 rounded-full overflow-hidden">
         <div 
-          className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full"
+          className="absolute top-0 left-0 h-full bg-linear-to-r from-red-400 to-red-600 rounded-full"
           style={{ width: `${percentageSold}%` }}
         />
       </div>

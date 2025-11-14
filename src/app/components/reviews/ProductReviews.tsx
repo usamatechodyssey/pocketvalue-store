@@ -219,7 +219,7 @@ export default function ProductReviews({
                     className="rounded-full object-cover"
                   />
                 ) : (
-                  <UserCircle className="w-10 h-10 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                  <UserCircle className="w-10 h-10 text-gray-400 dark:text-gray-500 shrink-0" />
                 )}
                 <div>
                   <p className="font-semibold text-gray-800 dark:text-gray-100">
@@ -228,7 +228,7 @@ export default function ProductReviews({
                   <StarRating rating={review.rating} />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 pl-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 shrink-0 pl-2">
                 {new Date(review._createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",

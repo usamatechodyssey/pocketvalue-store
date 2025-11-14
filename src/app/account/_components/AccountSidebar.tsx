@@ -1,6 +1,6 @@
+// /src/app/account/_components/AccountSidebar.tsx
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -18,54 +18,62 @@ const sidebarNavItems = [
   { title: "Dashboard", href: "/account", icon: LayoutDashboard },
   { title: "My Orders", href: "/account/orders", icon: ShoppingBag },
   { title: "My Profile", href: "/account/profile", icon: UserIcon },
-  { title: "My Addresses", href: "/account/addresses", icon: MapPin },
+  { title: "Address Book", href: "/account/addresses", icon: MapPin },
+  { title: "Return", href: "/account/returns", icon: MapPin },
 ];
 
 export default function AccountSidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
+  // Loading state for user info
   if (status === "loading") {
     return (
-        <div className="bg-white dark:bg-gray-800/50 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex justify-center items-center h-64">
-            <Loader2 className="animate-spin text-brand-primary" />
-        </div>
-    )
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex justify-center items-center">
+        <Loader2 className="animate-spin text-brand-primary" size={32} />
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full">
       {/* User Info Box */}
       <div className="p-4 flex items-center gap-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+        <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
           {session?.user?.image ? (
             <Image
               src={session.user.image}
               alt={session.user.name || "User"}
               fill
+              sizes="48px"
               className="object-cover"
             />
           ) : (
             <div className="flex items-center justify-center h-full w-full">
-                <UserIcon className="h-6 w-6 text-gray-400" />
+              <UserIcon className="h-6 w-6 text-gray-400" />
             </div>
           )}
         </div>
         <div>
-            <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">
-            {session?.user?.name || "Customer"}
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">
+            {session?.user?.name || "Valued Customer"}
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
             {session?.user?.email}
-            </p>
+          </p>
         </div>
       </div>
 
       {/* Navigation Links */}
-      <nav className="p-4">
+      <nav className="p-4 grow">
         <ul className="space-y-1">
           {sidebarNavItems.map((item) => {
-            const isActive = pathname === item.href;
+            // More robust check: also highlights child routes like /account/orders/[orderId]
+            const isActive =
+              item.href === "/account"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+
             return (
               <li key={item.title}>
                 <Link
@@ -76,6 +84,7 @@ export default function AccountSidebar() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                   }`}
                 >
+                  {/* Active state indicator bar */}
                   {isActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-brand-primary rounded-r-full"></div>
                   )}

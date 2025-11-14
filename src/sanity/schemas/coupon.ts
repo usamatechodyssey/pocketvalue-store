@@ -1,15 +1,15 @@
 import {defineField, defineType} from 'sanity'
-import {RocketIcon} from '@sanity/icons'
+import { TicketIcon } from 'lucide-react';
 
 export default defineType({
   name: 'coupon',
-  title: 'Coupons & Discounts',
+  title: 'Coupons',
   type: 'document',
-  icon: RocketIcon,
+  icon: TicketIcon,
   groups: [
     {name: 'main', title: 'Main Details', default: true},
     {name: 'rules', title: 'Usage Rules & Conditions'},
-    {name: 'targeting', title: 'Targeting'},
+    {name: 'applicability', title: 'Applicability'},
   ],
   fields: [
     // --- Main Details Group ---
@@ -23,12 +23,22 @@ export default defineType({
     }),
     defineField({
       name: 'description',
-      title: 'Description',
+      title: 'Description (Internal Use)',
       type: 'string',
-      description: 'Internal note for what this coupon is for (e.g., "Welcome discount for new signups").',
+      description: 'A short note for what this coupon is for (e.g., "Welcome discount for new signups").',
       validation: (Rule) => Rule.required(),
       group: 'main',
     }),
+    defineField({
+      name: 'isActive',
+      title: 'Is Active?',
+      type: 'boolean',
+      description: 'Turn this coupon on or off for all customers.',
+      initialValue: true,
+      group: 'main',
+    }),
+
+    // --- Usage Rules Group ---
     defineField({
       name: 'discountType',
       title: 'Discount Type',
@@ -36,114 +46,115 @@ export default defineType({
       options: { list: [ {title: 'Percentage (%)', value: 'percentage'}, {title: 'Fixed Amount (Rs.)', value: 'fixed'}, {title: 'Free Shipping', value: 'freeShipping'}, ], layout: 'radio' },
       initialValue: 'percentage',
       validation: (Rule) => Rule.required(),
-      group: 'main',
+      group: 'rules',
     }),
     defineField({
       name: 'discountValue',
       title: 'Discount Value',
       type: 'number',
-      description: 'Enter the value (e.g., 15 for 15%). Not needed for Free Shipping.',
+      description: 'Enter the value (e.g., 15 for 15%, or 500 for Rs. 500). Not needed for Free Shipping.',
       hidden: ({parent}) => parent?.discountType === 'freeShipping',
-      validation: (Rule) => Rule.positive().error('Value must be positive.'),
-      group: 'main',
+      validation: (Rule) => Rule.positive().error('Value must be a positive number.'),
+      group: 'rules',
     }),
     defineField({
         name: 'maximumDiscount',
         title: 'Maximum Discount (Rs.)',
         type: 'number',
-        description: 'Optional. For percentage discounts, cap the discount at this amount (e.g., 20% off, up to a maximum of Rs. 1,000).',
+        description: 'Optional: For percentage discounts, cap the discount at this amount (e.g., 20% off, up to a maximum of Rs. 1,000).',
         hidden: ({parent}) => parent?.discountType !== 'percentage',
-        group: 'main',
+        validation: (Rule) => Rule.positive(),
+        group: 'rules',
     }),
-    defineField({
-      name: 'isActive',
-      title: 'Active',
-      type: 'boolean',
-      description: 'Turn this coupon on or off.',
-      initialValue: true,
-      group: 'main',
-    }),
-
-    // --- Usage Rules Group ---
     defineField({
         name: 'minimumPurchaseAmount',
         title: 'Minimum Purchase Amount (Rs.)',
         type: 'number',
-        description: 'Optional. The coupon will only apply if the cart total is above this amount.',
-        initialValue: 0,
+        description: 'Optional: The coupon will only apply if the cart total is above this amount.',
         group: 'rules',
     }),
     defineField({
         name: 'startDate',
         title: 'Start Date',
         type: 'datetime',
-        description: 'Optional. The coupon becomes active from this date.',
+        description: 'Optional: The coupon becomes active from this date and time.',
         group: 'rules',
     }),
     defineField({
       name: 'expiryDate',
       title: 'Expiry Date',
       type: 'datetime',
-      description: 'Optional. The coupon will not be valid after this date.',
+      description: 'Optional: The coupon will not be valid after this date and time.',
       group: 'rules',
     }),
     defineField({
         name: 'totalUsageLimit',
-        title: 'Total Usage Limit',
+        title: 'Total Usage Limit (for all customers)',
         type: 'number',
-        description: 'Optional. Total number of times this coupon can be used across all customers.',
+        description: 'Optional: Total number of times this coupon can be used across all customers.',
+        validation: (Rule) => Rule.integer().positive(),
         group: 'rules',
     }),
+    // === YEH NAYA FIELD ADD KAREIN ===
     defineField({
         name: 'usageLimitPerUser',
         title: 'Usage Limit Per Customer',
         type: 'number',
-        description: 'How many times a single customer (identified by phone/email) can use this coupon.',
+        description: 'Optional: How many times a single customer can use this coupon. Leave blank for unlimited.',
         initialValue: 1,
-        validation: (Rule) => Rule.required().min(1),
+        validation: Rule => Rule.integer().positive(),
         group: 'rules',
     }),
-
-    // --- Targeting Group ---
+    // --- Applicability Group ---
     defineField({
-        name: 'forNewCustomersOnly',
-        title: 'For New Customers Only',
+        name: 'isStackable',
+        title: 'Stackable Discount',
         type: 'boolean',
-        description: 'If ON, this coupon only works for users who have not placed any orders yet.',
+        description: 'If ON, this coupon can be used even if a product is already on sale.',
         initialValue: false,
-        group: 'targeting',
+        group: 'applicability',
+    }),
+    // --- IMPROVEMENT #1: CONDITIONAL LOGIC FOR APPLICABILITY ---
+    defineField({
+      name: 'applicableTo',
+      title: 'Applicable To',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Entire Order', value: 'entireOrder' },
+          { title: 'Specific Products', value: 'specificProducts' },
+          { title: 'Specific Categories', value: 'specificCategories' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'entireOrder',
+      group: 'applicability',
     }),
     defineField({
         name: 'applicableProducts',
-        title: 'Apply to Specific Products ONLY',
+        title: 'Specific Products',
         type: 'array',
-        description: 'Optional. If you select products, the coupon will ONLY apply to them.',
+        description: 'The coupon will ONLY apply to these selected products.',
         of: [{type: 'reference', to: [{type: 'product'}]}],
-        group: 'targeting',
+        hidden: ({parent}) => parent?.applicableTo !== 'specificProducts',
+        group: 'applicability',
     }),
     defineField({
         name: 'applicableCategories',
-        title: 'Apply to Specific Categories ONLY',
+        title: 'Specific Categories',
         type: 'array',
-        description: 'Optional. If you select categories, the coupon ONLY applies to products in them.',
+        description: 'The coupon will ONLY apply to products within these selected categories.',
         of: [{type: 'reference', to: [{type: 'category'}]}],
-        group: 'targeting',
-    }),
-    defineField({
-      name: 'isStackable',
-      title: 'Can be used with other discounts?',
-      type: 'boolean',
-      description: 'If ON, this coupon can be used even if a product is already on sale.',
-      initialValue: false,
-      group: 'targeting',
+        hidden: ({parent}) => parent?.applicableTo !== 'specificCategories',
+        group: 'applicability',
     }),
   ],
   preview: {
     select: { code: 'code', type: 'discountType', value: 'discountValue', isActive: 'isActive' },
     prepare({code, type, value, isActive}) {
       let discount = '';
-      if (type === 'percentage') discount = `${value}%`;
-      else if (type === 'fixed') discount = `Rs. ${value}`;
+      if (type === 'percentage') discount = `${value || 0}%`;
+      else if (type === 'fixed') discount = `Rs. ${value || 0}`;
       else if (type === 'freeShipping') discount = 'Free Shipping';
       return { title: code, subtitle: `${discount} - ${isActive ? 'Active' : 'Inactive'}` }
     },
