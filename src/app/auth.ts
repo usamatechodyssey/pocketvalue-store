@@ -1,5 +1,4 @@
-
-// /src/auth.ts
+// /src/auth.ts (COMPLETE, UPDATED & FINAL CODE)
 
 import NextAuth from "next-auth";
 import type { NextAuthConfig, User as NextAuthUser } from "next-auth";
@@ -12,18 +11,19 @@ import { Types } from "mongoose";
 import connectMongoose from "@/app/lib/mongoose";
 import User, { IUser } from "@/models/User";
 
-// --- BUG FIX: .lean() ke liye ek alag, saaf suthri type banayein ---
-// Yeh type Mongoose Document ki properties ke bagher hai
+// Type for a plain user object from Mongoose's .lean() method
 type LeanUser = Omit<IUser, keyof Document | '_v'> & {
   _id: Types.ObjectId;
 };
 
-// --- REFACTORED Helper function to use Mongoose with correct types ---
+// Refactored helper function to get a full user object with the correct type
 async function getFullUser(email: string): Promise<LeanUser | null> {
     await connectMongoose();
-    // Ab .lean() ki return type wazeh hai
     return User.findOne({ email }).lean<LeanUser>();
 }
+
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const authOptions: NextAuthConfig = {
   providers: [
     Google({
@@ -54,7 +54,6 @@ export const authOptions: NextAuthConfig = {
             
             const passwordsMatch = await bcrypt.compare(password as string, userDoc.password);
             if (passwordsMatch) {
-              // --- BUG FIX: 'role' ko yahan return karna lazmi hai ---
               return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email, image: userDoc.image, role: userDoc.role };
             }
         } catch (error) { 
@@ -80,7 +79,7 @@ export const authOptions: NextAuthConfig = {
                 if (existingUser) {
                     if (!existingUser.phoneVerified) return `/verify-phone?email=${email}`;
                     user.id = existingUser._id.toString();
-                    user.role = existingUser.role; // BUG FIX: user object mein role add karein
+                    user.role = existingUser.role;
                     if (image && existingUser.image !== image) {
                        existingUser.image = image;
                        await existingUser.save();
@@ -89,7 +88,7 @@ export const authOptions: NextAuthConfig = {
                     const newUser = new User({ name, email, image, emailVerified: new Date() });
                     const savedUser = await newUser.save();
                     user.id = savedUser._id.toString();
-                    user.role = savedUser.role; // BUG FIX: user object mein role add karein
+                    user.role = savedUser.role;
                     return `/verify-phone?email=${email}`;
                 }
                 return true; 
@@ -101,20 +100,18 @@ export const authOptions: NextAuthConfig = {
         return true;
     },
 
-    async jwt({ token, user, trigger, session: _session }) { // 'session' ko '_session' kar diya taake "unused" ka error na aaye
+    async jwt({ token, user, trigger, session: _session }) {
       await connectMongoose();
       if (user) { // Initial sign-in
-        // user object ab 'signIn' callback se aa raha hai
         token.id = user.id;
         token.role = user.role;
         
-        // phone number ke liye DB se dobara fetch karein
         const dbUser = await User.findById(user.id).lean<LeanUser>();
         if (dbUser) {
             token.phone = dbUser.phone;
         }
       }
-      if (trigger === "update") { // Session update hone par
+      if (trigger === "update") { // On session update
         const freshUser = await User.findById(token.id as string).lean<LeanUser>();
         if (freshUser) {
             token.name = freshUser.name;
@@ -126,7 +123,6 @@ export const authOptions: NextAuthConfig = {
     
     async session({ session, token }) {
       if (token && session.user) {
-        // --- BUG FIX: Ab `as any` ki zaroorat nahi ---
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.phone = token.phone as string | null;
@@ -134,13 +130,43 @@ export const authOptions: NextAuthConfig = {
       return session;
     },
   },
+  
+  // ======================= THE FINAL, MOST ROBUST COOKIE CONFIGURATION =======================
+  useSecureCookies: isProduction, // Use secure cookies in production, but not in development (http://localhost)
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`, // Removed __Secure prefix for simplicity and better cross-environment compatibility
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+        // Domain is only set for production to handle subdomains (www)
+        domain: isProduction ? '.pocketvalue.pk' : undefined,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+        domain: isProduction ? '.pocketvalue.pk' : undefined,
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`, // Using a simpler name without __Host-
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+        // Domain should NOT be set for the CSRF token on localhost
+        domain: isProduction ? '.pocketvalue.pk' : undefined,
+      }
+    },
+  },
+  // ==============================================================================
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
-
-// --- SUMMARY OF CHANGES ---
-// - **Critical TypeScript Fix (`.lean()`):** Main ne ek nayi `LeanUser` type banayi hai jo Mongoose ke `.lean()` function ke return type ko sahi tareeqe se define karti hai. Is se `Property does not exist` ke tamam errors hal ho gaye hain.
-// - **`authorize` Callback Fix:** `authorize` function ab `role` ko user object ke sath return kar raha hai, jis se `next-auth.d.ts` ki shart poori ho gayi hai.
-// - **`signIn` Callback Fix:** Social login ke `signIn` callback mein ab `user` object ke andar `role` ko bhi shamil kiya ja raha hai taake yeh `jwt` callback tak pohanch sake.
-// - **End-to-End Type Safety (`session` callback):** `session` callback mein se `as any` ko mukammal taur par hata diya gaya hai. Ab hamari custom `next-auth.d.ts` file ki wajah se session object 100% type-safe hai.
-// - **Code Quality:** `jwt` callback mein unused `session` parameter ko `_session` ka naam de diya gaya hai, jo ke ek behtar practice hai.

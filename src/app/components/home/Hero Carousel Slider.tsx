@@ -1,58 +1,13 @@
-// app/components/ui/HeroCarousel.tsx (MUKAMMAL FINAL CODE)
+// app/components/ui/HeroCarousel.tsx (FINAL CODE - WITHOUT DRAGGING)
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useKeenSlider, KeenSliderPlugin } from "keen-slider/react";
-import "keen-slider/keen-slider.min.css"; // Keen Slider ki CSS import karein
+import { useKeenSlider, KeenSliderInstance } from "keen-slider/react";
+import "keen-slider/keen-slider.min.css";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { HeroCarouselSlide } from "@/sanity/types/carouselTypes";
-
-// Yeh plugin slider ko mouse se drag karne ki functionality deta hai
-const DraggablePlugin: KeenSliderPlugin = (slider) => {
-  let touchTimeout: ReturnType<typeof setTimeout>;
-  let position: { x: number; y: number };
-  let anabled = false;
-
-  function unify(e: TouchEvent | MouseEvent) {
-    return "changedTouches" in e ? e.changedTouches[0] : e;
-  }
-
-  function mousemove(e: MouseEvent) {
-    e.preventDefault();
-    if (!anabled) return;
-    const p = unify(e);
-    const deltaX = p.pageX - position.x;
-    position = { x: p.pageX, y: p.pageY };
-    if (Math.abs(deltaX) > Math.abs(p.pageY - position.y)) {
-      slider.container.style.cursor = "grabbing";
-      slider.track.add(deltaX);
-    }
-  }
-
-  function mousedown(e: MouseEvent) {
-    e.preventDefault();
-    const p = unify(e);
-    position = { x: p.pageX, y: p.pageY };
-    anabled = true;
-    slider.container.style.cursor = "grabbing";
-    slider.container.addEventListener("mousemove", mousemove);
-  }
-
-  function mouseup(e: MouseEvent) {
-    e.preventDefault();
-    anabled = false;
-    slider.container.style.cursor = "grab";
-    slider.container.removeEventListener("mousemove", mousemove);
-  }
-
-  slider.on("created", () => {
-    slider.container.style.cursor = "grab";
-    slider.container.addEventListener("mousedown", mousedown);
-    slider.container.addEventListener("mouseup", mouseup);
-  });
-};
 
 // Main Carousel Component
 export default function HeroCarousel({
@@ -62,25 +17,45 @@ export default function HeroCarousel({
 }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>(
-    {
-      loop: true, // Slides ko loop mein chalayein
-      slideChanged: (s) => setCurrentSlide(s.track.details.rel),
-      created() {
-        setLoaded(true); // Slider load hone par state update karein
-      },
-    },
-    [DraggablePlugin] // Dragging plugin ko yahan enable karein
-  );
+  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
+    loop: true, // Slides ko loop mein chalayein
+    initial: 0,
+    slideChanged: (s) => setCurrentSlide(s.track.details.rel),
+    created: () => setLoaded(true), // Slider load hone par state update karein
+  });
 
-  // Auto-play functionality ke liye useEffect hook
+  // Autoplay functionality with pause-on-hover
   useEffect(() => {
-    const timer = setInterval(() => {
-      instanceRef.current?.next();
-    }, 4000); // Har 4 second mein slide change hogi
+    const startAutoplay = () => {
+      autoplayTimerRef.current = setInterval(() => {
+        instanceRef.current?.next();
+      }, 4000); // Har 4 second mein slide change hogi
+    };
+
+    const stopAutoplay = () => {
+      if (autoplayTimerRef.current) {
+        clearInterval(autoplayTimerRef.current);
+      }
+    };
+
+    const sliderContainer = instanceRef.current?.container;
+    if (sliderContainer) {
+      // Jab user mouse slider par laye, to autoplay rok dein
+      sliderContainer.addEventListener("mouseover", stopAutoplay);
+      // Jab mouse hataye, to dobara shuru kar dein
+      sliderContainer.addEventListener("mouseout", startAutoplay);
+      startAutoplay(); // Initial autoplay start
+    }
+
+    // Component unmount hone par timer aur listeners saaf karein
     return () => {
-      clearInterval(timer); // Component unmount hone par timer saaf karein
+      stopAutoplay();
+      if (sliderContainer) {
+        sliderContainer.removeEventListener("mouseover", stopAutoplay);
+        sliderContainer.removeEventListener("mouseout", startAutoplay);
+      }
     };
   }, [instanceRef]);
 
@@ -90,13 +65,11 @@ export default function HeroCarousel({
   }
 
   return (
-    // Section ko side se padding di gayi hai taake yeh mobile par contained lage
-    <section className="w-full px-0 md:px-2 lg:px-2 py-0 bg-surface-ground dark:bg-gray-950">
-      <div className="w-full mx-auto relative">
+    <section className="w-full py-4 sm:px-2 md:px-4">
+      <div className="w-full mx-auto relative group">
         <div
           ref={sliderRef}
-          // Slider ko rounded corners aur responsive height di gayi hai
-          className={`keen-slider hero-carousel-slider rounded-xl overflow-hidden ${
+          className={`keen-slider hero-carousel-slider rounded-lg md:rounded-xl overflow-hidden aspect-2/1 md:aspect-3/1 lg:aspect-[3.5/1] ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           style={{ transition: "opacity 0.5s" }}
@@ -108,26 +81,25 @@ export default function HeroCarousel({
             >
               <Link
                 href={banner.link || "#"}
-                className="block w-full h-full"
-                aria-label={banner.title || "Promotional banner"}
+                className="block w-full h-full outline-none"
+                aria-label={`View deal: ${banner.title}`}
               >
                 <picture>
-                  {/* Mobile devices ke liye alag, choti image */}
                   <source
                     media="(max-width: 767px)"
                     srcSet={banner.mobileImage}
                   />
-                  {/* Desktop devices ke liye alag, bari image */}
                   <source
                     media="(min-width: 768px)"
                     srcSet={banner.desktopImage}
                   />
-                  {/* Fallback image agar browser <picture> support na kare */}
                   <img
                     src={banner.desktopImage}
                     alt={banner.title || "Promotional banner"}
                     className="w-full h-full object-cover"
-                    loading="eager" // Pehli image ko foran load karein (LCP Optimization)
+                    loading="eager"
+                    decoding="sync"
+                    fetchPriority="high"
                   />
                 </picture>
               </Link>
@@ -135,7 +107,7 @@ export default function HeroCarousel({
           ))}
         </div>
 
-        {/* Navigation Arrows (Sirf Tablet aur Desktop par nazar aayenge) */}
+        {/* Navigation Arrows (Group-hover par nazar aayenge) */}
         {loaded && instanceRef.current && (
           <>
             <button
@@ -144,7 +116,7 @@ export default function HeroCarousel({
                 instanceRef.current?.prev();
               }}
               aria-label="Previous slide"
-              className="hidden md:block absolute top-1/2 left-4 -translate-y-1/2 bg-white/70 hover:bg-white p-2 rounded-full shadow-md transition-all duration-300 hover:scale-110 focus:outline-none"
+              className="absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 bg-white/60 hover:bg-white p-2 rounded-full shadow-md transition-all duration-300 opacity-0 group-hover:opacity-100 focus:outline-none"
             >
               <FiChevronLeft size={24} className="text-gray-800" />
             </button>
@@ -154,14 +126,14 @@ export default function HeroCarousel({
                 instanceRef.current?.next();
               }}
               aria-label="Next slide"
-              className="hidden md:block absolute top-1/2 right-4 -translate-y-1/2 bg-white/70 hover:bg-white p-2 rounded-full shadow-md transition-all duration-300 hover:scale-110 focus:outline-none"
+              className="absolute top-1/2 right-2 sm:right-4 -translate-y-1/2 bg-white/60 hover:bg-white p-2 rounded-full shadow-md transition-all duration-300 opacity-0 group-hover:opacity-100 focus:outline-none"
             >
               <FiChevronRight size={24} className="text-gray-800" />
             </button>
           </>
         )}
 
-        {/* Pagination Dots (Image ke upar, neeche center mein) */}
+        {/* Pagination Dots */}
         {loaded && instanceRef.current && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-2">
             {banners.map((_, idx) => (
@@ -170,8 +142,8 @@ export default function HeroCarousel({
                 onClick={() => instanceRef.current?.moveToIdx(idx)}
                 className={`w-2 h-2 rounded-full transition-all duration-300 focus:outline-none ${
                   currentSlide === idx
-                    ? "w-4 bg-orange-500" // Active dot ka style
-                    : "bg-white/70 hover:bg-white" // Inactive dot ka style
+                    ? "w-4 bg-orange-500 scale-110" // Active dot style
+                    : "bg-white/70 hover:bg-white" // Inactive dot style
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               ></button>
@@ -182,3 +154,9 @@ export default function HeroCarousel({
     </section>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - Dragging Plugin Removed: `DraggablePlugin` aur usse related tamam code (mousedown, mousemove, etc.) ko mukammal tor par hata diya gaya hai.
+// - Clean Initialization: `useKeenSlider` ab seedha options object ke sath initialize ho raha hai, bina kisi external plugin ke.
+// - Smooth Experience: Slider ab sirf arrows, dots, ya autoplay se hi chalega. Is se "mix plate" hone wala issue khatam ho gaya hai.
+// - Cursor Fix: `cursor: grab` aur `cursor: grabbing` ka logic bhi hata diya gaya hai, is liye ab aam arrow cursor hi nazar aayega, jo links ke liye behtar hai.

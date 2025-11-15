@@ -103,7 +103,7 @@
 //     </main>
 //   );
 // }
-// /src/app/page.tsx
+// /src/app/(main)/page.tsx (FINAL POLISHED CODE)
 
 import { client } from "@/sanity/lib/client";
 import {
@@ -117,6 +117,7 @@ import {
 } from "@/sanity/lib/queries";
 import { FlashSaleData, SanityImageObject } from "@/sanity/types/product_types";
 
+// Import all homepage components
 import HeroCarousel from "./components/home/Hero Carousel Slider";
 import ProductCarousel from "./components/home/ProductCarousel";
 import TripleBanner from "./components/home/TripleBanner";
@@ -127,16 +128,13 @@ import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
 import CategoryShowcase from "./components/home/CategoryShowcase";
 import FlashSaleSection from "./components/home/FlashSaleSection";
 import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
-import { generateBaseMetadata } from "@/utils/metadata"; // <-- IMPORT METADATA UTILITY
-import type { Metadata } from "next"; // <-- IMPORT METADATA TYPE
+import { generateBaseMetadata } from "@/utils/metadata";
+import type { Metadata } from "next";
 
-// --- NEW: Dynamic generateMetadata function for the homepage ---
-// This serves as the root metadata for the site.
+// --- Dynamic metadata for the homepage ---
 export async function generateMetadata(): Promise<Metadata> {
-  // We don't need to pass specific title or description here,
-  // as the utility will automatically use the global defaults from Sanity.
   return generateBaseMetadata({
-    path: "/", // The canonical path for the homepage
+    path: "/", // Canonical path for the homepage
   });
 }
 
@@ -170,16 +168,15 @@ export default async function Home() {
   const sectionBanners: SectionBanner[] = homepageData?.sectionBanners || [];
 
   return (
-    <main className="w-full">
-      <div className="w-full mt-8 mb-4">
-        <HeroCarousel banners={banners} />
-      </div>
+    <main className="w-full flex flex-col items-center">
+      {/* HeroCarousel is full-width, so it has its own padding control */}
+      <HeroCarousel banners={banners} />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* --- THE DEFINITIVE FIX IS HERE --- */}
+      {/* This single div will now control the padding and spacing for ALL sections below the hero banner. */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 md:space-y-16 lg:space-y-20">
         <Coupon />
-      </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8">
         {featuredCategoriesData?.featuredCategories?.length > 0 && (
           <CategoryShowcase
             title={featuredCategoriesData.featuredCategoriesTitle}
@@ -230,9 +227,7 @@ export default async function Home() {
 
         <InstagramWall data={instagramData} />
 
-        <div className="container mx-auto">
-          <TripleBanner banners={promoBanners} />
-        </div>
+        <TripleBanner banners={promoBanners} />
 
         <InfiniteProductGrid initialProducts={initialGridProducts} />
       </div>
