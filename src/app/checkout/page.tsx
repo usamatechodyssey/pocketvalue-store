@@ -1,9 +1,35 @@
-// /src/app/checkout/page.tsx
+// // /src/app/checkout/page.tsx
+
+// import type { Metadata } from "next";
+// import CheckoutForm from "./_components/CheckoutForm"; // Hamara naya, smart client component
+
+// // Ab metadata export bilkul theek kaam karega
+// export const metadata: Metadata = {
+//   robots: {
+//     index: false,
+//     follow: false,
+//   },
+// };
+
+// // === Main Shipping Page (SERVER COMPONENT) ===
+// export default function ShippingPage() {
+//   return (
+//     <div>
+//       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+//         Shipping Information
+//       </h1>
+
+//       {/* Tamam complex logic ab is client component ke andar hai */}
+//       <CheckoutForm />
+//     </div>
+//   );
+// }
+// /src/app/checkout/page.tsx (VERIFIED - NO CHANGES NEEDED)
 
 import type { Metadata } from "next";
-import CheckoutForm from "./_components/CheckoutForm"; // Hamara naya, smart client component
+import CheckoutForm from "./_components/CheckoutForm"; // Imports the interactive client component
 
-// Ab metadata export bilkul theek kaam karega
+// Metadata for the shipping page
 export const metadata: Metadata = {
   robots: {
     index: false,
@@ -11,7 +37,7 @@ export const metadata: Metadata = {
   },
 };
 
-// === Main Shipping Page (SERVER COMPONENT) ===
+// This is the main Server Component for the '/checkout' route.
 export default function ShippingPage() {
   return (
     <div>
@@ -19,8 +45,11 @@ export default function ShippingPage() {
         Shipping Information
       </h1>
 
-      {/* Tamam complex logic ab is client component ke andar hai */}
+      {/* It renders the CheckoutForm client component, which contains all the complex state and logic. */}
       <CheckoutForm />
     </div>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - No changes were required. This file correctly serves as a simple Server Component wrapper for the complex, interactive `CheckoutForm` client component. This is the ideal structure.

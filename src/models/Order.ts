@@ -69,7 +69,8 @@ const OrderSchema = new Schema<IOrder>({
     index: true, // Indexed for fast lookups in admin panel
   },
   userId: {
-    type: String,
+    type: String, // Explicitly defined as String
+    ref: 'User', // Reference to the User model
     required: true,
     index: true,
   },

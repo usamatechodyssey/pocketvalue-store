@@ -1,18 +1,28 @@
-// /src/app/register/page.tsx
+// /src/app/register/page.tsx (CORRECTED WITH SUSPENSE)
 
 import type { Metadata } from "next";
-import RegisterClient from "./RegisterClient"; // Import the client component
+import { Suspense } from "react"; // <-- Naya Import
+import { Loader2 } from "lucide-react"; // <-- Naya Import
+import RegisterClient from "./RegisterClient";
 
-// This is a Server Component, so metadata is allowed here.
 export const metadata: Metadata = {
   title: "Create Account | PocketValue",
   robots: {
-    index: false, // Disallow search engines from indexing the registration page
+    index: false,
     follow: true,
   },
 };
 
 export default function RegisterPage() {
-  // Render the Client Component which contains all the interactive logic.
-  return <RegisterClient />;
+  return (
+    // --- YAHAN BHI WAHI FIX HAI ---
+    // Hum RegisterClient ko Suspense boundary se wrap kar rahe hain.
+    <Suspense fallback={
+      <div className="flex w-full min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="animate-spin text-brand-primary" size={40} />
+      </div>
+    }>
+      <RegisterClient />
+    </Suspense>
+  );
 }

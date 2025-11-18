@@ -1,4 +1,112 @@
-// /src/app/forgot-password/ForgotPasswordClient.tsx
+// // /src/app/forgot-password/ForgotPasswordClient.tsx
+
+// "use client";
+
+// import { useState } from "react";
+// import { toast } from "react-hot-toast";
+// import Link from "next/link";
+// import { Mail, Loader2, KeyRound } from "lucide-react";
+// import { requestPasswordReset } from "@/app/actions/authActions";
+
+// // METADATA EXPORT HAS BEEN REMOVED FROM THIS FILE
+
+// export default function ForgotPasswordClient() {
+//   // Renamed from ForgotPasswordPage
+//   const [email, setEmail] = useState("");
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [isSubmitted, setIsSubmitted] = useState(false);
+
+//   const inputStyles =
+//     "appearance-none block w-full rounded-md border-0 py-2.5 px-3.5 text-gray-900 bg-white dark:text-white dark:bg-gray-900 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm";
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setIsLoading(true);
+//     const result = await requestPasswordReset(email);
+//     setIsLoading(false);
+
+//     if (result.success) {
+//       setIsSubmitted(true);
+//     } else {
+//       toast.error(result.message);
+//     }
+//   };
+
+//   if (isSubmitted) {
+//     return (
+//       <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-screen py-12 px-4">
+//         <div className="w-full max-w-md p-8 sm:p-10 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+//           <Mail size={48} className="mx-auto text-brand-primary mb-4" />
+//           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+//             Check Your Email
+//           </h1>
+//           <p className="text-gray-600 dark:text-gray-400 mt-2">
+//             If an account with that email exists, we've sent a link to reset
+//             your password.
+//           </p>
+//           <Link
+//             href="/login"
+//             className="mt-6 inline-block text-sm font-semibold text-brand-primary hover:underline"
+//           >
+//             ← Back to Login
+//           </Link>
+//         </div>
+//       </main>
+//     );
+//   }
+//   return (
+//     <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-screen py-12 px-4">
+//       <div className="w-full max-w-md p-8 sm:p-10 space-y-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+//         <div className="text-center">
+//           <KeyRound size={40} className="mx-auto text-brand-primary mb-4" />
+//           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+//             Forgot Your Password?
+//           </h1>
+//           <p className="text-gray-600 dark:text-gray-400 mt-2">
+//             No problem. Enter your email and we'll send you a reset link.
+//           </p>
+//         </div>
+//         <form onSubmit={handleSubmit} className="space-y-6">
+//           <div>
+//             <label
+//               htmlFor="email-forgot"
+//               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+//             >
+//               Email Address
+//             </label>
+//             <input
+//               id="email-forgot"
+//               type="email"
+//               value={email}
+//               onChange={(e) => setEmail(e.target.value)}
+//               required
+//               autoComplete="email"
+//               className={`mt-1 ${inputStyles}`}
+//             />
+//           </div>
+//           <button
+//             type="submit"
+//             disabled={isLoading}
+//             className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed transition-colors"
+//           >
+//             {isLoading && <Loader2 className="animate-spin" size={20} />}
+//             {isLoading ? "Sending Link..." : "Send Reset Link"}
+//           </button>
+//         </form>
+//         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+//           Remembered your password?{" "}
+//           <Link
+//             href="/login"
+//             className="font-semibold text-brand-primary hover:underline"
+//           >
+//             Log in here
+//           </Link>
+//         </p>
+//       </div>
+//     </main>
+//   );
+// }
+// /src/app/forgot-password/ForgotPasswordClient.tsx (VERIFIED - NO CHANGES NEEDED)
 
 "use client";
 
@@ -8,10 +116,7 @@ import Link from "next/link";
 import { Mail, Loader2, KeyRound } from "lucide-react";
 import { requestPasswordReset } from "@/app/actions/authActions";
 
-// METADATA EXPORT HAS BEEN REMOVED FROM THIS FILE
-
 export default function ForgotPasswordClient() {
-  // Renamed from ForgotPasswordPage
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -22,12 +127,16 @@ export default function ForgotPasswordClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    // Calls the Server Action
     const result = await requestPasswordReset(email);
     setIsLoading(false);
 
+    // The server action always returns success to prevent user enumeration,
+    // so we can always show the success state.
     if (result.success) {
       setIsSubmitted(true);
     } else {
+      // This will only show if there's a critical server error (e.g., mail server down)
       toast.error(result.message);
     }
   };
@@ -106,3 +215,6 @@ export default function ForgotPasswordClient() {
     </main>
   );
 }
+
+// --- SUMMARY OF CHANGES ---
+// - No changes were required. The component correctly handles form state, calls the appropriate Server Action, and provides clear user feedback.

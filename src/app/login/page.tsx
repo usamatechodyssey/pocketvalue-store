@@ -1,18 +1,31 @@
-// /src/app/login/page.tsx
+// /src/app/login/page.tsx (CORRECTED WITH SUSPENSE)
 
 import type { Metadata } from "next";
-import LoginClient from "./LoginClient"; // Import the client component
+import { Suspense } from "react"; // <-- Naya Import
+import { Loader2 } from "lucide-react"; // <-- Naya Import
+import LoginClient from "./LoginClient";
 
-// This is a Server Component, so metadata is allowed here.
 export const metadata: Metadata = {
   title: "Login | PocketValue",
   robots: {
-    index: false, // Disallow search engines from indexing this page
-    follow: true, // Allow them to follow links on the page (like "Register")
+    index: false,
+    follow: true,
   },
 };
 
 export default function LoginPage() {
-  // Render the Client Component which contains all the interactive logic.
-  return <LoginClient />;
+  return (
+    // --- YAHAN ASAL FIX HAI ---
+    // Hum LoginClient ko Suspense boundary se wrap kar rahe hain.
+    <Suspense
+      fallback={
+        // 'fallback' batata hai ke jab tak component load ho, kya dikhana hai.
+        <div className="flex w-full min-h-screen items-center justify-center">
+          <Loader2 className="animate-spin text-brand-primary" size={40} />
+        </div>
+      }
+    >
+      <LoginClient />
+    </Suspense>
+  );
 }
