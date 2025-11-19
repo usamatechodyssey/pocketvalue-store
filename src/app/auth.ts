@@ -175,9 +175,6 @@
 // };
 
 // export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
-
-// /src/auth.ts (THE FINAL, DEFINITIVE JWT STRATEGY WITH MANUAL DB SYNC)
-
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -211,15 +208,33 @@ export const authOptions: NextAuthConfig = {
   trustHost: true,
   useSecureCookies: isProduction,
 
+  // === CRITICAL FIX FOR PRODUCTION ===
+  // Cookies configuration to handle domain mismatch (www vs non-www)
+  cookies: {
+    sessionToken: {
+      name: isProduction ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+        // Production me root domain use karein, Localhost me undefined rakhein
+        domain: isProduction ? '.pocketvalue.pk' : undefined, 
+      },
+    },
+  },
+
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
 
    Credentials({
@@ -227,10 +242,18 @@ export const authOptions: NextAuthConfig = {
         const { email, password } = credentials;
         try {
             const userDoc = await getFullUser(email as string);
+            
+            // 1. Check: Kya user exist karta hai?
             if (!userDoc) return null;
+            
+            // 2. Check: Kya user ka password hai? (Social login walo ka nahi hota)
             if (!userDoc.password) return null;
+            
+            // 3. Check: Kya Email Verified hai? (YE LINE AB ACTIVE HAI)
+            // Agar verify nahi hai, to error throw karega aur frontend pe toast dikhayega
             if (!userDoc.emailVerified) throw new Error("EmailNotVerified");
             
+            // 4. Check: Password match kar raha hai?
             const passwordsMatch = await bcrypt.compare(password as string, userDoc.password);
             if (passwordsMatch) {
               return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email, image: userDoc.image, role: userDoc.role };
@@ -248,63 +271,55 @@ export const authOptions: NextAuthConfig = {
   pages: { signIn: "/login", error: '/login' },
 
   callbacks: {
-    // --- THIS IS THE CRITICAL LOGIC FROM YOUR ORIGINAL FILE, NOW UPGRADED ---
     async signIn({ user, account }) {
+        // Social Login Logic
         if (account?.provider === 'google' || account?.provider === 'facebook') {
             const { name, email, image } = user;
-            if (!email) {
-              // Social accounts must have an email
-              return false;
-            }
+            if (!email) return false;
+            
             try {
                 await connectMongoose();
                 let existingUser = await User.findOne({ email });
 
                 if (existingUser) {
-                    // User already exists, just update their image if it has changed
+                    // Update image if changed
                     if (image && existingUser.image !== image) {
                        existingUser.image = image;
                        await existingUser.save();
                     }
-                    // Pass the existing user's ID and role to the user object
-                    // so it can be passed to the JWT
                     user.id = existingUser._id.toString();
                     user.role = existingUser.role;
                 } else {
-                    // User does not exist, create a new one in the database
+                    // Create new user (Auto-Verified because Google/FB is trusted)
                     const newUser = new User({ 
                         name, 
                         email, 
                         image, 
-                        emailVerified: new Date() // Social emails are considered verified
+                        emailVerified: new Date(), 
+                        role: 'customer'
                     });
                     const savedUser = await newUser.save();
-                    // Pass the new user's ID and role to the JWT
                     user.id = savedUser._id.toString();
                     user.role = savedUser.role;
                 }
-                // Allow the sign-in to proceed
                 return true; 
             } catch (error) {
                 console.error("Social Sign In DB Error:", error);
                 return false;
             }
         }
-        // Allow credentials sign-in to proceed
+        // Credentials Login ko allow karein (verification upar authorize me check ho chuki hai)
         return true;
     },
     
-    // This callback puts your custom data into the token.
     async jwt({ token, user }) {
       if (user) {
-        // On initial sign-in, `user` object is available from `signIn` or `authorize`
         token.id = user.id;
         token.role = user.role as 'customer' | 'Store Manager' | 'Super Admin' | 'Content Editor';
       }
       return token;
     },
     
-    // This callback puts data from the token into the session object.
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
@@ -316,6 +331,146 @@ export const authOptions: NextAuthConfig = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
+// // /src/auth.ts (THE FINAL, DEFINITIVE JWT STRATEGY WITH MANUAL DB SYNC)
+
+// import NextAuth from "next-auth";
+// import type { NextAuthConfig } from "next-auth";
+// import Credentials from "next-auth/providers/credentials";
+// import Google from "next-auth/providers/google";
+// import Facebook from "next-auth/providers/facebook";
+// import bcrypt from "bcryptjs";
+// import { Types } from "mongoose";
+
+// import connectMongoose from "@/app/lib/mongoose";
+// import User, { IUser } from "@/models/User";
+
+// // Type for a plain user object from Mongoose's .lean() method
+// type LeanUser = Omit<IUser, keyof Document | '_v'> & {
+//   _id: Types.ObjectId;
+// };
+
+// // Helper function to get a full user object with the correct type
+// async function getFullUser(email: string): Promise<LeanUser | null> {
+//     await connectMongoose();
+//     return User.findOne({ email }).lean<LeanUser>();
+// }
+
+// // Check if the environment is production
+// const isProduction = process.env.NODE_ENV === 'production';
+
+// export const authOptions: NextAuthConfig = {
+//   // Use JWT for session management
+//   session: { strategy: "jwt" },
+
+//   // These settings are crucial for Vercel's serverless environment
+//   trustHost: true,
+//   useSecureCookies: isProduction,
+
+//   providers: [
+//     Google({
+//       clientId: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//     }),
+    
+//     Facebook({
+//       clientId: process.env.FACEBOOK_CLIENT_ID,
+//       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+//     }),
+
+//    Credentials({
+//       async authorize(credentials) {
+//         const { email, password } = credentials;
+//         try {
+//             const userDoc = await getFullUser(email as string);
+//             if (!userDoc) return null;
+//             if (!userDoc.password) return null;
+//             if (!userDoc.emailVerified) throw new Error("EmailNotVerified");
+            
+//             const passwordsMatch = await bcrypt.compare(password as string, userDoc.password);
+//             if (passwordsMatch) {
+//               return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email, image: userDoc.image, role: userDoc.role };
+//             }
+//         } catch (error) { 
+//             if (error instanceof Error) throw error;
+//             return null; 
+//         }
+//         return null;
+//       },
+//     }),
+//   ],
+  
+//   secret: process.env.AUTH_SECRET,
+//   pages: { signIn: "/login", error: '/login' },
+
+//   callbacks: {
+//     // --- THIS IS THE CRITICAL LOGIC FROM YOUR ORIGINAL FILE, NOW UPGRADED ---
+//     async signIn({ user, account }) {
+//         if (account?.provider === 'google' || account?.provider === 'facebook') {
+//             const { name, email, image } = user;
+//             if (!email) {
+//               // Social accounts must have an email
+//               return false;
+//             }
+//             try {
+//                 await connectMongoose();
+//                 let existingUser = await User.findOne({ email });
+
+//                 if (existingUser) {
+//                     // User already exists, just update their image if it has changed
+//                     if (image && existingUser.image !== image) {
+//                        existingUser.image = image;
+//                        await existingUser.save();
+//                     }
+//                     // Pass the existing user's ID and role to the user object
+//                     // so it can be passed to the JWT
+//                     user.id = existingUser._id.toString();
+//                     user.role = existingUser.role;
+//                 } else {
+//                     // User does not exist, create a new one in the database
+//                     const newUser = new User({ 
+//                         name, 
+//                         email, 
+//                         image, 
+//                         emailVerified: new Date() // Social emails are considered verified
+//                     });
+//                     const savedUser = await newUser.save();
+//                     // Pass the new user's ID and role to the JWT
+//                     user.id = savedUser._id.toString();
+//                     user.role = savedUser.role;
+//                 }
+//                 // Allow the sign-in to proceed
+//                 return true; 
+//             } catch (error) {
+//                 console.error("Social Sign In DB Error:", error);
+//                 return false;
+//             }
+//         }
+//         // Allow credentials sign-in to proceed
+//         return true;
+//     },
+    
+//     // This callback puts your custom data into the token.
+//     async jwt({ token, user }) {
+//       if (user) {
+//         // On initial sign-in, `user` object is available from `signIn` or `authorize`
+//         token.id = user.id;
+//         token.role = user.role as 'customer' | 'Store Manager' | 'Super Admin' | 'Content Editor';
+//       }
+//       return token;
+//     },
+    
+//     // This callback puts data from the token into the session object.
+//     async session({ session, token }) {
+//       if (token && session.user) {
+//         session.user.id = token.id as string;
+//         session.user.role = token.role as 'customer' | 'Store Manager' | 'Super Admin' | 'Content Editor';
+//       }
+//       return session;
+//     },
+//   },
+// };
+
+// export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
 
 // --- SUMMARY OF CHANGES ---
 // - **Restored JWT Strategy:** Hum wapis `session: { strategy: "jwt" }` par aa gaye hain. `adapter` ko mukammal tor par hata diya gaya hai.
