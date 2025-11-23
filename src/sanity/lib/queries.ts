@@ -1009,14 +1009,14 @@ export async function getShippingRules(): Promise<ShippingRule[]> {
 }
 
 
+
 // =========================================================
-// === NEW CODE FOR GENERAL SETTINGS STARTS HERE ===
+// === UPDATED SETTINGS QUERY & TYPE ===
 // =========================================================
 
-// --- Define the Type for our settings object ---
 export interface GlobalSettings {
   siteName?: string;
-  siteLogo?: any; // Sanity Image Object
+  siteLogo?: any;
   storeContactEmail?: string;
   storePhoneNumber?: string;
   storeAddress?: string;
@@ -1025,15 +1025,22 @@ export interface GlobalSettings {
     instagram?: string;
     twitter?: string;
   };
-  // Add the SEO object to the type
+  topBarAnnouncements?: string[];
+  // === NEW FIELD ADDED HERE ===
+  secondaryNavLinks?: {
+    label: string;
+    url: string;
+    position: 'left' | 'right';
+    isHighlight: boolean;
+  }[];
+  // ============================
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
-    ogImage?: any; // Sanity Image Object
+    ogImage?: any;
   };
 }
 
-// --- Query to get all the general settings (UPDATED) ---
 const GET_GLOBAL_SETTINGS_QUERY = groq`
   *[_type == "settings" && _id == "settings"][0] {
     siteName,
@@ -1046,35 +1053,28 @@ const GET_GLOBAL_SETTINGS_QUERY = groq`
       instagram,
       twitter
     },
+    topBarAnnouncements,
+    // === NEW FIELD FETCHED HERE ===
+    secondaryNavLinks[] {
+      label,
+      url,
+      position,
+      isHighlight
+    },
+    // ==============================
     seo
   }
 `;
-// --- Cached function to fetch the settings ---
-// Using React's cache() ensures this function only runs once per request,
-// making it highly efficient for use in layouts.
-// export const getGlobalSettings = cache(async (): Promise<GlobalSettings> => {
-//   try {
-//     const settings = await client.fetch(GET_GLOBAL_SETTINGS_QUERY);
-//     return settings || {}; // Return empty object if no settings are found
-//   } catch (error) {
-//     console.error("Failed to fetch global settings:", error);
-//     return {}; // Return empty object on error to prevent site crashes
-//   }
-// });
 
-// --- Cached function to fetch the settings (No change to the function logic) ---
-// Using React's cache() ensures this function only runs once per request,
-// making it highly efficient for use in layouts.
 export const getGlobalSettings = cache(async (): Promise<GlobalSettings> => {
   try {
     const settings = await client.fetch(GET_GLOBAL_SETTINGS_QUERY);
-    return settings || {}; // Return empty object if no settings are found
+    return settings || {}; 
   } catch (error) {
     console.error("Failed to fetch global settings:", error);
-    return {}; // Return empty object on error to prevent site crashes
+    return {}; 
   }
 });
-
 // =========================================================
 // === NEW BREADCRUMB GENERATION LOGIC STARTS HERE ===
 // =========================================================

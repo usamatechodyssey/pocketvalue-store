@@ -1,131 +1,201 @@
-// app/components/layout/HeaderActions.tsx (FINAL & COMPLETE CODE)
+// "use client";
 
+// import Link from "next/link";
+// import { User, Heart, ShoppingCart, LogIn } from "lucide-react";
+// import { useStateContext } from "@/app/context/StateContext";
+// import { useSession } from "next-auth/react";
+// import { useEffect, useState } from "react";
+
+// export default function HeaderActions({ isMobile = false }) {
+//   const { totalQuantities, wishlistItems } = useStateContext();
+//   const { data: session, status } = useSession();
+//   const [mounted, setMounted] = useState(false);
+
+//   useEffect(() => {
+//     setMounted(true);
+//   }, []);
+
+//   if (!mounted) return <div className="w-20" />;
+
+//   const Badge = ({ count }: { count: number }) => {
+//     if (count <= 0) return null;
+//     return (
+//       <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900 animate-in zoom-in duration-300">
+//         {count > 9 ? "9+" : count}
+//       </span>
+//     );
+//   };
+
+//   // === MOBILE VIEW ===
+//   if (isMobile) {
+//     return (
+//       <div className="flex items-center gap-1">
+//         <Link href="/wishlist" className="relative p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all active:scale-95">
+//           <Heart size={22} strokeWidth={2} />
+//           <Badge count={wishlistItems.length} />
+//         </Link>
+//         <Link href="/cart" className="relative p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all active:scale-95">
+//           <ShoppingCart size={22} strokeWidth={2} />
+//           <Badge count={totalQuantities} />
+//         </Link>
+//       </div>
+//     );
+//   }
+
+//   // === DESKTOP & TABLET VIEW ===
+//   return (
+//     <div className="flex items-center gap-4 lg:gap-6">
+
+//       {/* 1. ACCOUNT (Text hidden on Tablet) */}
+//       <Link
+//         href={status === "authenticated" ? "/account" : "/login"}
+//         className="group flex items-center gap-2 lg:gap-3 hover:opacity-90 transition-opacity"
+//       >
+//         <div className="p-2 lg:p-2.5 bg-gray-50 dark:bg-gray-800 rounded-full group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors border border-gray-100 dark:border-gray-700">
+//           {status === "authenticated" ? <User size={20} strokeWidth={2.5} /> : <LogIn size={20} strokeWidth={2.5} />}
+//         </div>
+
+//         {/* 🔥 FIX: hidden on md, flex on lg (Laptop+) */}
+//         <div className="hidden lg:flex flex-col">
+//           <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide leading-tight">
+//             {status === "authenticated" ? "Welcome" : "Sign In"}
+//           </span>
+//           <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate max-w-[100px]">
+//             {status === "authenticated" && session?.user?.name
+//               ? session.user.name.split(" ")[0]
+//               : "Account"}
+//           </span>
+//         </div>
+//       </Link>
+
+//       <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1 hidden lg:block" />
+
+//       {/* 2. WISHLIST */}
+//       <Link
+//         href="/wishlist"
+//         className="group relative p-2 lg:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+//       >
+//         <Heart size={24} className="text-gray-600 dark:text-gray-300 group-hover:text-brand-primary transition-colors" strokeWidth={2} />
+//         <Badge count={wishlistItems.length} />
+//       </Link>
+
+//       {/* 3. CART */}
+//       <Link
+//         href="/cart"
+//         className="group relative p-2 lg:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+//       >
+//         <ShoppingCart size={24} className="text-gray-600 dark:text-gray-300 group-hover:text-brand-primary transition-colors" strokeWidth={2} />
+//         <Badge count={totalQuantities} />
+//       </Link>
+
+//     </div>
+//   );
+// }
 "use client";
 
 import Link from "next/link";
-import { FiUser, FiHeart, FiShoppingCart } from "react-icons/fi";
+import { User, Heart, ShoppingCart, LogIn } from "lucide-react";
 import { useStateContext } from "@/app/context/StateContext";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function HeaderActions({ isMobile = false }) {
   const { totalQuantities, wishlistItems } = useStateContext();
   const { data: session, status } = useSession();
-  const iconSize = 28; // Icon size for desktop/tablet
+  const [mounted, setMounted] = useState(false);
 
-  // === MOBILE VIEW LOGIC ===
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="w-20" />;
+
+  const Badge = ({ count }: { count: number }) => {
+    if (count <= 0) return null;
+    return (
+      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900 animate-in zoom-in duration-300">
+        {count > 9 ? "9+" : count}
+      </span>
+    );
+  };
+
+  // === MOBILE VIEW ===
   if (isMobile) {
     return (
-      <div className="flex items-center space-x-4">
-        {/* Account Icon */}
-        <Link
-          href="/account"
-          className="text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
-          title="My Account"
-        >
-          <FiUser size={22} />
-        </Link>
-
-        {/* Wishlist Icon */}
+      <div className="flex items-center gap-1">
         <Link
           href="/wishlist"
-          className="relative text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
-          title="Wishlist"
+          className="relative p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all active:scale-95"
         >
-          <FiHeart size={22} />
-          {wishlistItems.length > 0 && (
-            <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white font-bold rounded-full h-4 w-4 flex items-center justify-center">
-              {wishlistItems.length}
-            </span>
-          )}
+          <Heart size={22} strokeWidth={2} />
+          <Badge count={wishlistItems.length} />
         </Link>
-
-        {/* Cart Icon */}
         <Link
           href="/cart"
-          className="relative text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
-          title="Cart"
+          className="relative p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all active:scale-95"
         >
-          <FiShoppingCart size={22} />
-          {totalQuantities > 0 && (
-            <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white font-bold rounded-full h-4 w-4 flex items-center justify-center">
-              {totalQuantities}
-            </span>
-          )}
+          <ShoppingCart size={22} strokeWidth={2} />
+          <Badge count={totalQuantities} />
         </Link>
       </div>
     );
   }
 
-  // === DESKTOP & TABLET VIEW LOGIC ===
+  // === DESKTOP & TABLET VIEW ===
   return (
-
-    <div className="flex items-center space-x-6">
-      {/* === ACCOUNT SECTION (THE FIX IS HERE) === */}
+    <div className="flex items-center gap-4 lg:gap-6">
+      {/* 1. ACCOUNT (Visible on Tablet & Desktop now) */}
       <Link
         href={status === "authenticated" ? "/account" : "/login"}
-        className="flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors group"
+        className="group flex items-center gap-2 lg:gap-3 hover:opacity-90 transition-opacity"
       >
-        {/* Icon hamesha nazar aayega */}
-        <FiUser size={iconSize} />
+        <div className="p-2 lg:p-2.5 bg-gray-50 dark:bg-gray-800 rounded-full group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors border border-gray-100 dark:border-gray-700">
+          {status === "authenticated" ? (
+            <User size={20} strokeWidth={2.5} />
+          ) : (
+            <LogIn size={20} strokeWidth={2.5} />
+          )}
+        </div>
 
-        <div className="hidden lg:flex flex-col text-sm">
-          <span className="font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            Account
+        {/* 🔥 CHANGE: 'hidden md:flex' (Tablet par bhi text dikhega) */}
+        <div className="hidden md:flex flex-col">
+          <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide leading-tight">
+            {status === "authenticated" ? "Welcome" : "Sign In"}
           </span>
-
-          {/* Is span par ab sirf tooltip rahegi */}
-          <span
-            className="text-xs text-gray-500 leading-tight group-hover:text-orange-500"
-            title={
-              status === "authenticated"
-                ? session?.user?.name || ""
-                : "Hello, Sign in"
-            }
-          >
-            {(() => {
-              if (status === "authenticated" && session?.user?.name) {
-                const firstName = session.user.name.split(" ")[0];
-                // Yahan hum check kar rahe hain ke naam 10 haroof se lamba hai ya nahi
-                return firstName.length > 10
-                  ? `${firstName.substring(0, 10)}...` // Agar lamba hai to kaat kar ... laga do
-                  : firstName; // Warna poora pehla naam dikha do
-              }
-              return "Hello, Sign in";
-            })()}
+          <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate max-w-[100px]">
+            {status === "authenticated" && session?.user?.name
+              ? session.user.name.split(" ")[0]
+              : "Account"}
           </span>
         </div>
       </Link>
 
-      {/* === WISHLIST SECTION (No Changes) === */}
+      <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1 hidden lg:block" />
+
+      {/* 2. WISHLIST */}
       <Link
         href="/wishlist"
-        className="relative flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
+        className="group relative p-2 lg:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
       >
-        <FiHeart size={iconSize} />
-        <div className="hidden lg:flex flex-col text-sm">
-          <span className="font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            Wishlist
-          </span>
-          <span className="text-xs text-gray-500 leading-tight">
-            {wishlistItems.length} item(s)
-          </span>
-        </div>
+        <Heart
+          size={24}
+          className="text-gray-600 dark:text-gray-300 group-hover:text-brand-primary transition-colors"
+          strokeWidth={2}
+        />
+        <Badge count={wishlistItems.length} />
       </Link>
 
-      {/* === CART SECTION (No Changes) === */}
+      {/* 3. CART */}
       <Link
         href="/cart"
-        className="relative flex items-center gap-3 text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors pr-4"
+        className="group relative p-2 lg:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
       >
-        <FiShoppingCart size={iconSize} />
-        {totalQuantities > 0 && (
-          <span className="absolute top-0 -right-1 text-xs bg-blue-500 text-white font-bold rounded-full h-5 w-5 flex items-center justify-center">
-            {totalQuantities}
-          </span>
-        )}
-        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 hidden lg:inline">
-          Cart
-        </span>
+        <ShoppingCart
+          size={24}
+          className="text-gray-600 dark:text-gray-300 group-hover:text-brand-primary transition-colors"
+          strokeWidth={2}
+        />
+        <Badge count={totalQuantities} />
       </Link>
     </div>
   );

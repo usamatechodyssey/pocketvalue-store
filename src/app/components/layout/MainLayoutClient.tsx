@@ -1,5 +1,168 @@
-// /src/app/components/layout/MainLayoutClient.tsx
+// // /src/app/components/layout/MainLayoutClient.tsx
 
+// "use client";
+
+// import { useState, useEffect, ReactNode } from "react";
+// import { SanityCategory } from "@/sanity/types/product_types";
+// import NewSidebar from "./NewSidebar";
+// import NewHeader from "./NewHeader";
+// import NewRightDock from "./NewRightDock";
+// import MainFooter from "./Footer";
+// import MegaMenu from "./MegaMenu";
+// import TopActionBar from "@/app/components/ui/ActionBar";
+// import SecondaryNavBar from "@/app/components/ui/SecondaryNavBar";
+// import BottomNav from "./BottomMobileNav";
+// import MobileMenu from "./MobileMenu";
+// import SearchPanel from "../ui/MobileSearchPanel";
+// import { GlobalSettings } from "@/sanity/lib/queries"; // <-- IMPORT THE NEW TYPE
+
+// // --- PROPS INTERFACE UPDATED ---
+// interface SearchSuggestions {
+//   trendingKeywords: string[];
+//   popularCategories: SanityCategory[];
+// }
+
+// interface MainLayoutClientProps {
+//   categories: SanityCategory[];
+//   children: ReactNode;
+//   searchSuggestions: SearchSuggestions;
+//   globalSettings: GlobalSettings; // <-- ADD THE NEW PROP
+// }
+
+// // Heights (No change)
+// const TOP_ACTION_BAR_HEIGHT = 18;
+// const HEADER_HEIGHT_DESKTOP = 87;
+// const HEADER_HEIGHT_MOBILE = 70;
+// const SECONDARY_NAV_HEIGHT = 40;
+// const DESKTOP_UNSCROLLED_HEIGHT =
+//   TOP_ACTION_BAR_HEIGHT + HEADER_HEIGHT_DESKTOP + SECONDARY_NAV_HEIGHT;
+// const MOBILE_UNSCROLLED_HEIGHT = TOP_ACTION_BAR_HEIGHT + HEADER_HEIGHT_MOBILE;
+
+// export default function MainLayoutClient({
+//   categories,
+//   children,
+//   searchSuggestions,
+//   globalSettings, // <-- RECEIVE THE NEW PROP
+// }: MainLayoutClientProps) {
+//   const [hoveredCategory, setHoveredCategory] = useState<SanityCategory | null>(
+//     null
+//   );
+//   const [isScrolled, setIsScrolled] = useState(false);
+//   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+//   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
+//   useEffect(() => {
+//     const handleScroll = () => setIsScrolled(window.scrollY > 50);
+//     window.addEventListener("scroll", handleScroll);
+//     return () => window.removeEventListener("scroll", handleScroll);
+//   }, []);
+
+//   const handleToggleMenu = () => {
+//     if (isSearchPanelOpen) setIsSearchPanelOpen(false);
+//     setIsMobileMenuOpen((prev) => !prev);
+//   };
+
+//   const handleToggleSearch = () => {
+//     if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+//     setIsSearchPanelOpen((prev) => !prev);
+//   };
+
+//   const handleClosePanels = () => {
+//     setIsMobileMenuOpen(false);
+//     setIsSearchPanelOpen(false);
+//   };
+
+//   const topOffsetDesktop = isScrolled
+//     ? HEADER_HEIGHT_DESKTOP
+//     : DESKTOP_UNSCROLLED_HEIGHT;
+
+//   return (
+//     <div className="bg-gray-50 dark:bg-gray-950 overflow-x-hidden">
+//       <style>{`
+//         :root {
+//             --header-height-unscrolled: ${MOBILE_UNSCROLLED_HEIGHT}px;
+//             --header-height-scrolled: ${HEADER_HEIGHT_MOBILE}px;
+//         }
+//         @media (min-width: 768px) {
+//             :root {
+//                 --header-height-unscrolled: ${DESKTOP_UNSCROLLED_HEIGHT}px;
+//                 --header-height-scrolled: ${HEADER_HEIGHT_DESKTOP}px;
+//             }
+//         }
+//       `}</style>
+
+//       {/* Fixed Headers */}
+//       <div
+//         className="fixed top-0 w-full z-40 bg-white dark:bg-gray-900 shadow-sm"
+//         style={{
+//           transform: isScrolled
+//             ? `translateY(-${TOP_ACTION_BAR_HEIGHT}px)`
+//             : "translateY(0)",
+//           transition: "transform 0.3s ease-out",
+//         }}
+//       >
+//         <TopActionBar />
+//         <NewHeader
+//           categories={categories}
+//           onMenuClick={handleToggleMenu}
+//           searchSuggestions={searchSuggestions}
+//         />
+//         <SecondaryNavBar isVisible={!isScrolled} />
+//       </div>
+
+//       <div
+//         className="hidden lg:flex fixed left-0 z-30 transition-all duration-300 ease-out"
+//         style={{
+//           top: `${topOffsetDesktop}px`,
+//           height: `calc(100vh - ${topOffsetDesktop}px)`,
+//         }}
+//         onMouseLeave={() => setHoveredCategory(null)}
+//       >
+//         <NewSidebar
+//           categories={categories}
+//           onCategoryHover={setHoveredCategory}
+//         />
+//         <div className="absolute left-16 top-0 h-full">
+//           <MegaMenu category={hoveredCategory} />
+//         </div>
+//       </div>
+//       <NewRightDock topOffset={topOffsetDesktop} />
+
+//       {/* Mobile Panels */}
+//       <MobileMenu
+//         categories={categories}
+//         isOpen={isMobileMenuOpen}
+//         onClose={handleClosePanels}
+//       />
+//       <SearchPanel
+//         isOpen={isSearchPanelOpen}
+//         onClose={handleClosePanels}
+//         trendingKeywords={searchSuggestions.trendingKeywords}
+//         popularCategories={searchSuggestions.popularCategories}
+//       />
+//       <BottomNav
+//         onCategoriesClick={handleToggleMenu}
+//         onSearchClick={handleToggleSearch}
+//       />
+
+//       {/* Main Content */}
+//       <div className="relative flex flex-col min-h-screen">
+//         <main
+//           className="grow transition-all duration-300 ease-out lg:pl-16 lg:pr-16 pb-20 md:pb-0"
+//           style={{
+//             paddingTop: isScrolled
+//               ? `var(--header-height-scrolled)`
+//               : `var(--header-height-unscrolled)`,
+//           }}
+//         >
+//           {children}
+//         </main>
+//         {/* --- DATA IS PASSED TO THE FOOTER --- */}
+//         <MainFooter settings={globalSettings} />
+//       </div>
+//     </div>
+//   );
+// }
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
@@ -14,9 +177,11 @@ import SecondaryNavBar from "@/app/components/ui/SecondaryNavBar";
 import BottomNav from "./BottomMobileNav";
 import MobileMenu from "./MobileMenu";
 import SearchPanel from "../ui/MobileSearchPanel";
-import { GlobalSettings } from "@/sanity/lib/queries"; // <-- IMPORT THE NEW TYPE
+// === THE FIX IS HERE: Use 'import type' ===
+import type { GlobalSettings } from "@/sanity/lib/queries";
+import BackToTopButton from "../ui/BackToTopButton";
 
-// --- PROPS INTERFACE UPDATED ---
+// --- INTERFACES ---
 interface SearchSuggestions {
   trendingKeywords: string[];
   popularCategories: SanityCategory[];
@@ -26,14 +191,15 @@ interface MainLayoutClientProps {
   categories: SanityCategory[];
   children: ReactNode;
   searchSuggestions: SearchSuggestions;
-  globalSettings: GlobalSettings; // <-- ADD THE NEW PROP
+  globalSettings: GlobalSettings;
 }
 
-// Heights (No change)
+// === DIMENSIONS CONFIGURATION ===
 const TOP_ACTION_BAR_HEIGHT = 18;
-const HEADER_HEIGHT_DESKTOP = 70;
-const HEADER_HEIGHT_MOBILE = 64;
+const HEADER_HEIGHT_DESKTOP = 84;
+const HEADER_HEIGHT_MOBILE = 72;
 const SECONDARY_NAV_HEIGHT = 40;
+
 const DESKTOP_UNSCROLLED_HEIGHT =
   TOP_ACTION_BAR_HEIGHT + HEADER_HEIGHT_DESKTOP + SECONDARY_NAV_HEIGHT;
 const MOBILE_UNSCROLLED_HEIGHT = TOP_ACTION_BAR_HEIGHT + HEADER_HEIGHT_MOBILE;
@@ -42,7 +208,7 @@ export default function MainLayoutClient({
   categories,
   children,
   searchSuggestions,
-  globalSettings, // <-- RECEIVE THE NEW PROP
+  globalSettings,
 }: MainLayoutClientProps) {
   const [hoveredCategory, setHoveredCategory] = useState<SanityCategory | null>(
     null
@@ -77,7 +243,7 @@ export default function MainLayoutClient({
     : DESKTOP_UNSCROLLED_HEIGHT;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-950 overflow-x-hidden">
+    <div className="bg-gray-50 dark:bg-gray-950 overflow-x-hidden min-h-screen flex flex-col">
       <style>{`
         :root {
             --header-height-unscrolled: ${MOBILE_UNSCROLLED_HEIGHT}px;
@@ -91,25 +257,37 @@ export default function MainLayoutClient({
         }
       `}</style>
 
-      {/* Fixed Headers */}
+      {/* === FIXED HEADER STACK === */}
       <div
-        className="fixed top-0 w-full z-40 bg-white dark:bg-gray-900 shadow-sm"
+        className="fixed top-0 w-full z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm transition-transform duration-300 ease-out"
         style={{
           transform: isScrolled
             ? `translateY(-${TOP_ACTION_BAR_HEIGHT}px)`
             : "translateY(0)",
-          transition: "transform 0.3s ease-out",
         }}
       >
-        <TopActionBar />
+        {/* Dynamic Data passed here */}
+        <TopActionBar announcements={globalSettings?.topBarAnnouncements} />
+
         <NewHeader
           categories={categories}
           onMenuClick={handleToggleMenu}
           searchSuggestions={searchSuggestions}
         />
-        <SecondaryNavBar isVisible={!isScrolled} />
+
+        <div
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${isScrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100"}`}
+        >
+          {/* 🔥 UPDATE: PASSING THE MENU CLICK HANDLER HERE */}
+           <SecondaryNavBar 
+              isVisible={!isScrolled} 
+              links={globalSettings?.secondaryNavLinks}
+              onCategoryClick={handleToggleMenu}
+           />
+        </div>
       </div>
 
+      {/* === LEFT SIDEBAR (DESKTOP ONLY) === */}
       <div
         className="hidden lg:flex fixed left-0 z-30 transition-all duration-300 ease-out"
         style={{
@@ -126,9 +304,11 @@ export default function MainLayoutClient({
           <MegaMenu category={hoveredCategory} />
         </div>
       </div>
+
+      {/* === RIGHT DOCK (DESKTOP ONLY) === */}
       <NewRightDock topOffset={topOffsetDesktop} />
 
-      {/* Mobile Panels */}
+      {/* === MOBILE PANELS & NAV === */}
       <MobileMenu
         categories={categories}
         isOpen={isMobileMenuOpen}
@@ -145,10 +325,10 @@ export default function MainLayoutClient({
         onSearchClick={handleToggleSearch}
       />
 
-      {/* Main Content */}
-      <div className="relative flex flex-col min-h-screen">
+      {/* === MAIN CONTENT AREA === */}
+      <div className="relative flex flex-col min-h-screen w-full">
         <main
-          className="grow transition-all duration-300 ease-out lg:pl-16 lg:pr-16 pb-20 md:pb-0"
+          className="grow transition-all duration-300 ease-out lg:pl-16 lg:pr-16 pb-24 md:pb-0"
           style={{
             paddingTop: isScrolled
               ? `var(--header-height-scrolled)`
@@ -157,8 +337,14 @@ export default function MainLayoutClient({
         >
           {children}
         </main>
-        {/* --- DATA IS PASSED TO THE FOOTER --- */}
-        <MainFooter settings={globalSettings} />
+ {/* 🔥 GLOBAL BACK TO TOP BUTTON (Visible on all screens) */}
+    <div className="fixed bottom-20 right-4 z-40 lg:hidden">
+        <BackToTopButton /> 
+    </div>
+
+        <div className="lg:pl-16 lg:pr-16 pb-20 md:pb-0">
+          <MainFooter settings={globalSettings} />
+        </div>
       </div>
     </div>
   );

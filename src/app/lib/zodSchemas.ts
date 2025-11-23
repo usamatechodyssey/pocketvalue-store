@@ -417,10 +417,9 @@ export const InviteAdminSchema = z.object({
 // SECTION 2: E-COMMERCE & GENERAL FORM SCHEMAS
 // ====================================================================
 
-/**
- * @description For validating a user's shipping address.
- * Contains stricter validation for Pakistani phone numbers.
- */
+//  * @description For validating a user's shipping address.
+//  * Updated to include Lat/Lng for map pinning.
+//  */
 export const AddressSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required." }),
   phone: z.string().regex(/^((\+92)|(0))3\d{2}-?\d{7}$/, {
@@ -430,8 +429,10 @@ export const AddressSchema = z.object({
   city: z.string().min(1, { message: "City is required." }),
   area: z.string().min(3, { message: "Area or locality is required." }),
   address: z.string().min(5, { message: "Street address is required." }),
+  // ADDED: Coordinates allow karein
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
 });
-
 /**
  * @description For validating the request body of the 'create order' API.
  */

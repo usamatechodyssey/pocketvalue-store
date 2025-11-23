@@ -1,7 +1,5 @@
-// /src/sanity/schemas/settings.ts
-
 import { defineField, defineType } from 'sanity'
-import { CogIcon } from '@sanity/icons'
+import { CogIcon,LinkIcon } from '@sanity/icons'
 
 export default defineType({
   name: 'settings',
@@ -10,14 +8,15 @@ export default defineType({
   icon: CogIcon,
    groups: [
     { name: 'general', title: 'General Info', default: true },
+    { name: 'promotions', title: 'Promotions & Banners' }, // Naya Group Organization ke liye
+    { name: 'navigation', title: 'Navigation & Menus' }, // Naya Group
     { name: 'seo', title: 'Default SEO' },
     { name: 'shipping', title: 'Shipping Rules' },
     { name: 'inventory', title: 'Inventory' },
     { name: 'search', title: 'Search Suggestions' },
   ],
   fields: [
-    // === NEW: General Store Information Fields ===
-    // --- General Store Information Fields ---
+    // === GENERAL INFO ===
     defineField({
       name: 'siteName',
       title: 'Site Name',
@@ -31,17 +30,13 @@ export default defineType({
       title: 'Site Logo',
       type: 'image',
       group: 'general',
-      description: 'The main logo for the store, used in structured data and potentially the header.',
-      options: {
-        hotspot: true,
-      },
+      options: { hotspot: true },
     }),
     defineField({
       name: 'storeContactEmail',
       title: 'Store Contact Email',
       type: 'string',
       group: 'general',
-      description: 'The main email address for customer inquiries.',
       validation: Rule => Rule.email(),
     }),
     defineField({
@@ -49,14 +44,12 @@ export default defineType({
       title: 'Store Phone Number',
       type: 'string',
       group: 'general',
-      description: 'The main contact number for the store.',
     }),
     defineField({
       name: 'storeAddress',
       title: 'Physical Store Address',
       type: 'string',
       group: 'general',
-      description: 'The address that appears in the footer or contact page.',
     }),
     defineField({
       name: 'socialLinks',
@@ -70,22 +63,102 @@ export default defineType({
       ],
     }),
 
-    // --- Default SEO Settings ---
+      // === NEW: DYNAMIC SECONDARY NAV (Left/Right Control) ===
+    defineField({
+      name: 'secondaryNavLinks',
+      title: 'Secondary Navigation Bar',
+      type: 'array',
+      group: 'navigation',
+      description: 'Manage links appearing below the main header (e.g., "Today\'s Deals", "Help").',
+      of: [
+        {
+          type: 'object',
+          name: 'navLink',
+          icon: LinkIcon,
+          fields: [
+            defineField({
+              name: 'label',
+              title: 'Link Text',
+              type: 'string',
+              validation: Rule => Rule.required()
+            }),
+            defineField({
+              name: 'url',
+              title: 'Link URL',
+              type: 'string',
+              initialValue: '/',
+              validation: Rule => Rule.required()
+            }),
+            defineField({
+              name: 'position',
+              title: 'Position',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Left Side', value: 'left' },
+                  { title: 'Right Side', value: 'right' },
+                ],
+                layout: 'radio' // Radio buttons dikhenge, select karna asaan hoga
+              },
+              initialValue: 'left',
+              validation: Rule => Rule.required()
+            }),
+            defineField({
+              name: 'isHighlight',
+              title: 'Highlight this Link?',
+              type: 'boolean',
+              initialValue: false,
+              description: 'If ON, the link will be Orange (e.g., for Deals).'
+            })
+          ],
+         preview: {
+  select: {
+    title: 'label',
+    position: 'position',
+    highlight: 'isHighlight'
+  },
+  prepare({ title, position, highlight }) {
+    // Safe Check: Agar position exist karta hai tabhi uppercase karo, warna empty string
+    const posText = position ? position.toUpperCase() : 'NO POSITION';
+    
+    return {
+      title: title || 'New Link',
+      subtitle: `${posText} side ${highlight ? '(Highlighted)' : ''}`,
+      media: LinkIcon
+    }
+  }
+}
+        }
+      ]
+    }),
+
+
+    // === NEW: DYNAMIC ACTION BAR SETTINGS ===
+    defineField({
+      name: 'topBarAnnouncements',
+      title: 'Top Action Bar Text (Marquee)',
+      type: 'array',
+      group: 'promotions', // Alag group taake dhoondna asaan ho
+      description: 'Add specific taglines like "Free Delivery", "PocketValue Trust", etc. These will scroll at the top.',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags'
+      }
+    }),
+
+    // === SEO ===
     defineField({
         name: 'seo',
         title: 'Default SEO Settings',
         type: 'seo',
         group: 'seo',
-        description: 'These are the fallback SEO settings for pages that do not have their own specific metadata. The meta title and site name will be combined.',
     }),
 
-
-    // === Shipping Rules (No changes) ===
+    // === SHIPPING RULES ===
     defineField({
       name: 'shippingRules',
       title: 'Shipping Rules',
       type: 'array',
-      description: 'Define shipping costs based on order subtotal. Rules are checked from top to bottom. The first matching rule is applied.',
       group: 'shipping',
       of: [
         {
@@ -93,112 +166,49 @@ export default defineType({
           name: 'shippingRule',
           title: 'Shipping Rule',
           fields: [
-            defineField({
-              name: 'name',
-              title: 'Rule Name (e.g., Standard, Heavy Items)',
-              type: 'string',
-              validation: Rule => Rule.required(),
-            }),
-            defineField({
-              name: 'minAmount',
-              title: 'Minimum Subtotal (Rs.)',
-              type: 'number',
-              description: 'This rule applies if the subtotal is THIS amount or higher.',
-              initialValue: 0,
-              validation: Rule => Rule.required().min(0),
-            }),
-            defineField({
-              name: 'cost',
-              title: 'Shipping Cost (Rs.)',
-              type: 'number',
-              description: 'Enter 0 for free shipping.',
-              validation: Rule => Rule.required().min(0),
-            }),
+            defineField({ name: 'name', title: 'Rule Name', type: 'string', validation: Rule => Rule.required() }),
+            defineField({ name: 'minAmount', title: 'Minimum Subtotal (Rs.)', type: 'number', initialValue: 0, validation: Rule => Rule.required().min(0) }),
+            defineField({ name: 'cost', title: 'Shipping Cost (Rs.)', type: 'number', validation: Rule => Rule.required().min(0) }),
           ],
           preview: {
             select: { name: 'name', minAmount: 'minAmount', cost: 'cost' },
             prepare({ name, minAmount, cost }) {
-              return {
-                title: name,
-                subtitle: `Applies from Rs. ${minAmount} | Cost: Rs. ${cost}`
-              }
+              return { title: name, subtitle: `Applies from Rs. ${minAmount} | Cost: Rs. ${cost}` }
             }
           }
         }
       ],
-      validation: Rule => Rule.custom(rules => {
-        if (!rules || rules.length === 0) {
-          return 'At least one shipping rule is required.'
-        }
-        const hasBaseRule = rules.some(rule => (rule as any).minAmount === 0);
-        if (!hasBaseRule) {
-          return 'You must have at least one rule with a "Minimum Subtotal" of 0 for fallback.'
-        }
-        return true;
-      })
     }),
     
-    // --- Inventory Settings (No changes) ---
+    // === INVENTORY ===
     defineField({
       name: 'inventorySettings',
       title: 'Inventory Management',
       type: 'object',
-      description: 'Configure settings for stock and alerts.',
       group: 'inventory',
       options: { collapsible: false },
       fields: [
-        defineField({
-            name: 'lowStockThreshold',
-            title: 'Low Stock Threshold',
-            type: 'number',
-            initialValue: 5,
-            validation: Rule => Rule.required().min(0).integer(),
-        }),
-        defineField({
-            name: 'alertRecipientEmail',
-            title: 'Alert Recipient Email',
-            type: 'string',
-            initialValue: 'admin@example.com',
-            validation: Rule => Rule.required().email(),
-        }),
+        defineField({ name: 'lowStockThreshold', title: 'Low Stock Threshold', type: 'number', initialValue: 5 }),
+        defineField({ name: 'alertRecipientEmail', title: 'Alert Recipient Email', type: 'string', initialValue: 'admin@example.com' }),
       ]
     }),
 
-    // --- Search Settings (No changes) ---
+    // === SEARCH SUGGESTIONS ===
     defineField({
       name: 'searchSettings',
       title: 'Search Suggestions',
       type: 'object',
-      description: 'These suggestions will appear in the search panel on mobile and desktop.',
       group: 'search',
-      options: {
-        collapsible: true,
-        collapsed: false,
-      },
+      options: { collapsible: true, collapsed: false },
       fields: [
-        defineField({
-          name: 'trendingKeywords',
-          title: 'Trending Keywords',
-          type: 'array',
-          of: [{ type: 'string' }],
-          options: { layout: 'tags' }
-        }),
-        defineField({
-          name: 'popularCategories',
-          title: 'Popular Categories',
-          type: 'array',
-          of: [{ type: 'reference', to: [{ type: 'category' }] }],
-          validation: (Rule) => Rule.max(6).error('You can select a maximum of 6 categories.'),
-        }),
+        defineField({ name: 'trendingKeywords', title: 'Trending Keywords', type: 'array', of: [{ type: 'string' }], options: { layout: 'tags' } }),
+        defineField({ name: 'popularCategories', title: 'Popular Categories', type: 'array', of: [{ type: 'reference', to: [{ type: 'category' }] }] }),
       ],
     }),
   ],
-  // This helps hide fields that aren't needed in the document view
   preview: {
     prepare() {
-      return {
-        title: 'Site-wide Settings'
-      }
+      return { title: 'Site-wide Settings' }
     }
   }
 })
