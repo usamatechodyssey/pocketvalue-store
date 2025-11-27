@@ -103,11 +103,9 @@
 //     </main>
 //   );
 // }
-// /src/app/(main)/page.tsx (FINAL POLISHED CODE)
-
+import { Suspense } from "react";
 import { client } from "@/sanity/lib/client";
 import {
-  HERO_CAROUSEL_QUERY,
   HOMEPAGE_DATA_QUERY,
   PROMO_BANNERS_QUERY,
   INSTAGRAM_QUERY,
@@ -117,8 +115,9 @@ import {
 } from "@/sanity/lib/queries";
 import { FlashSaleData, SanityImageObject } from "@/sanity/types/product_types";
 
-// Import all homepage components
-import HeroCarousel from "./components/home/Hero Carousel Slider";
+// === UPDATED IMPORTS ===
+import HeroSection from "./components/home/HeroSection"; 
+import HeroSkeleton from "./components/home/HeroSkeleton"; // <-- NAYA IMPORT (Alag File wala)
 import ProductCarousel from "./components/home/ProductCarousel";
 import TripleBanner from "./components/home/TripleBanner";
 import DealOfTheDay from "./components/home/DealOfTheDay";
@@ -128,13 +127,14 @@ import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
 import CategoryShowcase from "./components/home/CategoryShowcase";
 import FlashSaleSection from "./components/home/FlashSaleSection";
 import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
+import LifestyleBanners from "./components/home/LifestyleBanners";
+import BrandShowcase from "./components/home/BrandShowcase";
 import { generateBaseMetadata } from "@/utils/metadata";
 import type { Metadata } from "next";
 
-// --- Dynamic metadata for the homepage ---
 export async function generateMetadata(): Promise<Metadata> {
   return generateBaseMetadata({
-    path: "/", // Canonical path for the homepage
+    path: "/", 
   });
 }
 
@@ -143,11 +143,10 @@ interface SectionBanner {
   bannerImage: SanityImageObject;
 }
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 12;
 
 export default async function Home() {
   const [
-    banners,
     homepageData,
     promoBanners,
     instagramData,
@@ -155,7 +154,6 @@ export default async function Home() {
     flashSaleData,
     initialGridProducts,
   ] = await Promise.all([
-    client.fetch(HERO_CAROUSEL_QUERY),
     client.fetch(HOMEPAGE_DATA_QUERY),
     client.fetch(PROMO_BANNERS_QUERY),
     client.fetch(INSTAGRAM_QUERY),
@@ -168,14 +166,19 @@ export default async function Home() {
   const sectionBanners: SectionBanner[] = homepageData?.sectionBanners || [];
 
   return (
-    <main className="w-full flex flex-col items-center">
-      {/* HeroCarousel is full-width, so it has its own padding control */}
-      <HeroCarousel banners={banners} />
+    <main className="w-full flex flex-col items-center bg-white dark:bg-gray-950 overflow-x-hidden">
+      
+      {/* === HERO SECTION with NEW SKELETON === */}
+      <Suspense fallback={<HeroSkeleton />}>
+        <HeroSection />
+      </Suspense>
 
-      {/* --- THE DEFINITIVE FIX IS HERE --- */}
-      {/* This single div will now control the padding and spacing for ALL sections below the hero banner. */}
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 md:space-y-16 lg:space-y-20">
-        <Coupon />
+      {/* === REST OF CONTENT === */}
+      <div className="w-full space-y-12 md:space-y-20 pt-6 md:pt-10">
+        
+        <div className="px-0 md:px-4 lg:px-8 w-full max-w-[1920px] mx-auto">
+           <Coupon />
+        </div>
 
         {featuredCategoriesData?.featuredCategories?.length > 0 && (
           <CategoryShowcase
@@ -196,6 +199,8 @@ export default async function Home() {
           />
         )}
 
+        <LifestyleBanners />
+
         <DealOfTheDay />
 
         {homepageData?.bestSellers?.length > 0 && (
@@ -208,6 +213,10 @@ export default async function Home() {
           />
         )}
 
+        <div className="px-4 md:px-8 w-full max-w-[1920px] mx-auto">
+            <TripleBanner banners={promoBanners} />
+        </div>
+
         {homepageData?.featuredProducts?.length > 0 && (
           <ProductCarousel
             title={homepageData.featuredProductsTitle || "Featured Products"}
@@ -218,6 +227,8 @@ export default async function Home() {
           />
         )}
 
+        <BrandShowcase brands={topBrands} />
+
         {featuredCategoriesData?.categoryGrid?.length > 0 && (
           <FeaturedCategoryGrid
             title={featuredCategoriesData.categoryGridTitle}
@@ -227,13 +238,144 @@ export default async function Home() {
 
         <InstagramWall data={instagramData} />
 
-        <TripleBanner banners={promoBanners} />
-
-        <InfiniteProductGrid initialProducts={initialGridProducts} />
+        <div className="px-0 md:px-8 w-full max-w-[1920px] mx-auto pb-20">
+            <InfiniteProductGrid initialProducts={initialGridProducts} />
+        </div>
       </div>
     </main>
   );
 }
+// /src/app/(main)/page.tsx (FINAL POLISHED CODE)
+
+// import { client } from "@/sanity/lib/client";
+// import {
+//   HERO_CAROUSEL_QUERY,
+//   HOMEPAGE_DATA_QUERY,
+//   PROMO_BANNERS_QUERY,
+//   INSTAGRAM_QUERY,
+//   getTopBrands,
+//   FLASH_SALE_QUERY,
+//   getPaginatedProducts,
+// } from "@/sanity/lib/queries";
+// import { FlashSaleData, SanityImageObject } from "@/sanity/types/product_types";
+
+// // Import all homepage components
+// import HeroCarousel from "./components/home/Hero Carousel Slider";
+// import ProductCarousel from "./components/home/ProductCarousel";
+// import TripleBanner from "./components/home/TripleBanner";
+// import DealOfTheDay from "./components/home/DealOfTheDay";
+// import InstagramWall from "./components/home/InstagramWall";
+// import Coupon from "./components/ui/Coupon";
+// import FeaturedCategoryGrid from "./components/home/FeaturedCategoryGrid";
+// import CategoryShowcase from "./components/home/CategoryShowcase";
+// import FlashSaleSection from "./components/home/FlashSaleSection";
+// import InfiniteProductGrid from "@/app/components/home/InfiniteProductGrid";
+// import { generateBaseMetadata } from "@/utils/metadata";
+// import type { Metadata } from "next";
+
+// // --- Dynamic metadata for the homepage ---
+// export async function generateMetadata(): Promise<Metadata> {
+//   return generateBaseMetadata({
+//     path: "/", // Canonical path for the homepage
+//   });
+// }
+
+// interface SectionBanner {
+//   tag: string;
+//   bannerImage: SanityImageObject;
+// }
+
+// const BATCH_SIZE = 10;
+
+// export default async function Home() {
+//   const [
+//     banners,
+//     homepageData,
+//     promoBanners,
+//     instagramData,
+//     topBrands,
+//     flashSaleData,
+//     initialGridProducts,
+//   ] = await Promise.all([
+//     client.fetch(HERO_CAROUSEL_QUERY),
+//     client.fetch(HOMEPAGE_DATA_QUERY),
+//     client.fetch(PROMO_BANNERS_QUERY),
+//     client.fetch(INSTAGRAM_QUERY),
+//     getTopBrands(),
+//     client.fetch<FlashSaleData | null>(FLASH_SALE_QUERY),
+//     getPaginatedProducts(1, BATCH_SIZE),
+//   ]);
+
+//   const featuredCategoriesData = homepageData?.featuredCategoriesData;
+//   const sectionBanners: SectionBanner[] = homepageData?.sectionBanners || [];
+
+//   return (
+//     <main className="w-full flex flex-col items-center">
+//       {/* HeroCarousel is full-width, so it has its own padding control */}
+//       <HeroCarousel banners={banners} />
+
+//       {/* --- THE DEFINITIVE FIX IS HERE --- */}
+//       {/* This single div will now control the padding and spacing for ALL sections below the hero banner. */}
+//       <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 md:space-y-16 lg:space-y-20">
+//         <Coupon />
+
+//         {featuredCategoriesData?.featuredCategories?.length > 0 && (
+//           <CategoryShowcase
+//             title={featuredCategoriesData.featuredCategoriesTitle}
+//             categories={featuredCategoriesData.featuredCategories}
+//           />
+//         )}
+
+//         <FlashSaleSection data={flashSaleData} />
+
+//         {homepageData?.newArrivals?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.newArrivalsTitle || "New Arrivals"}
+//             products={homepageData.newArrivals}
+//             banner={sectionBanners.find(
+//               (b: SectionBanner) => b.tag === "new-arrivals"
+//             )}
+//           />
+//         )}
+
+//         <DealOfTheDay />
+
+//         {homepageData?.bestSellers?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.bestSellersTitle || "Best Sellers"}
+//             products={homepageData.bestSellers}
+//             banner={sectionBanners.find(
+//               (b: SectionBanner) => b.tag === "best-sellers"
+//             )}
+//           />
+//         )}
+
+//         {homepageData?.featuredProducts?.length > 0 && (
+//           <ProductCarousel
+//             title={homepageData.featuredProductsTitle || "Featured Products"}
+//             products={homepageData.featuredProducts}
+//             banner={sectionBanners.find(
+//               (b: SectionBanner) => b.tag === "featured-products"
+//             )}
+//           />
+//         )}
+
+//         {featuredCategoriesData?.categoryGrid?.length > 0 && (
+//           <FeaturedCategoryGrid
+//             title={featuredCategoriesData.categoryGridTitle}
+//             categories={featuredCategoriesData.categoryGrid}
+//           />
+//         )}
+
+//         <InstagramWall data={instagramData} />
+
+//         <TripleBanner banners={promoBanners} />
+
+//         <InfiniteProductGrid initialProducts={initialGridProducts} />
+//       </div>
+//     </main>
+//   );
+// }
 
 // --- SUMMARY OF CHANGES ---
 // - Imported the `generateBaseMetadata` utility and `Metadata` type.

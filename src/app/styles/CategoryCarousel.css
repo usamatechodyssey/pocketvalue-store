@@ -1,33 +1,15 @@
-/* src/app/styles/CategoryCarousel.css (BASED ON THE WORKING PRODUCT CAROUSEL CSS) */
+/* src/app/styles/CategoryCarousel.css */
 
 .category-carousel-container {
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 10%,
-    black 90%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 10%,
-    black 90%,
-    transparent
-  );
 }
 
 .category-carousel-scroller {
   display: flex;
   width: max-content;
   flex-wrap: nowrap;
-  
-  /* === SPEED THEEK KI GAYI HAI === */
-  animation: scroll-cat 35s linear infinite;
-
-  /* Dono tracks ke beech mein barabar ka faasla */
-  gap: 1.5rem; /* 24px */
+  animation: scroll-cat 20s linear infinite; /* Speed thodi slow ki taake smooth lage */
+  gap: 1.5rem; /* Gap wapis 1.5rem (24px) kar diya */
 }
 
 .category-carousel-container:hover .category-carousel-scroller {
@@ -36,21 +18,18 @@
 
 @keyframes scroll-cat {
   to {
-    /* Wahi purana, perfect logic */
-    transform: translateX(calc(-50% - 0.75rem)); /* Adjust for half the gap */
+    transform: translateX(calc(-50% - 0.75rem));
   }
 }
 
 .category-carousel-track {
   display: flex;
   flex-wrap: nowrap;
-  /* Cards ke beech mein barabar ka faasla */
-  gap: 1.5rem; /* 24px, bilkul upar wali value jaisa */
+  gap: 1.5rem;
 }
 
 .category-item-wrapper {
   flex-shrink: 0;
-  /* Categories ke liye munasib width */
-  width: 220px;
+  /* width: 220px;  <--- YE LINE HATANI HAI (DELETE THIS) */
   box-sizing: border-box;
 }

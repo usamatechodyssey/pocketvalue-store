@@ -216,3 +216,17 @@
     animation: toast-leave 0.3s ease-in forwards;
   }
 }
+
+/* src/app/globals.css ke end mein */
+
+@layer utilities {
+  @keyframes deep-breath {
+    0%, 100% { opacity: 0.4; } /* Halka */
+    50% { opacity: 0.7; }     /* Gehra */
+  }
+  
+  .animate-deep-breath {
+    animation: deep-breath 1.5s ease-in-out infinite;
+    will-change: opacity; /* Performance Booster */
+  }
+}
