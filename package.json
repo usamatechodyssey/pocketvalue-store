@@ -44,7 +44,7 @@
     "lucide-react": "^0.513.0",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.2",
-    "next": "16.0.1",
+    "next": "16.0.10",
     "next-auth": "5.0.0-beta.30",
     "next-intl": "^4.4.0",
     "next-sanity": "^11.6.3",
