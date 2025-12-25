@@ -71,23 +71,27 @@ export default function CategoryShowcase({ title, categories }: Props) {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <section className="w-full">
+    <section className="w-full py-4 md:py-8">
       
-      {/* === MOBILE VIEW (Stories Style - No Heading) === */}
-      {/* Sirf thodi si top padding di hai taake Hero se chipke nahi */}
+      {/* === MOBILE VIEW (No Changes) === */}
       <div className="md:hidden pt-2">
         <MobileCategoryList categories={categories} />
       </div>
 
-      {/* === DESKTOP VIEW (Premium Carousel With Heading) === */}
-      {/* Desktop par Heading rahegi kyunke wahan space hoti hai */}
+      {/* === DESKTOP VIEW (YAHAN CHANGE HAI) === */}
       <div className="hidden md:block px-8">
-        <div className="mb-8 flex items-center gap-4">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            {title || "Shop by Category"}
+        
+        {/* 🔥 FIX: Is div ko center karne ke liye 'text-center' class add ki gayi hai */}
+        <div className="mb-8 text-center">
+            
+            {/* 🔥 FIX: Isko thoda aur bold karne ke liye 'font-extrabold' kiya gaya hai */}
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              {title || "Shop by Category"}
             </h2>
-            <div className="h-px bg-gray-200 dark:bg-gray-800 grow mt-1"></div>
+
         </div>
+
+        {/* Is component ko nahi chherna hai, yeh sirf circles dikhata hai */}
         <CategoryCarousel categories={categories} title="" />
       </div>
 

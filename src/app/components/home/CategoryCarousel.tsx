@@ -212,7 +212,7 @@ export default function CategoryCarousel({ title, categories }: Props) {
   const tracks = [0, 1];
 
   return (
-    <section className="w-full py-4 md:py-8 overflow-hidden bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+    <section className="w-full py-4 md:py-0 overflow-hidden bg-white dark:bg-gray-950  dark:border-gray-800">
       
       <div className="category-carousel-container relative">
         

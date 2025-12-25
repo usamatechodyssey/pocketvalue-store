@@ -1,7 +1,18 @@
-
-
 import type { StructureResolver } from 'sanity/structure'
-import { Home, Instagram, Presentation, Ticket as TicketIcon, Flame, Zap, FileText, HelpCircle, BookText, ShoppingBag, CogIcon } from 'lucide-react' 
+import { 
+  Home, 
+  Images, // <-- CHANGED: Used 'Images' (Gallery) instead of 'Instagram'
+  Presentation, 
+  Ticket as TicketIcon, 
+  Flame, 
+  Zap, 
+  FileText, 
+  HelpCircle, 
+  BookText, 
+  ShoppingBag, 
+  CogIcon,
+  Tag 
+} from 'lucide-react' 
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -23,16 +34,16 @@ export const structure: StructureResolver = (S) =>
       
       S.divider(),
 
-      // Instagram Wall
+      // Instagram Wall (Updated Icon)
       S.listItem()
         .title('Instagram Wall')
-        .icon(Instagram)
+        .icon(Images) // <-- FIXED HERE
         .id('instagramFeed')
         .child( S.document().schemaType('instagramFeed').documentId('instagramFeed') ),
 
       S.divider(),
       
-      // Page Banners & Promotions
+      // === PROMOTIONS SECTION ===
       S.listItem()
         .title('Promotions & Banners')
         .icon(Presentation)
@@ -40,12 +51,22 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title('Banners & Sales')
             .items([
+              // Campaigns (Master Deal Engine)
+              S.listItem()
+                .title('Campaigns (Sales & Events)')
+                .icon(Tag)
+                .schemaType('campaign')
+                .child(S.documentTypeList('campaign').title('All Campaigns')),
+
+              // Existing Banners
               S.listItem().title('Hero Carousel Slides').schemaType('heroCarousel').child(S.documentTypeList('heroCarousel').title('Slides')),
               S.listItem().title('Promo / Story Banners').schemaType('promoBanner').child(S.documentTypeList('promoBanner').title('All Banners')),
               S.listItem().title('Lifestyle Banners').schemaType('lifestyleBanner').child(S.documentTypeList('lifestyleBanner').title('All Lifestyle Banners')),
               S.listItem().title('Coupon Banners').icon(TicketIcon).schemaType('couponBanner').child(S.documentTypeList('couponBanner').title('All Coupon Banners')),
-              S.listItem().title('Deal of the Day').icon(Flame).child( S.document().schemaType('dealOfTheDay').documentId('dealOfTheDay').title('Setup Deal of the Day')),
-              S.listItem().title('Flash Sale').icon(Zap).child( S.document().schemaType('flashSale').documentId('flashSale').title('Setup Flash Sale')),
+              
+              // Legacy (To be removed later)
+              S.listItem().title('Deal of the Day (Legacy)').icon(Flame).child( S.document().schemaType('dealOfTheDay').documentId('dealOfTheDay').title('Setup Deal of the Day')),
+              S.listItem().title('Flash Sale (Legacy)').icon(Zap).child( S.document().schemaType('flashSale').documentId('flashSale').title('Setup Flash Sale')),
             ])
         ),
       
@@ -81,7 +102,7 @@ export const structure: StructureResolver = (S) =>
 
       S.divider(),
       
-      // Shop Management (Core E-commerce)
+      // Shop Management
       S.listItem()
         .title('Shop Management')
         .icon(ShoppingBag)
@@ -91,7 +112,6 @@ export const structure: StructureResolver = (S) =>
             .items([
               S.listItem().title('Products').schemaType('product').child(S.documentTypeList('product').title('All Products')),
               S.listItem().title('Categories').schemaType('category').child(S.documentTypeList('category').title('All Categories')),
-              // --- NAYA ITEM YAHAN ADD HUA HAI ---
               S.listItem().title('Coupons').schemaType('coupon').icon(TicketIcon).child(S.documentTypeList('coupon').title('All Coupons')),
               S.listItem().title('Product Reviews').schemaType('review').child(S.documentTypeList('review').title('All Reviews')),
             ])
@@ -99,13 +119,14 @@ export const structure: StructureResolver = (S) =>
 
       S.divider(),
 
-      // Filter out explicitly structured items from the default list
+      // Filter out explicitly structured items
       ...S.documentTypeListItems().filter(
         (listItem) => ![
             'homepage', 'settings', 'instagramFeed', 'promoBanner', 'heroCarousel', 
             'dealOfTheDay', 'lifestyleBanner', 'page', 'faq', 'review', 'post', 'author', 
             'category', 'product', 'couponBanner', 'flashSale',
-            'coupon', // <-- Coupon yahan filter kiya
+            'coupon', 
+            'campaign',
         ].includes(listItem.getId()!)
       ),
     ])

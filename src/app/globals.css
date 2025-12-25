@@ -1,89 +1,75 @@
-/* src/app/globals.css (FINAL UPDATED WITH NEW BRAND COLORS) */
-
+/* src/app/globals.css (FINAL - UPDATED WITH MONTSERRAT FONT) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 /* Core Tailwind imports */
 @import "tailwindcss";
 @import "./styles/ProductCarousel.css";
 @import "./styles/CategoryCarousel.css";
 
-
-/* src/app/globals.css (REPLACE THE OLD SWIPER FIXES WITH THIS) */
+/* 🔥 STEP 1: Google Fonts se Montserrat (Variable) import karein */
 
 
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* === FONTS (No Changes) === */
+/* === FONTS (UPDATED FOR MONTSERRAT) === */
 @layer base {
-  @font-face {
-    font-family: 'Satoshi';
-    src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
-    font-weight: 300 900;
-    font-display: swap;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'Clash Display';
-    src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
-    font-weight: 200 700;
-    font-display: swap;
-    font-style: normal;
-  }
+  /* 🔥 STEP 2: Purane @font-face rules (Satoshi, Clash Display) ko hata diya gaya hai */
+  
   :root {
-    --font-satoshi: 'Satoshi', sans-serif;
-    --font-clash-display: 'Clash Display', sans-serif;
+    /* 🔥 STEP 3: Naya font variable banaya gaya hai */
+    --font-sans: 'Montserrat', sans-serif;
   }
   html {
     scroll-behavior: smooth;
     font-size: 13px;
   }
   body {
-    font-family: var(--font-satoshi);
+    /* 🔥 STEP 4: Body mein naya font apply kiya gaya hai */
+    font-family: var(--font-sans);
     @apply bg-gray-50 text-gray-600 antialiased font-medium dark:bg-gray-950 dark:text-gray-300;
-
-    
   }
-
   
-  /* === UPDATED LINK COLOR TO USE THEME VARIABLES === */
+  /* === LINK COLOR (No Changes) === */
   a {
     @apply text-brand-primary hover:text-brand-primary-hover transition-colors duration-200;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-clash-display);
-    @apply text-gray-800 font-medium dark:text-gray-200;
+    /* 🔥 STEP 5: Headings mein bhi naya font apply kiya gaya hai */
+    font-family: var(--font-sans);
+    @apply text-gray-800 font-semibold dark:text-gray-200 tracking-tight;
   }
 }
 
-/* === === === YOUR NEW COLOR THEME === === === */
+/* === === === YOUR COLOR THEME (No Changes) === === === */
 @theme {
   /* Colors */
-  --color-brand-primary: #FF8F32; /* Your Bright Orange */
-  --color-brand-primary-hover: #E86627; /* Your Darker Orange */
-  --color-brand-secondary: #10589E; /* Your Deep Blue */
-  --color-brand-accent: #10589E; /* Blue is also good for accents */
+  --color-brand-primary: #FF8F32;
+  --color-brand-primary-hover: #E86627;
+  --color-brand-secondary: #10589E;
+  --color-brand-accent: #10589E;
   --color-brand-danger: #E11D48;
   --color-brand-success: #16A34A;
 
-  /* Surface colors (These remain the same for a clean look) */
-  --color-surface-base: #FFFFFF; /* white */
-  --color-surface-ground: #F9FAFB; /* gray-50 */
-  --color-surface-input: #F3F4F6; /* gray-100 */
-  --color-surface-border: #E5E7EB; /* gray-200 */
+  /* Surface colors */
+  --color-surface-base: #FFFFFF;
+  --color-surface-ground: #F9FAFB;
+  --color-surface-input: #F3F4F6;
+  --color-surface-border: #E5E7EB;
   --color-surface-border-darker: #D1D5DB;
-  --color-surface-footer: #1F2937; /* gray-800 */
+  --color-surface-footer: #1F2937;
 
-  /* Text colors (These remain the same for readability) */
-  --color-text-primary: #1F2937; /* gray-800 */
-  --color-text-secondary: #4B5563; /* gray-600 */
-  --color-text-subtle: #6B7280; /* gray-500 */
-   --color-text-on-primary: #FFFFFF; /* From white to a professional dark blue/gray */
+  /* Text colors */
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #4B5563;
+  --color-text-subtle: #6B7280;
+  --color-text-on-primary: #FFFFFF;
   --color-text-on-accent: #FFFFFF;
   --color-text-on-dark: #D1D5DB;
 }
 /* === === === END OF COLOR THEME === === === */
 
 
-/* Scrollbar styles (Updated) */
+/* Scrollbar styles (No Changes) */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #F9FAFB; }
 .dark ::-webkit-scrollbar-track { background: #111827; }
@@ -96,12 +82,9 @@
 @layer utilities {
   .brand-gradient-bg {
     background-color: #f9fafb;
-    /* Gradient color ko naye theme se match karne ke liye thora update kiya hai */
     background-image: linear-gradient(180deg, #FFF7ED 0%, #F9FAFB 100%);
-
   }
    .dark .brand-gradient-bg {
-    /* Dark mode ke liye alag gradient */
     background-image: linear-gradient(180deg, #1F2937 0%, #111827 100%);
   }
 }
@@ -127,106 +110,68 @@
     height: 125px; 
   }
   @media (min-width: 412px) {
-    .hero-carousel-slider {
-      height: 135.5px;
-    }
+    .hero-carousel-slider { height: 135.5px; }
   }
   @media (min-width: 768px) {
-    .hero-carousel-slider {
-      height: 250px;
-    }
+    .hero-carousel-slider { height: 250px; }
   }
   @media (min-width: 1024px) {
-    .hero-carousel-slider {
-      height: 300px;
-    }
+    .hero-carousel-slider { height: 300px; }
   }
   @media (min-width: 1280px) {
-    .hero-carousel-slider {
-      height: 400px;
-    }
+    .hero-carousel-slider { height: 400px; }
   }
 }
 
-/* === NEW "LIQUID FLOW" ANIMATION FOR FLASH SALE === */
+/* Flash Sale Animation (No Changes) */
 @keyframes gradient-flow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
 .animated-brand-gradient {
-  /* Gradient mein aapke dono brand colors istemal kiye gaye hain */
   background: linear-gradient(-45deg, #10589E, #083B6A, #E86627, #FF8F32);
   background-size: 400% 400%;
   animation: gradient-flow 15s ease-in-out infinite;
 }
-/* @media (min-width: 375px) { */
-  /*
-     Define custom utility classes that behave like Tailwind's
-     responsive utilities for 'sm' screens (480px and up).
-     You need to define the CSS property and value.
-  */
-  /* .sm\:h-110 {
-    height: 27.5rem; /* 27.5 * 16px = 440px. Tailwind's h-110 is 440px. */
-  /* } */ 
 
-  /*
-     Agar aapko future mein aur bhi `sm:` utilities ki zarurat ho,
-     aap unhe yahan define kar sakte hain.
-     Misal ke tor par:
-     .sm\:h-64 { height: 16rem; } // h-64 = 256px
-     .sm\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-     .sm\:flex { display: flex; }
-  */
-/* } */
-
-/* src/app/globals.css */
-
-/* ... your existing global styles ... */
-
+/* Toast Animations (No Changes) */
 @layer utilities {
   @keyframes toast-enter {
-    from {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
-
   @keyframes toast-leave {
-    from {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
   }
+  .animation-toast-enter { animation: toast-enter 0.3s ease-out; }
+  .animation-toast-leave { animation: toast-leave 0.3s ease-in forwards; }
+}
 
-  .animation-toast-enter {
-    animation: toast-enter 0.3s ease-out;
+/* Skeleton Loader Animation (No Changes) */
+@layer utilities {
+  @keyframes deep-breath {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
   }
-
-  .animation-toast-leave {
-    animation: toast-leave 0.3s ease-in forwards;
+  .animate-deep-breath {
+    animation: deep-breath 1.5s ease-in-out infinite;
+    will-change: opacity;
   }
 }
 
-/* src/app/globals.css ke end mein */
-
-@layer utilities {
-  @keyframes deep-breath {
-    0%, 100% { opacity: 0.4; } /* Halka */
-    50% { opacity: 0.7; }     /* Gehra */
-  }
-  
-  .animate-deep-breath {
-    animation: deep-breath 1.5s ease-in-out infinite;
-    will-change: opacity; /* Performance Booster */
-  }
+/* Product Card Swiper Styles (Updated Active Color) */
+.product-card-swiper .swiper-pagination-bullet {
+  background-color: #cccccc;
+  opacity: 1;
+  width: 6px;
+  height: 6px;
+  transition: background-color 0.3s;
+}
+.product-card-swiper .swiper-pagination-bullet-active {
+  background-color: #FF8F32; /* Active dot ka color aapke brand color se match kar diya */
+}
+.product-card-swiper .swiper-pagination {
+  bottom: 8px !important;
 }

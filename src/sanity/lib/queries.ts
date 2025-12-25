@@ -236,36 +236,36 @@ export const getRelatedProducts = async (currentProductId: string, categoryIds: 
   return await client.fetch(query, { categoryIds, currentProductId });
 };
 
-export const HOMEPAGE_DATA_QUERY = groq`{
-    "featuredProductsTitle": "Featured Products",
-    "featuredProducts": *[_type == "product" && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} },
+// export const HOMEPAGE_DATA_QUERY = groq`{
+//     "featuredProductsTitle": "Featured Products",
+//     "featuredProducts": *[_type == "product" && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} },
     
-    "bestSellersTitle": "Best Sellers",
-    "bestSellers": *[_type == "product" && isBestSeller == true] | order(rating desc, reviewCount desc)[0...12]{ ${productFields} },
+//     "bestSellersTitle": "Best Sellers",
+//     "bestSellers": *[_type == "product" && isBestSeller == true] | order(rating desc, reviewCount desc)[0...12]{ ${productFields} },
     
-    "newArrivalsTitle": "New Arrivals",
-    "newArrivals": *[_type == "product"] | order(_createdAt desc)[0...12]{ ${productFields} },
+//     "newArrivalsTitle": "New Arrivals",
+//     "newArrivals": *[_type == "product"] | order(_createdAt desc)[0...12]{ ${productFields} },
 
-    // === YAHAN NAYA CODE ADD HUA HAI ===
-    "sectionBanners": *[_type == "homepage" && _id == "homepage"][0].sectionBanners,
-    // ===================================
+//     // === YAHAN NAYA CODE ADD HUA HAI ===
+//     "sectionBanners": *[_type == "homepage" && _id == "homepage"][0].sectionBanners,
+//     // ===================================
 
-    "featuredCategoriesData": *[_type == "homepage" && _id == "homepage"][0] {
-        featuredCategoriesTitle,
-        "featuredCategories": featuredCategories[]->{ _id, name, "slug": slug.current, "image": image.asset->url },
-        categoryGridTitle,
-        "categoryGrid": categoryGrid[]{
-          _key,
-          discountText,
-          category->{
-            _id,
-            name,
-            "slug": slug.current,
-            image
-          }
-        }
-    }
-}`;
+//     "featuredCategoriesData": *[_type == "homepage" && _id == "homepage"][0] {
+//         featuredCategoriesTitle,
+//         "featuredCategories": featuredCategories[]->{ _id, name, "slug": slug.current, "image": image.asset->url },
+//         categoryGridTitle,
+//         "categoryGrid": categoryGrid[]{
+//           _key,
+//           discountText,
+//           category->{
+//             _id,
+//             name,
+//             "slug": slug.current,
+//             image
+//           }
+//         }
+//     }
+// }`;
 
 
 // === YAHAN ASAL TABDEELI HAI ===
@@ -335,6 +335,7 @@ export const searchProducts = async (
   options: {
     searchTerm?: string;
     categorySlug?: string;
+     campaignSlug?: string; // <-- ADD THIS
     isDeal?: boolean; // Naya parameter
     filters?: { [key:string]: any };
     minPrice?: number;
@@ -346,6 +347,7 @@ export const searchProducts = async (
   const {
     searchTerm,
     categorySlug,
+    campaignSlug, // <-- Destructure
     isDeal, // Naya parameter
     filters = {},
     minPrice,
@@ -361,6 +363,14 @@ export const searchProducts = async (
   const params: { [key: string]: any } = {};
   let conditions: string[] = [`_type == "product"`, `count(variants) > 0`];
   let variantConditions: string[] = [];
+
+
+   // Logic Add karein:
+  if (campaignSlug) {
+     // Find campaign ID by slug first (sub-query)
+     conditions.push(`references(*[_type=="campaign" && slug.current == $campaignSlug]._id)`);
+     params.campaignSlug = campaignSlug;
+  }
 
   // Context-based conditions
   if (isDeal) {
@@ -1137,3 +1147,409 @@ export const GET_SINGLE_PRODUCT_FOR_EDIT_QUERY = groq`
 // - **`GET_TOTAL_ADMIN_PRODUCTS_COUNT_QUERY`:** Created a corresponding query to efficiently count the total matching products for pagination.
 // - **`GET_FORM_DATA_QUERY`:** Created an exported constant for fetching categories and brands for the product form.
 // - **`GET_SINGLE_PRODUCT_FOR_EDIT_QUERY`:** Created an exported constant for fetching the full product data needed for the edit page.
+
+// ... (Upar wale imports aur productFields wese hi rahenge)
+
+// // === 🔥 UPDATED HOMEPAGE MASTER QUERY (FINAL) 🔥 ===
+// export const HOMEPAGE_DATA_QUERY = groq`{
+//     "pageSections": *[_type == "homepage" && _id == "homepage"][0].pageSections[]{
+//       _key,
+//       _type,
+
+//       // === A. BANNER SECTION (Grid/Mosaic) ===
+//       _type == 'bannerSection' => {
+//         desktopLayout,
+//         gridColumns,
+//         heightMode,
+//         aspectRatio,
+//         fixedHeight,
+//         customHeightPx,
+//         mobileBehavior,
+//         containerSettings,
+//         banners[]{
+//           "desktopImage": desktopImage.asset->url,
+//           "mobileImage": mobileImage.asset->url,
+//           altText, link, heading, subheading, buttonText, contentPosition, overlayOpacity, textColor
+//         }
+//       },
+
+//       // === B. DEAL SECTION (Universal Engine) ===
+//       _type == 'dealSection' => {
+//         title,
+//         subtitle,
+//         fetchStrategy,
+//         viewType,
+//         backgroundStyle,
+//         enableTimer,
+//         endTime,
+        
+//         // Side Banner Support
+//         showSideBanner,
+//         sideBanner {
+//             "image": image.asset->url,
+//             link
+//         },
+
+//         // Strategy 1: Manual
+//         fetchStrategy == 'manual' => {
+//           "products": manualProducts[]->{ ${productFields} }
+//         },
+//         // Strategy 2: Campaign
+//         fetchStrategy == 'campaign' => {
+//           "campaignSlug": selectedCampaign->slug.current,
+//           "products": *[_type == 'product' && references(^.selectedCampaign._ref)] | order(_createdAt desc)[0...12] { ${productFields} }
+//         },
+//         // Strategy 3: Category
+//         fetchStrategy == 'category' => {
+//            "categorySlug": selectedCategory->slug.current,
+//            "products": *[_type == 'product' && references(^.selectedCategory._ref)] | order(_createdAt desc)[0...12] { ${productFields} }
+//         },
+//         // Strategy 4: Tag
+//         fetchStrategy == 'tag' => {
+//            tagType,
+//            "products": *[_type == 'product' && (
+//              (^.tagType == 'newArrivals' && isNewArrival == true) ||
+//              (^.tagType == 'bestSellers' && isBestSeller == true) ||
+//              (^.tagType == 'featured' && isFeatured == true)
+//            )] | order(_createdAt desc)[0...12] { ${productFields} }
+//         }
+//       },
+
+//       // === C. PRODUCT SHOWCASE (Row) ===
+//       _type == 'productShowcase' => {
+//           title, type, 
+//           manualProducts[]->{ ${productFields} },
+//           showSideBanner, 
+//           sideBanner { "image": image.asset->url, link }
+//       },
+
+//       // === D. CATEGORY CAROUSEL (Circles) ===
+//       _type == 'categoryShowcase' => {
+//           title, 
+//           categories[]->{ _id, name, "slug": slug.current, "image": image.asset->url }
+//       },
+
+//       // === E. CATEGORY GRID (Bento) ===
+//       _type == 'categoryGrid' => {
+//           title, 
+//           items[]{ 
+//             discountText, 
+//             category->{ _id, name, "slug": slug.current, "image": image.asset->url } 
+//           }
+//       },
+
+//       // === F. COUPON SECTION ===
+//       _type == 'couponSection' => {
+//           fullWidth,
+//           couponReference->{
+//              mediaType, mediaUrls, width, height, objectFit, altText, link
+//           }
+//       },
+
+//       // === G. BRAND SECTION ===
+//       _type == 'brandSection' => {
+//           title,
+//           manualBrands[]->{ _id, name, "slug": slug.current, "logo": logo.asset->url }
+//       },
+
+//       // === H. LAYOUT SECTION (Trust/News/Infinite) ===
+//       _type == 'layoutSection' => {
+//           type,
+//           gridTitle
+//       }
+//     },
+
+//     // --- LEGACY DATA (BACKUP) ---
+//     "featuredProductsTitle": "Featured Products",
+//     "featuredProducts": *[_type == "product" && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} },
+    
+//     "bestSellersTitle": "Best Sellers",
+//     "bestSellers": *[_type == "product" && isBestSeller == true] | order(rating desc, reviewCount desc)[0...12]{ ${productFields} },
+    
+//     "newArrivalsTitle": "New Arrivals",
+//     "newArrivals": *[_type == "product"] | order(_createdAt desc)[0...12]{ ${productFields} },
+
+//     "sectionBanners": *[_type == "homepage" && _id == "homepage"][0].sectionBanners,
+
+//     "featuredCategoriesData": *[_type == "homepage" && _id == "homepage"][0] {
+//         featuredCategoriesTitle,
+//         "featuredCategories": featuredCategories[]->{ _id, name, "slug": slug.current, "image": image.asset->url },
+//         categoryGridTitle,
+//         "categoryGrid": categoryGrid[]{
+//           _key,
+//           discountText,
+//           category->{
+//             _id,
+//             name,
+//             "slug": slug.current,
+//             image
+//           }
+//         }
+//     }
+// }`;
+// ... (Upar wale imports aur productFields wese hi rahenge)
+// src/sanity/lib/queries.ts
+
+// ... (baaki saari queries waisi hi rahengi) ...
+
+// === 🔥 UPDATED HOMEPAGE MASTER QUERY (FINAL WITH INFINITE GRID) 🔥 ===
+export const HOMEPAGE_DATA_QUERY = groq`{
+    "pageSections": *[_type == "homepage" && _id == "homepage"][0].pageSections[]{
+      _key,
+      _type,
+
+      // === A. BANNER SECTION ===
+      _type == 'bannerSection' => {
+        // ... (ye section theek hai)
+        desktopLayout,
+        gridColumns,
+        heightMode,
+        aspectRatio,
+        fixedHeight,
+        customHeightPx,
+        mobileBehavior,
+        containerSettings,
+        banners[]{
+          "desktopImage": desktopImage.asset->url,
+          "mobileImage": mobileImage.asset->url,
+          altText, link, heading, subheading, buttonText, contentPosition, overlayOpacity, textColor
+        }
+      },
+
+      // ... (baaki saare sections theek hain) ...
+      // === B. DEAL SECTION ===
+      _type == 'dealSection' => {
+        title, subtitle, fetchStrategy, viewType, backgroundStyle, enableTimer, endTime, showSideBanner,
+        sideBanner { "image": image.asset->url, link },
+        fetchStrategy == 'manual' => { "products": manualProducts[]->{ ${productFields} } },
+        fetchStrategy == 'campaign' => { "campaignSlug": selectedCampaign->slug.current, "products": *[_type == 'product' && references(^.selectedCampaign._ref)] | order(_createdAt desc)[0...12] { ${productFields} } },
+        fetchStrategy == 'category' => { "categorySlug": selectedCategory->slug.current, "products": *[_type == 'product' && references(^.selectedCategory._ref)] | order(_createdAt desc)[0...12] { ${productFields} } },
+        fetchStrategy == 'tag' => { tagType, "products": *[_type == 'product' && ((^.tagType == 'newArrivals' && isNewArrival == true) || (^.tagType == 'bestSellers' && isBestSeller == true) || (^.tagType == 'featured' && isFeatured == true))] | order(_createdAt desc)[0...12] { ${productFields} } }
+      },
+      // === C. PRODUCT SHOWCASE ===
+      _type == 'productShowcase' => {
+        title, type, manualProducts[]->{ ${productFields} }, showSideBanner, 
+        sideBanner { "image": image.asset->url, link },
+        type == 'newest' => { "products": *[_type == 'product'] | order(_createdAt desc)[0...12] { ${productFields} } },
+        type == 'best-selling' => { "products": *[_type == 'product' && isBestSeller == true] | order(rating desc)[0...12] { ${productFields} } },
+        type == 'featured' => { "products": *[_type == 'product' && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} } }
+      },
+      // === D. CATEGORY CAROUSEL ===
+      _type == 'categoryShowcase' => { title, categories[]->{ _id, name, "slug": slug.current, "image": image.asset->url } },
+      // === E. CATEGORY GRID ===
+      _type == 'categoryGrid' => { title, items[]{ discountText, category->{ _id, name, "slug": slug.current, "image": image.asset->url } } },
+
+      // === F. COUPON SECTION (🔥 YAHAN FIX KIYA GAYA HAI) ===
+      _type == 'couponSection' => {
+          fullWidth,
+          couponReference->{
+             mediaType,
+             mediaUrls {
+                mobile { asset->{url} },
+                tablet { asset->{url} },
+                desktop { asset->{url} }
+             },
+             width, 
+             height, 
+             objectFit, 
+             altText, 
+             link->{ _type, "slug": slug.current }
+          }
+      },
+
+      // === G. BRAND SECTION ===
+      _type == 'brandSection' => {
+          title,
+          manualBrands[]->{ _id, name, "slug": slug.current, "logo": logo.asset->url }
+      },
+      // === H. LAYOUT SECTION ===
+      _type == 'layoutSection' => {
+          type, gridTitle,
+          type == 'infiniteGrid' => { "initialProducts": *[_type == "product"] | order(_createdAt desc)[0...12] { ${productFields} } }
+      }
+    },
+
+    // --- Legacy Data ---
+    "featuredProductsTitle": "Featured Products",
+    "featuredProducts": *[_type == "product" && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} },
+    "bestSellersTitle": "Best Sellers",
+    "bestSellers": *[_type == "product" && isBestSeller == true] | order(rating desc, reviewCount desc)[0...12]{ ${productFields} },
+    "newArrivalsTitle": "New Arrivals",
+    "newArrivals": *[_type == "product"] | order(_createdAt desc)[0...12]{ ${productFields} },
+    "sectionBanners": *[_type == "homepage" && _id == "homepage"][0].sectionBanners,
+    "featuredCategoriesData": *[_type == "homepage" && _id == "homepage"][0] {
+        featuredCategoriesTitle,
+        "featuredCategories": featuredCategories[]->{ _id, name, "slug": slug.current, "image": image.asset->url },
+        categoryGridTitle,
+        "categoryGrid": categoryGrid[]{
+          _key,
+          discountText,
+          category->{ _id, name, "slug": slug.current, image }
+        }
+    }
+}`;
+// === 🔥 UPDATED HOMEPAGE MASTER QUERY (FINAL WITH INFINITE GRID) 🔥 ===
+// export const HOMEPAGE_DATA_QUERY = groq`{
+//     "pageSections": *[_type == "homepage" && _id == "homepage"][0].pageSections[]{
+//       _key,
+//       _type,
+
+//       // === A. BANNER SECTION ===
+//       _type == 'bannerSection' => {
+//         desktopLayout,
+//         gridColumns,
+//         heightMode,
+//         aspectRatio,
+//         fixedHeight,
+//         customHeightPx,
+//         mobileBehavior,
+//         containerSettings,
+//         banners[]{
+//           "desktopImage": desktopImage.asset->url,
+//           "mobileImage": mobileImage.asset->url,
+//           altText, link, heading, subheading, buttonText, contentPosition, overlayOpacity, textColor
+//         }
+//       },
+
+//       // === B. DEAL SECTION ===
+//       _type == 'dealSection' => {
+//         title,
+//         subtitle,
+//         fetchStrategy,
+//         viewType,
+//         backgroundStyle,
+//         enableTimer,
+//         endTime,
+//         showSideBanner,
+//         sideBanner { "image": image.asset->url, link },
+
+//         fetchStrategy == 'manual' => {
+//           "products": manualProducts[]->{ ${productFields} }
+//         },
+//         fetchStrategy == 'campaign' => {
+//           "campaignSlug": selectedCampaign->slug.current,
+//           "products": *[_type == 'product' && references(^.selectedCampaign._ref)] | order(_createdAt desc)[0...12] { ${productFields} }
+//         },
+//         fetchStrategy == 'category' => {
+//            "categorySlug": selectedCategory->slug.current,
+//            "products": *[_type == 'product' && references(^.selectedCategory._ref)] | order(_createdAt desc)[0...12] { ${productFields} }
+//         },
+//         fetchStrategy == 'tag' => {
+//            tagType,
+//            "products": *[_type == 'product' && (
+//              (^.tagType == 'newArrivals' && isNewArrival == true) ||
+//              (^.tagType == 'bestSellers' && isBestSeller == true) ||
+//              (^.tagType == 'featured' && isFeatured == true)
+//            )] | order(_createdAt desc)[0...12] { ${productFields} }
+//         }
+//       },
+
+//       // === C. PRODUCT SHOWCASE ===
+//       _type == 'productShowcase' => {
+//           title, type, 
+//           manualProducts[]->{ ${productFields} },
+//           showSideBanner, 
+//           sideBanner { "image": image.asset->url, link },
+
+//           // Auto Fetch Logic for Product Showcase
+//           type == 'newest' => { "products": *[_type == 'product'] | order(_createdAt desc)[0...12] { ${productFields} } },
+//           type == 'best-selling' => { "products": *[_type == 'product' && isBestSeller == true] | order(rating desc)[0...12] { ${productFields} } },
+//           type == 'featured' => { "products": *[_type == 'product' && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} } }
+//       },
+
+//       // === D. CATEGORY CAROUSEL ===
+//       _type == 'categoryShowcase' => {
+//           title, 
+//           categories[]->{ _id, name, "slug": slug.current, "image": image.asset->url }
+//       },
+
+//       // === E. CATEGORY GRID ===
+//       _type == 'categoryGrid' => {
+//           title, 
+//           items[]{ discountText, category->{ _id, name, "slug": slug.current, "image": image.asset->url } }
+//       },
+
+//      // === F. COUPON SECTION ===
+//       _type == 'couponSection' => {
+//           fullWidth,
+//           couponReference->{
+//              mediaType, mediaUrls, width, height, objectFit, altText, link
+//           }
+//       },
+
+//       // === G. BRAND SECTION ===
+//       _type == 'brandSection' => {
+//           title,
+//           manualBrands[]->{ _id, name, "slug": slug.current, "logo": logo.asset->url }
+//       },
+
+//       // === H. LAYOUT SECTION (WITH INFINITE GRID DATA) ===
+//       _type == 'layoutSection' => {
+//           type,
+//           gridTitle,
+//           // 🔥 THIS WAS MISSING - NOW ADDED
+//           type == 'infiniteGrid' => {
+//              "initialProducts": *[_type == "product"] | order(_createdAt desc)[0...12] { ${productFields} }
+//           }
+//       }
+//     },
+
+//     // --- LEGACY DATA ---
+//     "featuredProductsTitle": "Featured Products",
+//     "featuredProducts": *[_type == "product" && isFeatured == true] | order(_createdAt desc)[0...12] { ${productFields} },
+//     "bestSellersTitle": "Best Sellers",
+//     "bestSellers": *[_type == "product" && isBestSeller == true] | order(rating desc, reviewCount desc)[0...12]{ ${productFields} },
+//     "newArrivalsTitle": "New Arrivals",
+//     "newArrivals": *[_type == "product"] | order(_createdAt desc)[0...12]{ ${productFields} },
+//     "sectionBanners": *[_type == "homepage" && _id == "homepage"][0].sectionBanners,
+//     "featuredCategoriesData": *[_type == "homepage" && _id == "homepage"][0] {
+//         featuredCategoriesTitle,
+//         "featuredCategories": featuredCategories[]->{ _id, name, "slug": slug.current, "image": image.asset->url },
+//         categoryGridTitle,
+//         "categoryGrid": categoryGrid[]{
+//           _key,
+//           discountText,
+//           category->{ _id, name, "slug": slug.current, image }
+//         }
+//     }
+// }`;
+
+
+
+
+// === 1. FETCH ALL ACTIVE CAMPAIGNS ===
+export const GET_ALL_CAMPAIGNS = groq`
+  *[_type == "campaign" && isActive == true] {
+    _id,
+    title,
+    "slug": slug.current,
+    description,
+    "banner": banner.asset->url,
+    endDate
+  }
+`;
+
+// === 2. FETCH SPECIFIC CAMPAIGN DATA (FIXED PAGINATION) ===
+export const GET_CAMPAIGN_DATA = groq`
+  *[_type == "campaign" && slug.current == $slug][0] {
+    title,
+    description,
+    "banner": banner.asset->url,
+    endDate,
+    
+    // 🔥 PAGINATION ADDED [0...12]
+    "products": *[_type == "product" && references(^._id)] | order(_createdAt desc) [0...12] {
+      ${productFields}
+    },
+    "totalCount": count(*[_type == "product" && references(^._id)]),
+
+    "filterData": {
+      "brands": array::unique(*[_type == "product" && references(^._id)].brand->{_id, name, "slug": slug.current}),
+      "attributes": *[_type == "product" && references(^._id)].variants[].attributes[]{name, value},
+      "priceRange": {
+        "min": math::min(*[_type == "product" && references(^._id)].variants[].price),
+        "max": math::max(*[_type == "product" && references(^._id)].variants[].price)
+      }
+    }
+  }
+`;

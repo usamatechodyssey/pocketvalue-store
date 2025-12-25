@@ -39,10 +39,26 @@ export async function POST(request: NextRequest) {
       filters.isFeatured = true;
     }
 
-    const options = {
+    // const options = {
+    //   searchTerm: body.context.type === 'search' ? body.context.value : undefined,
+    //   categorySlug: body.context.type === 'category' ? body.context.value : undefined,
+    //   isDeal: body.context.type === 'deals', // Add this for deals page context
+    //   filters: filters,
+    //   minPrice: body.priceRange?.min,
+    //   maxPrice: body.priceRange?.max,
+    //   sortOrder: sortOrder,
+    //   page: body.page || 1,
+    // };
+      const options: any = { // Use 'any' or update type definition
       searchTerm: body.context.type === 'search' ? body.context.value : undefined,
       categorySlug: body.context.type === 'category' ? body.context.value : undefined,
-      isDeal: body.context.type === 'deals', // Add this for deals page context
+      
+      // 🔥 OLD LOGIC (Boolean)
+      isDeal: body.context.type === 'deals' && !body.context.value, 
+      
+      // 🔥 NEW LOGIC (Campaign Slug)
+      campaignSlug: body.context.type === 'deals' ? body.context.value : undefined,
+      
       filters: filters,
       minPrice: body.priceRange?.min,
       maxPrice: body.priceRange?.max,

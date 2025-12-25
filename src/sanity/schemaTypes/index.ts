@@ -22,9 +22,18 @@ import flashSale from '../schemas/flashSale'
 import settings from '../schemas/settings'
 import coupon from '../schemas/coupon'
 import seo from '../schemas/seo'
+import campaign from '../schemas/campaign'
+import dealSection from '../schemas/objects/dealSection'
+import bannerSection from '../schemas/objects/bannerSection'
+import categoryGrid from '../schemas/objects/categoryGrid'
+import categoryShowcase from '../schemas/objects/categoryShowcase'
+import productShowcase from '../schemas/objects/productShowcase'
+import brandSection from '../schemas/objects/brandSection'
+import couponSection from '../schemas/objects/couponSection'
+import layoutSection from '../schemas/objects/layoutSection'
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,dealOfTheDay,brand,couponBanner,featuredCategory,flashSale,settings,coupon,seo],
+  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,dealOfTheDay,brand,couponBanner,featuredCategory,flashSale,settings,coupon,seo,campaign,dealSection,bannerSection,categoryGrid,categoryShowcase,productShowcase,brandSection,couponSection,layoutSection],
 }
 
