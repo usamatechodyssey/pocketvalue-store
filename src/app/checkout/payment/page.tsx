@@ -36,16 +36,87 @@ export default function PaymentPage() {
     }
   }, [shippingAddress, cartItems, router]);
 
+  // const handlePlaceOrder = async () => {
+  //   if (!shippingAddress || !selectedGateway) {
+  //     toastError("Please select a payment method.");
+  //     return;
+  //   }
+  //   setIsProcessing(true);
+  //   let orderId = ""; // Order ID ko yahan store karein
+
+  //   try {
+  //     // Step 1: Order create karein
+  //     const orderRes = await fetch("/api/orders/create", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         shippingAddress,
+  //         cartItems,
+  //         totalPrice: grandTotal,
+  //         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+  //       }),
+  //     });
+  //     const orderData = await orderRes.json();
+  //     if (!orderRes.ok)
+  //       throw new Error(orderData.message || "Failed to create order.");
+
+  //     orderId = orderData.orderId;
+
+  //     // Step 2: Payment process shuru karein
+  //     const paymentRes = await fetch("/api/payment/initiate", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ orderId, gatewayKey: selectedGateway }),
+  //     });
+  //     const paymentData = await paymentRes.json();
+  //     if (!paymentRes.ok)
+  //       throw new Error(paymentData.message || "Payment initiation failed.");
+
+  //     // Step 3: Response ke mutabiq action lein
+  //     if (paymentData.redirectUrl) {
+  //       // External gateway par redirect karein
+  //       clearCart();
+  //       window.location.href = paymentData.redirectUrl;
+  //     } else if (paymentData.success) {
+  //       // Internal gateways (COD, Bank Transfer) ke liye verify karein
+  //       const verifyRes = await fetch(
+  //         `/api/payment/verify/${selectedGateway}`,
+  //         {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ orderId, ...paymentData.data }),
+  //         }
+  //       );
+  //       if (verifyRes.ok && verifyRes.redirected) {
+  //         clearCart();
+  //         window.location.href = verifyRes.url; // Success page par redirect
+  //       } else {
+  //         const errorData = await verifyRes.json();
+  //         throw new Error(
+  //           errorData.message || "Failed to finalize your order."
+  //         );
+  //       }
+  //     } else {
+  //       throw new Error("An unknown error occurred during payment initiation.");
+  //     }
+  //   } catch (error: any) {
+  //     toastError(
+  //       error.message || "An unexpected error occurred.",
+  //       "Order Failed"
+  //     );
+  //     setIsProcessing(false);
+  //   }
+  // };
   const handlePlaceOrder = async () => {
     if (!shippingAddress || !selectedGateway) {
       toastError("Please select a payment method.");
       return;
     }
     setIsProcessing(true);
-    let orderId = ""; // Order ID ko yahan store karein
+    let orderId = "";
 
     try {
-      // Step 1: Order create karein
+      // Step 1: Create Order
       const orderRes = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,7 +133,7 @@ export default function PaymentPage() {
 
       orderId = orderData.orderId;
 
-      // Step 2: Payment process shuru karein
+      // Step 2: Initiate Payment
       const paymentRes = await fetch("/api/payment/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,13 +143,13 @@ export default function PaymentPage() {
       if (!paymentRes.ok)
         throw new Error(paymentData.message || "Payment initiation failed.");
 
-      // Step 3: Response ke mutabiq action lein
+      // Step 3: Handle Response & Redirect
       if (paymentData.redirectUrl) {
-        // External gateway par redirect karein
+        // External Gateway (Stripe, etc.)
         clearCart();
         window.location.href = paymentData.redirectUrl;
       } else if (paymentData.success) {
-        // Internal gateways (COD, Bank Transfer) ke liye verify karein
+        // Internal Gateways (COD, Bank Transfer) - Verify step
         const verifyRes = await fetch(
           `/api/payment/verify/${selectedGateway}`,
           {
@@ -87,19 +158,24 @@ export default function PaymentPage() {
             body: JSON.stringify({ orderId, ...paymentData.data }),
           }
         );
-        if (verifyRes.ok && verifyRes.redirected) {
+
+        // --- NEW LOGIC HERE ---
+        const verifyData = await verifyRes.json();
+
+        if (verifyRes.ok && verifyData.success && verifyData.redirectUrl) {
           clearCart();
-          window.location.href = verifyRes.url; // Success page par redirect
+          // Manual browser redirect
+          window.location.href = verifyData.redirectUrl;
         } else {
-          const errorData = await verifyRes.json();
           throw new Error(
-            errorData.message || "Failed to finalize your order."
+            verifyData.message || "Failed to finalize your order."
           );
         }
       } else {
         throw new Error("An unknown error occurred during payment initiation.");
       }
     } catch (error: any) {
+      console.error("Checkout Error:", error);
       toastError(
         error.message || "An unexpected error occurred.",
         "Order Failed"
