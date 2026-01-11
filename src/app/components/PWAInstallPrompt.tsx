@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Share, PlusSquare, Download } from "lucide-react"; // Icons for better UI
+import { X, Share, PlusSquare, Download } from "lucide-react";
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -11,7 +11,6 @@ export default function PWAInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // 1. Check if App is already installed (Standalone mode)
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
                                (window.navigator as any).standalone || 
                                document.referrer.includes('android-app://');
@@ -21,21 +20,18 @@ export default function PWAInstallPrompt() {
       return; 
     }
 
-    // 2. Detect iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // 3. Android Logic (Save event)
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsVisible(true);
+      checkDismissal(); // Check Time Logic
     };
 
-    // 4. iOS Logic (Always show if not standalone)
     if (isIosDevice) {
-      setIsVisible(true);
+      checkDismissal(); // Check Time Logic
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -45,6 +41,24 @@ export default function PWAInstallPrompt() {
     };
   }, []);
 
+  // === 🔥 SMART TIME LOGIC ===
+  const checkDismissal = () => {
+      const dismissedTime = localStorage.getItem("pwa_popup_dismissed_time");
+      
+      if (dismissedTime) {
+          const now = new Date().getTime();
+          const timePassed = now - parseInt(dismissedTime);
+          const oneDay = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+
+          // Agar 24 ghantay se kam waqt hua hai, to mat dikhao
+          if (timePassed < oneDay) {
+              return; 
+          }
+      }
+      // Agar koi record nahi hai, ya 24 ghantay guzar gaye hain, to dikhao
+      setIsVisible(true);
+  };
+
   const handleAndroidInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -52,24 +66,25 @@ export default function PWAInstallPrompt() {
     
     if (outcome === "accepted") {
       setIsVisible(false);
+      // Agar install kar liya, to permanent band (no timestamp needed)
+      // Lekin browser khud hi standalone mode detect kar lega next time
     }
     setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
-    setIsVisible(false); // Close for this session
+    setIsVisible(false);
+    // 🔥 STEP: Current Time save kar lo
+    localStorage.setItem("pwa_popup_dismissed_time", new Date().getTime().toString());
   };
 
-  // Agar App Installed hai ya Visible nahi hai to return null
   if (isStandalone || !isVisible) return null;
 
   return (
-    // 🔥 MOBILE ONLY FIX: 'md:hidden' ensures it never shows on Tablet/Desktop
     <div className="fixed bottom-4 left-4 right-4 z-9999 md:hidden animate-in slide-in-from-bottom-10 fade-in duration-500">
       
       <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-4 relative">
         
-        {/* Close Button */}
         <button 
           onClick={handleDismiss}
           className="absolute -top-3 -right-3 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-full p-1.5 shadow-md hover:bg-gray-300 transition-colors"
@@ -78,8 +93,6 @@ export default function PWAInstallPrompt() {
         </button>
 
         <div className="flex gap-4 items-center">
-          
-          {/* Logo */}
           <div className="shrink-0 w-14 h-14 relative rounded-xl overflow-hidden shadow-sm border border-gray-100">
             <Image src="/Logo1.png" alt="App Icon" fill className="object-cover" />
           </div>
@@ -89,9 +102,7 @@ export default function PWAInstallPrompt() {
               Install PocketValue App
             </h3>
             
-            {/* === LOGIC: ANDROID vs IOS === */}
             {isIOS ? (
-              // === IOS Instructions ===
               <div className="text-xs text-gray-600 dark:text-gray-300 mt-1.5">
                 <p className="mb-2">For best experience:</p>
                 <div className="flex items-center flex-wrap gap-1 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -104,7 +115,6 @@ export default function PWAInstallPrompt() {
                 </div>
               </div>
             ) : (
-              // === ANDROID Install Button ===
               <div className="mt-2">
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   Add to Home Screen for quick access.
