@@ -1,6 +1,7 @@
+
 // "use client";
 
-// import { useState, useEffect, useCallback, useRef } from "react";
+// import { useState, useEffect, useRef, useMemo } from "react";
 // import { useRouter } from "next/navigation";
 // import {
 //   Search,
@@ -10,6 +11,7 @@
 //   TrendingUp,
 //   History,
 //   Tag,
+//   ArrowRight,
 // } from "lucide-react";
 // import { AnimatePresence, motion } from "framer-motion";
 // import { searchProducts } from "@/sanity/lib/queries";
@@ -30,367 +32,6 @@
 //   searchSuggestions: SearchSuggestions;
 // }
 
-// const SearchSuggestionPill = ({
-//   text,
-//   icon: Icon,
-//   onSelect,
-// }: {
-//   text: string;
-//   icon: React.ComponentType<{ size?: number }>;
-//   onSelect: (term: string) => void;
-// }) => (
-//   <button
-//     onClick={() => onSelect(text)}
-//     className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded-full text-sm text-gray-600 dark:text-gray-300 hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
-//   >
-//     <Icon size={14} />
-//     <span>{text}</span>
-//   </button>
-// );
-
-// export default function SearchBar({ searchSuggestions }: SearchBarProps) {
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [results, setResults] = useState<SanityProduct[]>([]);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const router = useRouter();
-//   const searchContainerRef = useRef<HTMLDivElement>(null);
-//   const inputRef = useRef<HTMLInputElement>(null);
-//   const [isVisualSearchOpen, setIsVisualSearchOpen] = useState(false);
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-//   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-
-//   useEffect(() => {
-//     const storedSearches = localStorage.getItem("pocketvalue_recent_searches");
-//     if (storedSearches) setRecentSearches(JSON.parse(storedSearches));
-//   }, []);
-
-//   const addRecentSearch = (term: string) => {
-//     const trimmedTerm = term.trim();
-//     if (!trimmedTerm) return;
-//     const updatedSearches = [
-//       trimmedTerm,
-//       ...recentSearches.filter(
-//         (t) => t.toLowerCase() !== trimmedTerm.toLowerCase()
-//       ),
-//     ].slice(0, 5);
-//     setRecentSearches(updatedSearches);
-//     localStorage.setItem(
-//       "pocketvalue_recent_searches",
-//       JSON.stringify(updatedSearches)
-//     );
-//   };
-
-//   const handleSearchSubmit = (e: React.FormEvent, term = searchTerm) => {
-//     e.preventDefault();
-//     const finalTerm = term.trim();
-//     if (!finalTerm) return;
-//     addRecentSearch(finalTerm);
-//     router.push(`/search?q=${encodeURIComponent(finalTerm)}`);
-//     setSearchTerm("");
-//     setResults([]);
-//     setIsDropdownOpen(false);
-//     inputRef.current?.blur();
-//   };
-
-//   const debouncedSearch = useCallback(
-//     debounce(async (query: string) => {
-//       if (query.trim().length > 1) {
-//         setIsLoading(true);
-//         const { products } = await searchProducts({
-//           searchTerm: query.trim(),
-//           page: 1,
-//         });
-//         setResults(products.slice(0, 4));
-//         setIsLoading(false);
-//       } else {
-//         setResults([]);
-//       }
-//     }, 300),
-//     []
-//   );
-
-//   useEffect(() => {
-//     debouncedSearch(searchTerm);
-//   }, [searchTerm, debouncedSearch]);
-//   useEffect(() => {
-//     const handleClickOutside = (event: MouseEvent) => {
-//       if (
-//         searchContainerRef.current &&
-//         !searchContainerRef.current.contains(event.target as Node)
-//       ) {
-//         setIsDropdownOpen(false);
-//         setIsVisualSearchOpen(false);
-//       }
-//     };
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   const showSuggestions = !searchTerm.trim();
-//   const showResults = !!searchTerm.trim();
-
-//   return (
-//     <div ref={searchContainerRef} className="relative w-full">
-//       <form
-//         onSubmit={handleSearchSubmit}
-//         className="flex items-center w-full bg-gray-100 dark:bg-gray-800 rounded-lg shadow-inner focus-within:ring-2 focus-within:ring-brand-primary transition-all"
-//       >
-//         <div className="pl-4 pr-2 text-gray-400 dark:text-gray-500">
-//           <Search size={20} />
-//         </div>
-//         <input
-//           ref={inputRef}
-//           type="text"
-//           value={searchTerm}
-//           onChange={(e) => setSearchTerm(e.target.value)}
-//           placeholder="Search for products..."
-//           className="w-full h-12 text-base text-gray-800 dark:text-gray-200 bg-transparent focus:outline-none placeholder-gray-400 dark:placeholder-gray-500"
-//           onFocus={() => {
-//             setIsVisualSearchOpen(false);
-//             setIsDropdownOpen(true);
-//           }}
-//         />
-//         {searchTerm && (
-//           <button
-//             type="button"
-//             onClick={() => setSearchTerm("")}
-//             className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 px-3 h-12 flex items-center justify-center transition-colors"
-//             aria-label="Clear search"
-//           >
-//             <X size={18} />
-//           </button>
-//         )}
-//         <button
-//           type="button"
-//           onClick={() => {
-//             setIsDropdownOpen(false);
-//             setIsVisualSearchOpen((prev) => !prev);
-//           }}
-//           className="text-gray-500 hover:text-brand-primary px-3 h-12 flex items-center justify-center transition-colors border-l border-gray-200 dark:border-gray-700"
-//           aria-label="Search by image"
-//         >
-//           <Camera size={20} />
-//         </button>
-//         <button
-//           type="submit"
-//           className="bg-brand-primary hover:bg-brand-primary-hover transition-colors h-12 px-5 flex items-center justify-center rounded-r-lg focus:outline-none"
-//           aria-label="Submit search"
-//         >
-//           <Search className="text-white" size={20} />
-//         </button>
-//       </form>
-
-//       <AnimatePresence>
-//         {isVisualSearchOpen && (
-//           <motion.div
-//             key="visual-search-panel"
-//             initial={{ opacity: 0, y: -10 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             exit={{ opacity: 0, y: -10 }}
-//           >
-//             <VisualSearchPanel onClose={() => setIsVisualSearchOpen(false)} />
-//           </motion.div>
-//         )}
-
-//         {isDropdownOpen && (
-//           <motion.div
-//             key="search-dropdown"
-//             initial={{ opacity: 0, y: -10 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             exit={{ opacity: 0, y: -10 }}
-//             className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-[70vh] overflow-y-auto"
-//           >
-//             {showResults && (
-//               <div>
-//                 {isLoading && (
-//                   <div className="p-4 flex items-center justify-center gap-2 text-gray-500">
-//                     <Loader2 className="animate-spin" size={16} /> Searching...
-//                   </div>
-//                 )}
-//                 {!isLoading && results.length > 0 && (
-//                   <ul>
-//                     {results.map((product) => (
-//                       <li key={product._id}>
-//                         <Link
-//                           href={`/product/${product.slug}`}
-//                           onClick={() => {
-//                             addRecentSearch(searchTerm);
-//                             setSearchTerm("");
-//                             setIsDropdownOpen(false);
-//                           }}
-//                           className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-//                         >
-//                           <div className="relative w-14 h-14 shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md">
-//                             <Image
-//                               src={
-//                                 product.defaultVariant.images?.[0]
-//                                   ? urlFor(
-//                                       product.defaultVariant.images[0]
-//                                     ).url()
-//                                   : PLACEHOLDER_IMAGE_URL
-//                               }
-//                               alt={product.title}
-//                               fill
-//                               className="object-contain p-1"
-//                               sizes="56px"
-//                             />
-//                           </div>
-//                           <div className="grow overflow-hidden">
-//                             <p className="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
-//                               {product.title}
-//                             </p>
-//                             <p className="text-sm font-bold text-brand-primary">
-//                               Rs.{" "}
-//                               {(
-//                                 product.defaultVariant.salePrice ??
-//                                 product.defaultVariant.price
-//                               ).toLocaleString()}
-//                             </p>
-//                           </div>
-//                         </Link>
-//                       </li>
-//                     ))}
-//                     <li className="p-3 text-center border-t border-gray-200 dark:border-gray-700">
-//                       <button
-//                         onClick={(e) => handleSearchSubmit(e)}
-//                         className="text-sm font-bold text-brand-primary hover:underline"
-//                       >
-//                         View all results for "{searchTerm}"
-//                       </button>
-//                     </li>
-//                   </ul>
-//                 )}
-//                 {!isLoading &&
-//                   results.length === 0 &&
-//                   searchTerm.length > 1 && (
-//                     <p className="p-4 text-center text-gray-500">
-//                       No results found for "{searchTerm}".
-//                     </p>
-//                   )}
-//               </div>
-//             )}
-//             {showSuggestions && (
-//               <div className="p-6 space-y-6">
-//                 {recentSearches.length > 0 && (
-//                   <section>
-//                     <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-//                       Recent Searches
-//                     </h3>
-//                     <div className="flex flex-wrap gap-2">
-//                       {recentSearches.map((term) => (
-//                         <SearchSuggestionPill
-//                           key={term}
-//                           text={term}
-//                           icon={History}
-//                           onSelect={(t) =>
-//                             handleSearchSubmit(new Event("submit") as any, t)
-//                           }
-//                         />
-//                       ))}
-//                     </div>
-//                   </section>
-//                 )}
-
-//                 {/* --- FIX APPLIED HERE --- */}
-//                 {searchSuggestions?.trendingKeywords?.length > 0 && (
-//                   <section>
-//                     <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-//                       Trending Now
-//                     </h3>
-//                     <div className="flex flex-wrap gap-2">
-//                       {searchSuggestions.trendingKeywords.map((term) => (
-//                         <SearchSuggestionPill
-//                           key={term}
-//                           text={term}
-//                           icon={TrendingUp}
-//                           onSelect={(t) =>
-//                             handleSearchSubmit(new Event("submit") as any, t)
-//                           }
-//                         />
-//                       ))}
-//                     </div>
-//                   </section>
-//                 )}
-
-//                 {/* --- FIX APPLIED HERE --- */}
-//                 {searchSuggestions?.popularCategories?.length > 0 && (
-//                   <section>
-//                     <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-//                       Popular Categories
-//                     </h3>
-//                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-//                       {searchSuggestions.popularCategories.map((cat) => (
-//                         <Link
-//                           key={cat._id}
-//                           href={`/category/${cat.slug}`}
-//                           onClick={() => setIsDropdownOpen(false)}
-//                           className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
-//                         >
-//                           <div className="w-16 h-16 relative rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-//                             {cat.image ? (
-//                               <Image
-//                                 src={cat.image}
-//                                 alt={cat.name}
-//                                 fill
-//                                 className="object-cover"
-//                                 sizes="64px"
-//                               />
-//                             ) : (
-//                               <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-//                                 <Tag className="text-gray-400" />
-//                               </div>
-//                             )}
-//                           </div>
-//                           <p className="text-xs font-semibold text-center text-gray-700 dark:text-gray-300 line-clamp-2">
-//                             {cat.name}
-//                           </p>
-//                         </Link>
-//                       ))}
-//                     </div>
-//                   </section>
-//                 )}
-//               </div>
-//             )}
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </div>
-//   );
-// }
-// "use client";
-
-// import { useState, useEffect, useCallback, useRef } from "react";
-// import { useRouter } from "next/navigation";
-// import {
-//   Search,
-//   Camera,
-//   X,
-//   Loader2,
-//   TrendingUp,
-//   History,
-//   Tag,
-//   ArrowRight
-// } from "lucide-react";
-// import { AnimatePresence, motion } from "framer-motion";
-// import { searchProducts } from "@/sanity/lib/queries";
-// import SanityProduct, { SanityCategory } from "@/sanity/types/product_types";
-// import Image from "next/image";
-// import { urlFor } from "@/sanity/lib/image";
-// import Link from "next/link";
-// import { debounce } from "lodash";
-// import VisualSearchPanel from "@/app/components/ui/VisualSearchPanell"; // Note: Check filename spelling (Panel vs Panell)
-
-// const PLACEHOLDER_IMAGE_URL = "/placeholder.png";
-
-// interface SearchSuggestions {
-//   trendingKeywords: string[];
-//   popularCategories: SanityCategory[];
-// }
-// interface SearchBarProps {
-//   searchSuggestions: SearchSuggestions;
-// }
-
-// // --- STYLISH SUGGESTION PILL ---
 // const SearchSuggestionPill = ({
 //   text,
 //   icon: Icon,
@@ -453,22 +94,32 @@
 //     inputRef.current?.blur();
 //   };
 
-//   const debouncedSearch = useCallback(
-//     debounce(async (query: string) => {
-//       if (query.trim().length > 1) {
-//         setIsLoading(true);
-//         const { products } = await searchProducts({
-//           searchTerm: query.trim(),
-//           page: 1,
-//         });
-//         setResults(products.slice(0, 4)); // Limit to 4 results for quick preview
-//         setIsLoading(false);
-//       } else {
-//         setResults([]);
-//       }
-//     }, 300),
+//   // 🔥 FIX: useMemo instead of useCallback for Lodash Debounce
+//   // Debounce function state ko maintain karta hai, isliye usay re-create nahi hona chahiye.
+//   const debouncedSearch = useMemo(
+//     () =>
+//       debounce(async (query: string) => {
+//         if (query.trim().length > 1) {
+//           setIsLoading(true);
+//           const { products } = await searchProducts({
+//             searchTerm: query.trim(),
+//             page: 1,
+//           });
+//           setResults(products.slice(0, 4));
+//           setIsLoading(false);
+//         } else {
+//           setResults([]);
+//         }
+//       }, 300),
 //     []
 //   );
+
+//   // Clean up debounce on unmount
+//   useEffect(() => {
+//     return () => {
+//       debouncedSearch.cancel();
+//     };
+//   }, [debouncedSearch]);
 
 //   useEffect(() => {
 //     debouncedSearch(searchTerm);
@@ -493,19 +144,16 @@
 
 //   return (
 //     <div ref={searchContainerRef} className="relative w-full z-50">
-
-//       {/* === MAIN SEARCH INPUT BAR === */}
 //       <form
 //         onSubmit={handleSearchSubmit}
 //         className={`
-//           relative flex items-center w-full h-[50px]
+//           relative flex items-center w-full h-[50px] 
 //           bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm
 //           border border-transparent focus-within:border-brand-primary/50 focus-within:bg-white dark:focus-within:bg-gray-900
 //           focus-within:ring-4 focus-within:ring-brand-primary/10
 //           rounded-full transition-all duration-300 ease-out shadow-sm hover:shadow-md
 //         `}
 //       >
-//         {/* Search Icon */}
 //         <div className="pl-5 pr-3 text-gray-400 dark:text-gray-500">
 //           <Search size={20} />
 //         </div>
@@ -523,10 +171,7 @@
 //           }}
 //         />
 
-//         {/* Action Buttons Right Side */}
 //         <div className="flex items-center pr-2 gap-1">
-
-//           {/* Clear Button (Only shows when typing) */}
 //           <AnimatePresence>
 //             {searchTerm && (
 //               <motion.button
@@ -542,20 +187,18 @@
 //             )}
 //           </AnimatePresence>
 
-//           {/* Visual Search Trigger */}
 //           <button
 //             type="button"
 //             onClick={() => {
 //               setIsDropdownOpen(false);
 //               setIsVisualSearchOpen((prev) => !prev);
 //             }}
-//             className={`p-2 rounded-full transition-all duration-200 ${isVisualSearchOpen ? 'text-brand-primary bg-brand-primary/10' : 'text-gray-400 hover:text-brand-primary hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+//             className={`p-2 rounded-full transition-all duration-200 ${isVisualSearchOpen ? "text-brand-primary bg-brand-primary/10" : "text-gray-400 hover:text-brand-primary hover:bg-gray-200 dark:hover:bg-gray-700"}`}
 //             title="Search by Image"
 //           >
 //             <Camera size={20} />
 //           </button>
 
-//           {/* Search Submit Button */}
 //           <button
 //             type="submit"
 //             className="ml-1 h-9 w-9 flex items-center justify-center bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full shadow-md hover:shadow-lg transform active:scale-95 transition-all duration-200"
@@ -565,7 +208,6 @@
 //         </div>
 //       </form>
 
-//       {/* === VISUAL SEARCH PANEL === */}
 //       <AnimatePresence>
 //         {isVisualSearchOpen && (
 //           <motion.div
@@ -581,7 +223,6 @@
 //         )}
 //       </AnimatePresence>
 
-//       {/* === DROPDOWN RESULTS === */}
 //       <AnimatePresence>
 //         {isDropdownOpen && !isVisualSearchOpen && (
 //           <motion.div
@@ -592,12 +233,14 @@
 //             transition={{ duration: 0.2, ease: "easeOut" }}
 //             className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-[75vh] overflow-y-auto custom-scrollbar"
 //           >
-//             {/* ... LIVE RESULTS ... */}
 //             {showResults && (
 //               <div className="py-2">
 //                 {isLoading && (
 //                   <div className="p-8 flex flex-col items-center justify-center gap-3 text-gray-500">
-//                     <Loader2 className="animate-spin text-brand-primary" size={24} />
+//                     <Loader2
+//                       className="animate-spin text-brand-primary"
+//                       size={24}
+//                     />
 //                     <span className="text-sm font-medium">Searching...</span>
 //                   </div>
 //                 )}
@@ -623,7 +266,9 @@
 //                               <Image
 //                                 src={
 //                                   product.defaultVariant.images?.[0]
-//                                     ? urlFor(product.defaultVariant.images[0]).url()
+//                                     ? urlFor(
+//                                         product.defaultVariant.images[0]
+//                                       ).url()
 //                                     : PLACEHOLDER_IMAGE_URL
 //                                 }
 //                                 alt={product.title}
@@ -637,44 +282,57 @@
 //                               </p>
 //                               <div className="flex items-center gap-2 mt-0.5">
 //                                 <span className="text-sm font-bold text-brand-primary">
-//                                   Rs. {((product.defaultVariant.salePrice ?? product.defaultVariant.price)).toLocaleString()}
+//                                   Rs.{" "}
+//                                   {(
+//                                     product.defaultVariant.salePrice ??
+//                                     product.defaultVariant.price
+//                                   ).toLocaleString()}
 //                                 </span>
 //                                 {product.defaultVariant.salePrice && (
-//                                     <span className="text-xs text-gray-400 line-through">
-//                                         Rs. {product.defaultVariant.price.toLocaleString()}
-//                                     </span>
+//                                   <span className="text-xs text-gray-400 line-through">
+//                                     Rs.{" "}
+//                                     {product.defaultVariant.price.toLocaleString()}
+//                                   </span>
 //                                 )}
 //                               </div>
 //                             </div>
-//                             <ArrowRight size={16} className="text-gray-300 group-hover:text-brand-primary -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+//                             <ArrowRight
+//                               size={16}
+//                               className="text-gray-300 group-hover:text-brand-primary -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all"
+//                             />
 //                           </Link>
 //                         </li>
 //                       ))}
 //                     </ul>
 //                     <div className="px-3 pt-2">
-//                         <button
-//                             onClick={(e) => handleSearchSubmit(e)}
-//                             className="w-full py-3 mt-2 text-sm font-bold text-center text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover transition-colors shadow-md hover:shadow-lg"
-//                         >
-//                             View all results for "{searchTerm}"
-//                         </button>
+//                       <button
+//                         onClick={(e) => handleSearchSubmit(e)}
+//                         className="w-full py-3 mt-2 text-sm font-bold text-center text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover transition-colors shadow-md hover:shadow-lg"
+//                       >
+//                         View all results for "{searchTerm}"
+//                       </button>
 //                     </div>
 //                   </div>
 //                 )}
 
-//                 {!isLoading && results.length === 0 && searchTerm.length > 1 && (
+//                 {!isLoading &&
+//                   results.length === 0 &&
+//                   searchTerm.length > 1 && (
 //                     <div className="p-10 text-center text-gray-500">
-//                         <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-//                             <Search size={32} className="text-gray-400" />
-//                         </div>
-//                         <p className="text-lg font-medium text-gray-700 dark:text-gray-300">No results found</p>
-//                         <p className="text-sm mt-1">Try searching for something else</p>
+//                       <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+//                         <Search size={32} className="text-gray-400" />
+//                       </div>
+//                       <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+//                         No results found
+//                       </p>
+//                       <p className="text-sm mt-1">
+//                         Try searching for something else
+//                       </p>
 //                     </div>
-//                 )}
+//                   )}
 //               </div>
 //             )}
 
-//             {/* ... SUGGESTIONS (Recent, Trending, Categories) ... */}
 //             {showSuggestions && (
 //               <div className="p-6 space-y-8">
 //                 {recentSearches.length > 0 && (
@@ -683,13 +341,28 @@
 //                       <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2">
 //                         <History size={14} /> Recent Searches
 //                       </h3>
-//                       <button onClick={() => { localStorage.removeItem("pocketvalue_recent_searches"); setRecentSearches([]); }} className="text-[10px] font-semibold text-red-500 hover:text-red-600 hover:underline">
+//                       <button
+//                         onClick={() => {
+//                           localStorage.removeItem(
+//                             "pocketvalue_recent_searches"
+//                           );
+//                           setRecentSearches([]);
+//                         }}
+//                         className="text-[10px] font-semibold text-red-500 hover:text-red-600 hover:underline"
+//                       >
 //                         Clear All
 //                       </button>
 //                     </div>
 //                     <div className="flex flex-wrap gap-2">
 //                       {recentSearches.map((term) => (
-//                         <SearchSuggestionPill key={term} text={term} icon={History} onSelect={(t) => handleSearchSubmit(new Event("submit") as any, t)} />
+//                         <SearchSuggestionPill
+//                           key={term}
+//                           text={term}
+//                           icon={History}
+//                           onSelect={(t) =>
+//                             handleSearchSubmit(new Event("submit") as any, t)
+//                           }
+//                         />
 //                       ))}
 //                     </div>
 //                   </section>
@@ -702,7 +375,14 @@
 //                     </h3>
 //                     <div className="flex flex-wrap gap-2">
 //                       {searchSuggestions.trendingKeywords.map((term) => (
-//                         <SearchSuggestionPill key={term} text={term} icon={TrendingUp} onSelect={(t) => handleSearchSubmit(new Event("submit") as any, t)} />
+//                         <SearchSuggestionPill
+//                           key={term}
+//                           text={term}
+//                           icon={TrendingUp}
+//                           onSelect={(t) =>
+//                             handleSearchSubmit(new Event("submit") as any, t)
+//                           }
+//                         />
 //                       ))}
 //                     </div>
 //                   </section>
@@ -721,11 +401,19 @@
 //                           onClick={() => setIsDropdownOpen(false)}
 //                           className="flex flex-col items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-white hover:shadow-md dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-200 group"
 //                         >
-//                           <div className="w-12 h-12 relative rounded-full overflow-hidden bg-white shadow-sm group-hover:scale-110 transition-transform">
+//                           <div className="w-12 h-12 relative rounded-full overflow-hidden bg-white dark:bg-gray-700 shadow-sm group-hover:scale-110 transition-transform">
 //                             {cat.image ? (
-//                               <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" />
+//                               <Image
+//                                 src={cat.image}
+//                                 alt={cat.name}
+//                                 fill
+//                                 className="object-cover"
+//                                 sizes="48px"
+//                               />
 //                             ) : (
-//                               <div className="w-full h-full flex items-center justify-center"><Tag className="text-gray-300" size={20} /></div>
+//                               <div className="w-full h-full flex items-center justify-center">
+//                                 <Tag className="text-gray-300" size={20} />
+//                               </div>
 //                             )}
 //                           </div>
 //                           <p className="text-[11px] font-bold text-center text-gray-600 dark:text-gray-400 group-hover:text-brand-primary line-clamp-2 leading-tight">
@@ -746,7 +434,7 @@
 // }
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -790,9 +478,7 @@ const SearchSuggestionPill = ({
     onClick={() => onSelect(text)}
     className="group flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-brand-primary hover:text-white rounded-full text-sm text-gray-600 dark:text-gray-300 transition-all duration-200 active:scale-95"
   >
-    <Icon
-      size={14}
-    />
+    <Icon size={14} />
     <span className="font-medium">{text}</span>
   </button>
 );
@@ -809,8 +495,16 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   useEffect(() => {
-    const storedSearches = localStorage.getItem("pocketvalue_recent_searches");
-    if (storedSearches) setRecentSearches(JSON.parse(storedSearches));
+    if (typeof window !== "undefined") {
+      const storedSearches = localStorage.getItem("pocketvalue_recent_searches");
+      if (storedSearches) {
+        try {
+          setRecentSearches(JSON.parse(storedSearches));
+        } catch (e) {
+          console.error("Failed to parse recent searches", e);
+        }
+      }
+    }
   }, []);
 
   const addRecentSearch = (term: string) => {
@@ -823,10 +517,12 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
       ),
     ].slice(0, 5);
     setRecentSearches(updatedSearches);
-    localStorage.setItem(
-      "pocketvalue_recent_searches",
-      JSON.stringify(updatedSearches)
-    );
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "pocketvalue_recent_searches",
+        JSON.stringify(updatedSearches)
+      );
+    }
   };
 
   const handleSearchSubmit = (e: React.FormEvent, term = searchTerm) => {
@@ -841,22 +537,35 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
     inputRef.current?.blur();
   };
 
-  const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
-      if (query.trim().length > 1) {
-        setIsLoading(true);
-        const { products } = await searchProducts({
-          searchTerm: query.trim(),
-          page: 1,
-        });
-        setResults(products.slice(0, 4));
-        setIsLoading(false);
-      } else {
-        setResults([]);
-      }
-    }, 300),
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (query: string) => {
+        if (query.trim().length > 1) {
+          setIsLoading(true);
+          try {
+            const { products } = await searchProducts({
+              searchTerm: query.trim(),
+              page: 1,
+            });
+            setResults(products.slice(0, 4));
+          } catch (error) {
+            console.error("Search failed", error);
+            setResults([]);
+          } finally {
+             setIsLoading(false);
+          }
+        } else {
+          setResults([]);
+        }
+      }, 300),
     []
   );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   useEffect(() => {
     debouncedSearch(searchTerm);
@@ -1046,7 +755,8 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
                         onClick={(e) => handleSearchSubmit(e)}
                         className="w-full py-3 mt-2 text-sm font-bold text-center text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover transition-colors shadow-md hover:shadow-lg"
                       >
-                        View all results for "{searchTerm}"
+                        {/* ✅ FIX: Replaced " with &quot; */}
+                        View all results for &quot;{searchTerm}&quot;
                       </button>
                     </div>
                   </div>
@@ -1138,7 +848,6 @@ export default function SearchBar({ searchSuggestions }: SearchBarProps) {
                           onClick={() => setIsDropdownOpen(false)}
                           className="flex flex-col items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-white hover:shadow-md dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-200 group"
                         >
-                          {/* === FIX IS HERE: Added dark:bg-gray-700 === */}
                           <div className="w-12 h-12 relative rounded-full overflow-hidden bg-white dark:bg-gray-700 shadow-sm group-hover:scale-110 transition-transform">
                             {cat.image ? (
                               <Image

@@ -29,204 +29,157 @@
 //   const logoIconRef = useRef(null);
 //   const [isAnimating, setIsAnimating] = useState(false);
 //   const [isTabletSearchOpen, setIsTabletSearchOpen] = useState(false);
-
-//   const playLogoAnimation = () => {
-//     if (isAnimating || !logoIconRef.current) return;
-//     setIsAnimating(true);
-
-//     const isLargeScreen = window.innerWidth >= 1024;
-//     const tl = gsap.timeline({ onComplete: () => setIsAnimating(false) });
-
-//     if (isLargeScreen) {
-//       tl.to(logoIconRef.current, {
-//         x: -120,
-//         rotation: -360,
-//         scale: 1.1,
-//         duration: 1.5,
-//         ease: "power2.inOut",
-//       }).to(logoIconRef.current, {
-//         x: 0,
-//         rotation: 0,
-//         scale: 1,
-//         duration: 1.2,
-//         ease: "elastic.out(1, 0.5)",
-//         delay: 0.1,
-//       });
-//     } else {
-//       tl.to(logoIconRef.current, {
-//         rotation: -360,
-//         scale: 1.2,
-//         duration: 1.5,
-//         ease: "power2.inOut",
-//       }).to(logoIconRef.current, {
-//         rotation: 0,
-//         scale: 1,
-//         duration: 1.2,
-//         ease: "elastic.out(1, 0.5)",
-//       });
-//     }
-//   };
+//   const [mounted, setMounted] = useState(false);
 
 //   useEffect(() => {
+//     setMounted(true);
 //     const timer = setTimeout(() => playLogoAnimation(), 1500);
 //     return () => clearTimeout(timer);
 //   }, []);
 
+//   const playLogoAnimation = () => {
+//     if (isAnimating || !logoIconRef.current) return;
+//     setIsAnimating(true);
+//     const isLargeScreen = window.innerWidth >= 1024; 
+//     const tl = gsap.timeline({ onComplete: () => setIsAnimating(false) });
+//     if (isLargeScreen) {
+//         tl.to(logoIconRef.current, { x: -120, rotation: -360, scale: 1.1, duration: 1.5, ease: "power2.inOut" })
+//           .to(logoIconRef.current, { x: 0, rotation: 0, scale: 1, duration: 1.2, ease: "elastic.out(1, 0.5)", delay: 0.1 });
+//     } else {
+//         tl.to(logoIconRef.current, { rotation: -360, scale: 1.2, duration: 1.5, ease: "power2.inOut" })
+//           .to(logoIconRef.current, { rotation: 0, scale: 1, duration: 1.2, ease: "elastic.out(1, 0.5)" });
+//     }
+//   };
+
+//   // === 🔥 STATIC SKELETON (RESPONSIVE FIX) ===
+//   if (!mounted) {
+//     return (
+//       <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 w-full z-50 relative">
+//         <div className="max-w-[1920px] mx-auto w-full">
+            
+//             {/* === 1. DESKTOP & TABLET SKELETON (Hidden on Mobile) === */}
+//             <div className="hidden md:flex items-center justify-between h-20 lg:h-28 px-6 lg:px-12 gap-8">
+//                 {/* Left: Logo + Text */}
+//                 <div className="flex items-center gap-4">
+//                     {/* Tablet Menu Button */}
+//                     <div className="hidden md:block lg:hidden w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
+                    
+//                     {/* Logo Icon */}
+//                     <div className="w-14 h-14 lg:w-20 lg:h-20 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+                    
+//                     {/* Logo Text (Now visible on MD too) */}
+//                     <div className="flex flex-col gap-2">
+//                         <div className="w-24 lg:w-32 h-4 bg-gray-200 dark:bg-gray-800 rounded"></div>
+//                         <div className="w-16 lg:w-20 h-2 bg-gray-200 dark:bg-gray-800 rounded"></div>
+//                     </div>
+//                 </div>
+
+//                 {/* Center: Search Bar (Desktop Only) */}
+//                 <div className="hidden lg:block grow max-w-4xl px-4">
+//                     <div className="w-full h-12 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+//                 </div>
+
+//                 {/* Right: Actions (isMobile=false -> 3 Icons) */}
+//                 <div className="flex items-center gap-4">
+//                     <div className="hidden md:block lg:hidden w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
+//                     <HeaderActions isMobile={false} />
+//                 </div>
+//             </div>
+
+//             {/* === 2. MOBILE SKELETON (Visible only on Mobile) === */}
+//             <div className="md:hidden flex items-center justify-between h-20 px-4">
+//                 {/* Left: Logo + Text */}
+//                 <div className="flex items-center gap-3">
+//                     <div className="w-14 h-14 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+//                     <div className="flex flex-col gap-1.5">
+//                         <div className="w-24 h-4 bg-gray-200 dark:bg-gray-800 rounded"></div>
+//                         <div className="w-16 h-2 bg-gray-200 dark:bg-gray-800 rounded"></div>
+//                     </div>
+//                 </div>
+
+//                 {/* Right: Actions (isMobile=true -> 2 Icons) */}
+//                 <div>
+//                     <HeaderActions isMobile={true} />
+//                 </div>
+//             </div>
+
+//         </div>
+//       </header>
+//     );
+//   }
+
+//   // === REAL HEADER ===
 //   return (
-//     // Added 'z-50' to ensure dropdowns appear above content
 //     <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 w-full z-50 relative">
-//       {/* === 🖥️ DESKTOP VIEW === */}
-//       <div className="hidden lg:flex items-center justify-between h-28 w-full px-12 gap-8">
-//         <div className="flex items-center gap-6 shrink-0">
-//           <Link
-//             href="/"
-//             className="flex items-center gap-4 group"
-//             onMouseEnter={playLogoAnimation}
-//           >
-//             <div
-//               ref={logoIconRef}
-//               className="relative h-20 w-20 filter drop-shadow-sm"
-//             >
-//               <Image
-//                 src="/usamabrand.svg"
-//                 alt="Logo"
-//                 fill
-//                 className="object-contain"
-//                 priority
-//               />
+//       <div className="max-w-[1920px] mx-auto w-full">
+
+//         {/* === 🖥️ DESKTOP VIEW === */}
+//         <div className="hidden lg:flex items-center justify-between h-28 w-full px-8 xl:px-12 gap-8">
+//           <div className="flex items-center gap-6 shrink-0">
+//             <Link href="/" className="flex items-center gap-4 group" onMouseEnter={playLogoAnimation}>
+//               <div ref={logoIconRef} className="relative h-20 w-20 filter drop-shadow-sm">
+//                 <Image src="/usamabrand.svg" alt="Logo" fill className="object-contain" priority />
+//               </div>
+//               <div className="flex flex-col justify-center">
+//                 <span className="text-gray-900 dark:text-white text-3xl font-clash font-bold tracking-tight leading-none">PocketValue</span>
+//                 <span className="text-sm text-brand-primary font-medium tracking-widest uppercase mt-1">Premium Store</span>
+//               </div>
+//             </Link>
+//           </div>
+//           <div className="grow max-w-4xl px-4 relative z-50">
+//             <SearchBar searchSuggestions={searchSuggestions} />
+//           </div>
+//           <div className="flex items-center gap-6 shrink-0">
+//             <HeaderActions isMobile={false} />
+//           </div>
+//         </div>
+
+//         {/* === 📱 TABLET VIEW === */}
+//         <div className={`hidden md:flex lg:hidden items-center justify-between h-24 w-full px-6 gap-4 relative ${isTabletSearchOpen ? 'overflow-visible' : 'overflow-hidden'}`}>
+//           <AnimatePresence mode="wait">
+//               {!isTabletSearchOpen ? (
+//                   <motion.div key="normal-nav" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex items-center justify-between">
+//                       <div className="flex items-center gap-4">
+//                           <button onClick={onMenuClick} className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-brand-primary hover:text-white transition-colors shrink-0"><LayoutGrid size={24} /></button>
+//                           <Link href="/" className="flex items-center gap-3" onMouseEnter={playLogoAnimation}>
+//                               <div className="relative h-16 w-16 shrink-0"><Image src="/usamabrand.svg" alt="Logo" fill className="object-contain" priority /></div>
+//                               <div className="flex flex-col justify-center"><span className="text-2xl font-clash font-bold text-gray-900 dark:text-white leading-none">PocketValue</span><span className="text-xs text-brand-primary font-medium tracking-widest uppercase mt-0.5">Premium Store</span></div>
+//                           </Link>
+//                       </div>
+//                       <div className="flex items-center gap-4">
+//                           <button onClick={() => setIsTabletSearchOpen(true)} className="p-2.5 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-brand-primary/10 text-gray-600 dark:text-gray-300 hover:text-brand-primary transition-all"><Search size={22} strokeWidth={2.5} /></button>
+//                           <div className="h-8 w-px bg-gray-200 dark:bg-gray-700" />
+//                           <HeaderActions isMobile={false} />
+//                       </div>
+//                   </motion.div>
+//               ) : (
+//                   <motion.div key="search-nav" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="w-full flex items-center gap-3 z-50">
+//                       <button onClick={() => setIsTabletSearchOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors shrink-0"><ArrowLeft size={24} className="text-gray-600 dark:text-gray-300" /></button>
+//                       <div className="grow relative z-50"><SearchBar searchSuggestions={searchSuggestions} /></div>
+//                   </motion.div>
+//               )}
+//           </AnimatePresence>
+//         </div>
+
+//         {/* === 📱 MOBILE VIEW === */}
+//         <div className="md:hidden flex items-center justify-between w-full h-20 px-4 relative overflow-hidden">
+//           <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-brand-primary via-brand-secondary to-brand-primary opacity-80" />
+//           <Link href="/" className="flex items-center gap-3 z-10" onMouseEnter={playLogoAnimation}>
+//             <div className="relative h-14 w-14 filter drop-shadow-sm shrink-0">
+//               <Image src="/usamabrand.svg" alt="PocketValue Logo" fill className="object-contain" priority />
 //             </div>
 //             <div className="flex flex-col justify-center">
-//               <span className="text-gray-900 dark:text-white text-3xl font-clash font-bold tracking-tight leading-none">
+//               <span className="text-xl font-clash font-bold text-gray-900 dark:text-white tracking-tight leading-none">
 //                 PocketValue
 //               </span>
-//               <span className="text-sm text-brand-primary font-medium tracking-widest uppercase mt-1">
+//               <span className="text-[10px] text-brand-primary font-medium tracking-wider uppercase mt-0.5">
 //                 Premium Store
 //               </span>
 //             </div>
 //           </Link>
+//           <div className="z-10"><HeaderActions isMobile={true} /></div>
 //         </div>
-//         <div className="grow max-w-4xl px-4 relative z-50">
-//           {" "}
-//           {/* Z-Index added */}
-//           <SearchBar searchSuggestions={searchSuggestions} />
-//         </div>
-//         <div className="flex items-center gap-6 shrink-0">
-//           <HeaderActions isMobile={false} />
-//         </div>
-//       </div>
 
-//       {/* === 📱 TABLET VIEW (FIXED OVERFLOW ISSUE) === */}
-//       <div
-//         className={`hidden md:flex lg:hidden items-center justify-between h-24 w-full px-6 gap-4 relative ${isTabletSearchOpen ? "overflow-visible" : "overflow-hidden"}`}
-//       >
-//         <AnimatePresence mode="wait">
-//           {!isTabletSearchOpen ? (
-//             <motion.div
-//               key="normal-nav"
-//               initial={{ opacity: 0 }}
-//               animate={{ opacity: 1 }}
-//               exit={{ opacity: 0 }}
-//               className="w-full flex items-center justify-between"
-//             >
-//               <div className="flex items-center gap-4">
-//                 <button
-//                   onClick={onMenuClick}
-//                   className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-brand-primary hover:text-white transition-colors shrink-0"
-//                 >
-//                   <LayoutGrid size={24} />
-//                 </button>
-
-//                 <Link
-//                   href="/"
-//                   className="flex items-center gap-3"
-//                   onMouseEnter={playLogoAnimation}
-//                 >
-//                   <div className="relative h-16 w-16 shrink-0">
-//                     <Image
-//                       src="/usamabrand.svg"
-//                       alt="Logo"
-//                       fill
-//                       className="object-contain"
-//                       priority
-//                     />
-//                   </div>
-//                   <div className="flex flex-col justify-center">
-//                     <span className="text-2xl font-clash font-bold text-gray-900 dark:text-white leading-none">
-//                       PocketValue
-//                     </span>
-//                     <span className="text-xs text-brand-primary font-medium tracking-widest uppercase mt-0.5">
-//                       Premium Store
-//                     </span>
-//                   </div>
-//                 </Link>
-//               </div>
-
-//               <div className="flex items-center gap-4">
-//                 <button
-//                   onClick={() => setIsTabletSearchOpen(true)}
-//                   className="p-2.5 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-brand-primary/10 text-gray-600 dark:text-gray-300 hover:text-brand-primary transition-all"
-//                 >
-//                   <Search size={22} strokeWidth={2.5} />
-//                 </button>
-//                 <div className="h-8 w-px bg-gray-200 dark:bg-gray-700" />
-//                 <HeaderActions isMobile={false} />
-//               </div>
-//             </motion.div>
-//           ) : (
-//             <motion.div
-//               key="search-nav"
-//               initial={{ opacity: 0, x: 20 }}
-//               animate={{ opacity: 1, x: 0 }}
-//               exit={{ opacity: 0, x: -20 }}
-//               transition={{ duration: 0.2 }}
-//               className="w-full flex items-center gap-3 z-50" // High Z-Index
-//             >
-//               <button
-//                 onClick={() => setIsTabletSearchOpen(false)}
-//                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors shrink-0"
-//               >
-//                 <ArrowLeft
-//                   size={24}
-//                   className="text-gray-600 dark:text-gray-300"
-//                 />
-//               </button>
-//               <div className="grow relative z-50">
-//                 <SearchBar searchSuggestions={searchSuggestions} />
-//               </div>
-//             </motion.div>
-//           )}
-//         </AnimatePresence>
-//       </div>
-
-//       {/* === 📱 MOBILE VIEW (Same as before) === */}
-//       <div className="md:hidden flex items-center justify-between w-full h-20 px-4 relative overflow-hidden">
-//         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-brand-primary via-brand-secondary to-brand-primary opacity-80" />
-//         <Link
-//           href="/"
-//           className="flex items-center gap-3 z-10"
-//           onMouseEnter={playLogoAnimation}
-//         >
-//           <div className="relative h-16 w-16 filter drop-shadow-sm shrink-0">
-//             <Image
-//               src="/usamabrand.svg"
-//               alt="PocketValue Logo"
-//               fill
-//               className="object-contain"
-//               priority
-//             />
-//           </div>
-//           <div className="flex flex-col justify-center">
-//             <span className="text-xl font-clash font-bold text-gray-900 dark:text-white tracking-tight leading-none">
-//               PocketValue
-//             </span>
-//             <span className="text-xs text-brand-primary font-medium tracking-tight uppercase mt-0.5">
-//               Premium Store
-//             </span>
-//           </div>
-//         </Link>
-//         <div className="z-10">
-//           <HeaderActions isMobile={true} />
-//         </div>
 //       </div>
 //     </header>
 //   );
@@ -254,7 +207,6 @@ interface NewHeaderProps {
 }
 
 export default function NewHeader({
-  categories,
   onMenuClick,
   searchSuggestions,
 }: NewHeaderProps) {
@@ -263,12 +215,7 @@ export default function NewHeader({
   const [isTabletSearchOpen, setIsTabletSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const timer = setTimeout(() => playLogoAnimation(), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
+  // 🔥 FIX: Function Defined BEFORE useEffect
   const playLogoAnimation = () => {
     if (isAnimating || !logoIconRef.current) return;
     setIsAnimating(true);
@@ -283,44 +230,36 @@ export default function NewHeader({
     }
   };
 
-  // === 🔥 STATIC SKELETON (RESPONSIVE FIX) ===
+  useEffect(() => {
+    setMounted(true);
+    const timer = setTimeout(() => playLogoAnimation(), 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // === STATIC SKELETON ===
   if (!mounted) {
     return (
       <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 w-full z-50 relative">
         <div className="max-w-[1920px] mx-auto w-full">
-            
-            {/* === 1. DESKTOP & TABLET SKELETON (Hidden on Mobile) === */}
             <div className="hidden md:flex items-center justify-between h-20 lg:h-28 px-6 lg:px-12 gap-8">
-                {/* Left: Logo + Text */}
                 <div className="flex items-center gap-4">
-                    {/* Tablet Menu Button */}
                     <div className="hidden md:block lg:hidden w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
-                    
-                    {/* Logo Icon */}
                     <div className="w-14 h-14 lg:w-20 lg:h-20 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
-                    
-                    {/* Logo Text (Now visible on MD too) */}
                     <div className="flex flex-col gap-2">
                         <div className="w-24 lg:w-32 h-4 bg-gray-200 dark:bg-gray-800 rounded"></div>
                         <div className="w-16 lg:w-20 h-2 bg-gray-200 dark:bg-gray-800 rounded"></div>
                     </div>
                 </div>
-
-                {/* Center: Search Bar (Desktop Only) */}
                 <div className="hidden lg:block grow max-w-4xl px-4">
                     <div className="w-full h-12 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
                 </div>
-
-                {/* Right: Actions (isMobile=false -> 3 Icons) */}
                 <div className="flex items-center gap-4">
                     <div className="hidden md:block lg:hidden w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
                     <HeaderActions isMobile={false} />
                 </div>
             </div>
-
-            {/* === 2. MOBILE SKELETON (Visible only on Mobile) === */}
             <div className="md:hidden flex items-center justify-between h-20 px-4">
-                {/* Left: Logo + Text */}
                 <div className="flex items-center gap-3">
                     <div className="w-14 h-14 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
                     <div className="flex flex-col gap-1.5">
@@ -328,13 +267,10 @@ export default function NewHeader({
                         <div className="w-16 h-2 bg-gray-200 dark:bg-gray-800 rounded"></div>
                     </div>
                 </div>
-
-                {/* Right: Actions (isMobile=true -> 2 Icons) */}
                 <div>
                     <HeaderActions isMobile={true} />
                 </div>
             </div>
-
         </div>
       </header>
     );
@@ -345,7 +281,7 @@ export default function NewHeader({
     <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 w-full z-50 relative">
       <div className="max-w-[1920px] mx-auto w-full">
 
-        {/* === 🖥️ DESKTOP VIEW === */}
+        {/* DESKTOP */}
         <div className="hidden lg:flex items-center justify-between h-28 w-full px-8 xl:px-12 gap-8">
           <div className="flex items-center gap-6 shrink-0">
             <Link href="/" className="flex items-center gap-4 group" onMouseEnter={playLogoAnimation}>
@@ -366,7 +302,7 @@ export default function NewHeader({
           </div>
         </div>
 
-        {/* === 📱 TABLET VIEW === */}
+        {/* TABLET */}
         <div className={`hidden md:flex lg:hidden items-center justify-between h-24 w-full px-6 gap-4 relative ${isTabletSearchOpen ? 'overflow-visible' : 'overflow-hidden'}`}>
           <AnimatePresence mode="wait">
               {!isTabletSearchOpen ? (
@@ -393,16 +329,20 @@ export default function NewHeader({
           </AnimatePresence>
         </div>
 
-        {/* === 📱 MOBILE VIEW === */}
+        {/* MOBILE */}
         <div className="md:hidden flex items-center justify-between w-full h-20 px-4 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-brand-primary via-brand-secondary to-brand-primary opacity-80" />
+          
           <Link href="/" className="flex items-center gap-3 z-10" onMouseEnter={playLogoAnimation}>
             <div className="relative h-14 w-14 filter drop-shadow-sm shrink-0">
               <Image src="/usamabrand.svg" alt="PocketValue Logo" fill className="object-contain" priority />
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-xl font-clash font-bold text-gray-900 dark:text-white tracking-tight leading-none">PocketValue</span>
-              <span className="text-[10px] text-brand-primary font-medium tracking-wider uppercase mt-0.5">Premium Store</span>
+              <span className="text-xl font-clash font-bold text-gray-900 dark:text-white tracking-tight leading-none">
+                PocketValue
+              </span>
+              <span className="text-[10px] text-brand-primary font-medium tracking-wider uppercase mt-0.5">
+                Premium Store
+              </span>
             </div>
           </Link>
           <div className="z-10"><HeaderActions isMobile={true} /></div>

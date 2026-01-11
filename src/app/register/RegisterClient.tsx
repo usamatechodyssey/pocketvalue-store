@@ -530,7 +530,7 @@ export default function RegisterClient() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex justify-center py-2.5 px-4 bg-brand-primary text-on-primary font-semibold rounded-md hover:bg-brand-primary-hover disabled:bg-opacity-70"
+            className="w-full flex justify-center py-2.5 px-4 bg-brand-primary text-white font-semibold rounded-md hover:bg-brand-primary-hover disabled:bg-opacity-70"
           >
             {isSubmitting ? (
               <Loader2 className="animate-spin" />

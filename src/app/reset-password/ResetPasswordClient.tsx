@@ -275,7 +275,7 @@ const ResetPasswordForm = () => {
         </p>
         <Link
           href={`/login?email=${encodeURIComponent(userEmail)}`}
-          className="inline-block w-full py-3 px-4 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover transition-colors"
+          className="inline-block w-full py-3 px-4 bg-brand-primary text-white font-bold rounded-lg shadow-md hover:bg-brand-primary-hover transition-colors"
         >
           Go to Login
         </Link>
@@ -314,7 +314,7 @@ const ResetPasswordForm = () => {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-white font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed"
       >
         {isPending && <Loader2 className="animate-spin" size={20} />}
         {isPending ? "Resetting..." : "Reset Password"}
@@ -325,7 +325,7 @@ const ResetPasswordForm = () => {
 
 export default function ResetPasswordClient() {
   return (
-    <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-screen py-12 px-4">
+    <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-[80vh] py-12 px-4">
       <div className="w-full max-w-md p-8 sm:p-10 space-y-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
         <div className="text-center">
           <KeyRound size={40} className="mx-auto text-brand-primary mb-4" />

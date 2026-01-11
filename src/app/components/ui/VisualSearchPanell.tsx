@@ -1,22 +1,37 @@
+
 // "use client";
 
 // import { useState, useRef, useEffect, useCallback } from "react";
-// import SanityProduct from "@/sanity/types/product_types";
-// import { getProductsBySlugs } from "@/sanity/lib/queries";
-// import { X, UploadCloud, Search, ArrowLeft, ArrowRight, Image as ImageIcon, AlertTriangle } from "lucide-react";
 // import Image from "next/image";
 // import Link from "next/link";
-// import { urlFor } from "@/sanity/lib/image";
+// import { motion } from "framer-motion";
 // import { useKeenSlider } from "keen-slider/react";
 // import "keen-slider/keen-slider.min.css";
-// import { motion } from "framer-motion";
+// import {
+//   X,
+//   UploadCloud,
+//   Search,
+//   ArrowLeft,
+//   ArrowRight,
+//   Image as ImageIcon,
+//   AlertTriangle,
+//   Loader2,
+// } from "lucide-react";
+
+// // Sanity Imports
+// import SanityProduct from "@/sanity/types/product_types";
+// import { getProductsBySlugs } from "@/sanity/lib/queries";
+// import { urlFor } from "@/sanity/lib/image";
 
 // interface VisualSearchPanelProps {
 //   onClose: () => void;
 // }
 
 // const PLACEHOLDER_IMAGE_URL = "/placeholder.png";
-// const VISUAL_SEARCH_API_KEY = "sk_20ed2d16a97592584923393f17ed297e";
+
+// // === ENVIRONMENT VARIABLES CONFIGURATION ===
+// const API_URL = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_URL;
+// const API_KEY = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_KEY;
 
 // export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
 //   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -24,11 +39,12 @@
 //   const [isLoading, setIsLoading] = useState(false);
 //   const [error, setError] = useState<string | null>(null);
 //   const [results, setResults] = useState<SanityProduct[]>([]);
-//   const panelRef = useRef<HTMLDivElement>(null);
+
 //   const fileInputRef = useRef<HTMLInputElement>(null);
 //   const [loaded, setLoaded] = useState(false);
 //   const [currentSlide, setCurrentSlide] = useState(0);
 
+//   // KeenSlider Hook
 //   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
 //     initial: 0,
 //     slides: { perView: "auto", spacing: 16 },
@@ -36,20 +52,29 @@
 //     created: () => setLoaded(true),
 //   });
 
-//   // Paste and outside click hooks are perfect. No changes.
-//   useEffect(() => { /* ... paste logic ... */ }, []);
-//   useEffect(() => { /* ... click outside logic ... */ }, [onClose]);
-
+//   // Handle File Selection
 //   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 //     const file = event.target.files?.[0];
-//     if (file && file.size < 5 * 1024 * 1024) { // 5MB limit
+//     if (file) {
+//       if (file.size > 5 * 1024 * 1024) {
+//         // 5MB Limit
+//         setError("Image size should be less than 5MB.");
+//         return;
+//       }
 //       setSelectedFile(file);
-//     } else if (file) {
-//       setError("Image size should be less than 5MB.");
 //     }
 //   };
 
+//   // API Call Logic
 //   const handleSearch = useCallback(async (file: File) => {
+//     if (!API_URL || !API_KEY) {
+//       setError("Visual Search API is not configured.");
+//       console.error(
+//         "Missing Env Variables: NEXT_PUBLIC_VISUAL_SEARCH_API_URL or KEY"
+//       );
+//       return;
+//     }
+
 //     setIsLoading(true);
 //     setError(null);
 //     setResults([]);
@@ -58,21 +83,25 @@
 //     formData.append("file", file);
 
 //     try {
-//       const aiResponse = await fetch("http://127.0.0.1:8000/search", {
+//       const aiResponse = await fetch(`${API_URL}/search`, {
 //         method: "POST",
-//         headers: { "x-api-key": VISUAL_SEARCH_API_KEY },
+//         headers: { "x-api-key": API_KEY },
 //         body: formData,
 //       });
 
 //       if (!aiResponse.ok) {
-//         const errorData = await aiResponse.json();
+//         const errorData = await aiResponse.json().catch(() => ({}));
 //         throw new Error(errorData.detail || "Could not connect to AI server.");
 //       }
 
-//       const aiData: { results: { slug: string; similarity: number }[] } = await aiResponse.json();
+//       const aiData: { results: { slug: string; similarity: number }[] } =
+//         await aiResponse.json();
+
+//       // Extract valid slugs
 //       const slugs = aiData.results.map((item) => item.slug).filter(Boolean);
 
 //       if (slugs.length > 0) {
+//         // Fetch full product data from Sanity using slugs
 //         const products = await getProductsBySlugs(slugs);
 //         setResults(products);
 //       } else {
@@ -80,18 +109,20 @@
 //       }
 //     } catch (err: any) {
 //       setError(err.message || "Search failed. Please try again.");
-//       console.error(err);
+//       console.error("Visual Search Error:", err);
 //     } finally {
 //       setIsLoading(false);
 //     }
 //   }, []);
 
+//   // Auto-trigger search when file is selected
 //   useEffect(() => {
 //     if (selectedFile) {
 //       const objectUrl = URL.createObjectURL(selectedFile);
 //       setPreviewUrl(objectUrl);
 //       handleSearch(selectedFile);
 
+//       // Cleanup memory
 //       return () => URL.revokeObjectURL(objectUrl);
 //     }
 //   }, [selectedFile, handleSearch]);
@@ -104,66 +135,173 @@
 //     if (fileInputRef.current) fileInputRef.current.value = "";
 //   };
 
-//   const allResultSlugs = results.map(p => p.slug);
+//   const allResultSlugs = results.map((p) => p.slug);
 
 //   return (
 //     <motion.div
-//       ref={panelRef}
 //       initial={{ opacity: 0, y: -10 }}
 //       animate={{ opacity: 1, y: 0 }}
 //       exit={{ opacity: 0, y: -10 }}
-//       className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-6"
+//       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 z-50"
 //     >
-//       <div className="flex justify-between items-center mb-4">
-//         <h3 className="font-semibold text-gray-800 dark:text-gray-200">Search by Image</h3>
-//         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-//           <X className="text-gray-500" size={18}/>
+//       {/* Header */}
+//       <div className="flex justify-between items-center mb-6">
+//         <div className="flex items-center gap-2 text-brand-primary">
+//           <div className="p-2 bg-brand-primary/10 rounded-lg">
+//             <ImageIcon size={20} />
+//           </div>
+//           <h3 className="font-bold text-gray-900 dark:text-white">
+//             Visual Search AI
+//           </h3>
+//         </div>
+//         <button
+//           onClick={onClose}
+//           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+//         >
+//           <X className="text-gray-500" size={20} />
 //         </button>
 //       </div>
 
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//         {/* Upload Column */}
+//       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+//         {/* 1. UPLOAD AREA */}
 //         <div className="md:col-span-1">
-//           <label className={`relative border-2 border-dashed rounded-lg h-48 flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-colors ${previewUrl ? '' : 'hover:border-brand-primary hover:bg-brand-primary/5'}`}>
+//           <label
+//             className={`relative flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 overflow-hidden
+//             ${
+//               previewUrl
+//                 ? "border-brand-primary bg-gray-50 dark:bg-gray-900"
+//                 : "border-gray-300 dark:border-gray-600 hover:border-brand-primary hover:bg-brand-primary/5"
+//             }`}
+//           >
 //             {previewUrl ? (
 //               <>
-//                 <Image src={previewUrl} alt="Preview" fill className="object-contain p-2 rounded-lg" sizes="200px"/>
-//                 <button onClick={(e) => { e.preventDefault(); resetSearch(); }} className="absolute top-2 right-2 bg-white dark:bg-gray-700 p-1.5 rounded-full shadow-md text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 z-10">
+//                 <div className="relative w-full h-full p-4">
+//                   <Image
+//                     src={previewUrl}
+//                     alt="Preview"
+//                     fill
+//                     className="object-contain"
+//                   />
+//                 </div>
+//                 <button
+//                   onClick={(e) => {
+//                     e.preventDefault();
+//                     resetSearch();
+//                   }}
+//                   className="absolute top-3 right-3 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 transition-colors z-10"
+//                   title="Remove Image"
+//                 >
 //                   <X size={14} />
 //                 </button>
 //               </>
 //             ) : (
-//               <div className="text-gray-400 dark:text-gray-500">
-//                 <UploadCloud size={32} className="mx-auto" />
-//                 <p className="text-sm font-medium mt-2">Drop, paste or click</p>
-//                 <p className="text-xs">Max file size 5MB</p>
+//               <div className="text-center p-6">
+//                 <div className="w-16 h-16 bg-brand-primary/10 text-brand-primary rounded-full flex items-center justify-center mx-auto mb-4">
+//                   <UploadCloud size={32} />
+//                 </div>
+//                 <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+//                   Click to upload
+//                 </p>
+//                 <p className="text-xs text-gray-500 mt-1">
+//                   or drag and drop an image
+//                 </p>
+//                 <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+//                   Max 5MB
+//                 </p>
 //               </div>
 //             )}
-//             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+//             <input
+//               ref={fileInputRef}
+//               type="file"
+//               accept="image/*"
+//               onChange={handleFileChange}
+//               className="hidden"
+//             />
 //           </label>
 //         </div>
 
-//         {/* Results Column */}
-//         <div className="md:col-span-2 relative flex flex-col min-h-48">
+//         {/* 2. RESULTS AREA */}
+//         <div className="md:col-span-2 flex flex-col h-64">
 //           {isLoading ? (
-//             <div className="grow flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-//               <Search className="animate-pulse text-brand-primary" size={24} />
-//               <p className="mt-2 text-sm font-medium">Finding similar products...</p>
+//             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+//               <Loader2
+//                 className="animate-spin text-brand-primary mb-3"
+//                 size={32}
+//               />
+//               <p className="text-sm font-medium text-gray-600 dark:text-gray-300 animate-pulse">
+//                 Analyzing image...
+//               </p>
 //             </div>
 //           ) : results.length > 0 ? (
-//             <div className="relative">
-//               <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Similar Products Found:</h4>
-//               <div ref={sliderRef} className="keen-slider">
+//             <div className="relative h-full flex flex-col">
+//               <div className="flex justify-between items-center mb-3">
+//                 <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200">
+//                   Found {results.length} similar items
+//                 </h4>
+//                 <div className="flex gap-2">
+//                   {loaded && instanceRef.current && (
+//                     <>
+//                       <button
+//                         onClick={(e) => {
+//                           e.stopPropagation();
+//                           instanceRef.current?.prev();
+//                         }}
+//                         disabled={currentSlide === 0}
+//                         className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//                       >
+//                         <ArrowLeft size={16} />
+//                       </button>
+//                       <button
+//                         onClick={(e) => {
+//                           e.stopPropagation();
+//                           instanceRef.current?.next();
+//                         }}
+//                         // @ts-ignore - track.details might be null initially
+//                         disabled={
+//                           currentSlide >=
+//                           (instanceRef.current.track.details?.slides.length ||
+//                             0) -
+//                             1
+//                         }
+//                         className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//                       >
+//                         <ArrowRight size={16} />
+//                       </button>
+//                     </>
+//                   )}
+//                 </div>
+//               </div>
+
+//               <div ref={sliderRef} className="keen-slider grow">
 //                 {results.map((product) => {
-//                   const imageUrl = product.defaultVariant?.images?.[0] ? urlFor(product.defaultVariant.images[0]).url() : PLACEHOLDER_IMAGE_URL;
+//                   const imageUrl = product.defaultVariant?.images?.[0]
+//                     ? urlFor(product.defaultVariant.images[0]).url()
+//                     : PLACEHOLDER_IMAGE_URL;
+
 //                   return (
-//                     <div key={product._id} className="keen-slider__slide" style={{ minWidth: 120, maxWidth: 120 }}>
-//                       <Link href={`/product/${product.slug}`} onClick={onClose} className="block h-full">
-//                         <div className="border dark:border-gray-700 rounded-lg p-2 text-center hover:shadow-md transition-shadow h-full flex flex-col justify-between bg-white dark:bg-gray-800">
-//                           <div className="relative h-24 w-full">
-//                             <Image src={imageUrl} alt={product.title} fill className="object-contain" sizes="100px"/>
+//                     <div
+//                       key={product._id}
+//                       className="keen-slider__slide"
+//                       style={{ minWidth: 140, maxWidth: 140 }}
+//                     >
+//                       <Link
+//                         href={`/product/${product.slug}`}
+//                         onClick={onClose}
+//                         className="block h-full group"
+//                       >
+//                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-2 h-full flex flex-col hover:border-brand-primary/50 transition-colors shadow-sm">
+//                           <div className="relative aspect-square w-full mb-2 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+//                             <Image
+//                               src={imageUrl}
+//                               alt={product.title}
+//                               fill
+//                               className="object-contain group-hover:scale-105 transition-transform duration-300"
+//                               sizes="150px"
+//                             />
 //                           </div>
-//                           <p className="text-xs mt-1 font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 h-8">{product.title}</p>
+//                           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight group-hover:text-brand-primary">
+//                             {product.title}
+//                           </p>
 //                         </div>
 //                       </Link>
 //                     </div>
@@ -171,31 +309,42 @@
 //                 })}
 //               </div>
 
-//               {loaded && instanceRef.current && results.length > 3 && (
+//               <div className="mt-3 text-right">
+//                 <Link
+//                   href={`/search?slugs=${allResultSlugs.join(",")}`}
+//                   onClick={onClose}
+//                   className="text-xs font-bold text-brand-primary hover:underline"
+//                 >
+//                   View all results &rarr;
+//                 </Link>
+//               </div>
+//             </div>
+//           ) : (
+//             // EMPTY STATE
+//             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 text-gray-400">
+//               {selectedFile ? (
 //                 <>
-//                   <button onClick={(e) => { e.stopPropagation(); instanceRef.current?.prev(); }} disabled={currentSlide === 0} className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
-//                     <ArrowLeft size={18}/>
-//                   </button>
-//                   <button onClick={(e) => { e.stopPropagation(); instanceRef.current?.next(); }} disabled={currentSlide >= instanceRef.current.track.details.slides.length - 3} className="absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
-//                     <ArrowRight size={18}/>
-//                   </button>
+//                   <Search size={40} className="mb-2 opacity-50" />
+//                   <p className="text-sm">No matches found for this image.</p>
+//                 </>
+//               ) : (
+//                 <>
+//                   <div className="flex gap-2 mb-3 opacity-50">
+//                     <div className="w-12 h-16 bg-gray-200 rounded-md"></div>
+//                     <div className="w-12 h-16 bg-gray-300 rounded-md"></div>
+//                     <div className="w-12 h-16 bg-gray-200 rounded-md"></div>
+//                   </div>
+//                   <p className="text-sm">
+//                     Upload an image to find similar products
+//                   </p>
 //                 </>
 //               )}
 //             </div>
-//           ) : (
-//             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 dark:text-gray-400 text-center p-4">
-//               <ImageIcon size={32} className="mb-2" />
-//               <p className="text-sm font-medium">{selectedFile ? "No similar products found." : "Upload an image to see similar items."}</p>
-//             </div>
 //           )}
 
-//           {error && <div className="flex items-center gap-2 text-red-500 text-xs mt-2"><AlertTriangle size={14}/> {error}</div>}
-
-//           {!isLoading && results.length > 0 && (
-//             <div className="mt-4 text-center">
-//               <Link href={`/search?slugs=${allResultSlugs.join(",")}`} onClick={onClose} className="text-sm font-bold text-brand-primary hover:underline">
-//                 View all {results.length} similar products
-//               </Link>
+//           {error && (
+//             <div className="absolute bottom-4 left-6 right-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+//               <AlertTriangle size={16} /> {error}
 //             </div>
 //           )}
 //         </div>
@@ -233,7 +382,6 @@ interface VisualSearchPanelProps {
 
 const PLACEHOLDER_IMAGE_URL = "/placeholder.png";
 
-// === ENVIRONMENT VARIABLES CONFIGURATION ===
 const API_URL = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_URL;
 const API_KEY = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_KEY;
 
@@ -248,7 +396,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
   const [loaded, setLoaded] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // KeenSlider Hook
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     initial: 0,
     slides: { perView: "auto", spacing: 16 },
@@ -256,12 +403,10 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
     created: () => setLoaded(true),
   });
 
-  // Handle File Selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        // 5MB Limit
         setError("Image size should be less than 5MB.");
         return;
       }
@@ -269,7 +414,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
     }
   };
 
-  // API Call Logic
   const handleSearch = useCallback(async (file: File) => {
     if (!API_URL || !API_KEY) {
       setError("Visual Search API is not configured.");
@@ -301,32 +445,33 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
       const aiData: { results: { slug: string; similarity: number }[] } =
         await aiResponse.json();
 
-      // Extract valid slugs
       const slugs = aiData.results.map((item) => item.slug).filter(Boolean);
 
       if (slugs.length > 0) {
-        // Fetch full product data from Sanity using slugs
         const products = await getProductsBySlugs(slugs);
         setResults(products);
       } else {
         setResults([]);
       }
-    } catch (err: any) {
-      setError(err.message || "Search failed. Please try again.");
-      console.error("Visual Search Error:", err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+        console.error("Visual Search Error:", err.message);
+      } else {
+         setError("Search failed. Please try again.");
+         console.error("Visual Search Error:", err);
+      }
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Auto-trigger search when file is selected
   useEffect(() => {
     if (selectedFile) {
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreviewUrl(objectUrl);
       handleSearch(selectedFile);
 
-      // Cleanup memory
       return () => URL.revokeObjectURL(objectUrl);
     }
   }, [selectedFile, handleSearch]);
@@ -348,7 +493,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
       exit={{ opacity: 0, y: -10 }}
       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 z-50"
     >
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2 text-brand-primary">
           <div className="p-2 bg-brand-primary/10 rounded-lg">
@@ -367,7 +511,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* 1. UPLOAD AREA */}
         <div className="md:col-span-1">
           <label
             className={`relative flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 overflow-hidden
@@ -424,7 +567,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
           </label>
         </div>
 
-        {/* 2. RESULTS AREA */}
         <div className="md:col-span-2 flex flex-col h-64">
           {isLoading ? (
             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
@@ -460,7 +602,7 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
                           e.stopPropagation();
                           instanceRef.current?.next();
                         }}
-                        // @ts-ignore - track.details might be null initially
+                        // ✅ FIX: Replaced @ts-ignore with safe optional chaining
                         disabled={
                           currentSlide >=
                           (instanceRef.current.track.details?.slides.length ||
@@ -524,7 +666,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
               </div>
             </div>
           ) : (
-            // EMPTY STATE
             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 text-gray-400">
               {selectedFile ? (
                 <>

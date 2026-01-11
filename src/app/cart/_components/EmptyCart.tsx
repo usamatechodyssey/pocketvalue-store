@@ -12,7 +12,8 @@ export default function EmptyCart() {
         />
         <h1 className="text-2xl md:text-3xl font-bold">Your Cart is Empty</h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Let's find something you'll love!
+          {/* ✅ FIX: Escaped apostrophes */}
+          Let&apos;s find something you&apos;ll love!
         </p>
         <Link
           href="/"

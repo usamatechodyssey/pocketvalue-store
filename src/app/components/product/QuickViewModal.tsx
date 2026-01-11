@@ -1,5 +1,285 @@
-// app/components/QuickViewModal.tsx - FINAL SUPERCHARGED CODE
 
+// "use client";
+
+// import { Fragment, useState, useEffect, useMemo } from "react";
+// import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
+// import { X } from "lucide-react";
+// import SanityProduct, { ProductVariant } from "@/sanity/types/product_types";
+// import ProductGallery from "./ProductGallery";
+// import ProductInfo from "./ProductInfo";
+
+// interface QuickViewModalProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   product: SanityProduct | null;
+// }
+
+// export default function QuickViewModal({
+//   isOpen,
+//   onClose,
+//   product,
+// }: QuickViewModalProps) {
+//   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+//   useEffect(() => {
+//     if (product) {
+//       setSelectedVariant(product.defaultVariant);
+//     }
+//   }, [product]);
+
+//   const handleVariantChange = (variant: ProductVariant | null) => {
+//     setSelectedVariant(variant);
+//   };
+
+//   const imagesToShow = useMemo(() => {
+//     if (selectedVariant?.images && selectedVariant.images.length > 0) {
+//       return selectedVariant.images;
+//     }
+//     return product?.defaultVariant.images || [];
+//   }, [selectedVariant, product]);
+
+//   if (!product) return null;
+
+//   return (
+//     <Transition appear show={isOpen} as={Fragment}>
+//       <Dialog as="div" className="relative z-60" onClose={onClose}>
+        
+//         {/* Backdrop */}
+//         <TransitionChild
+//           as={Fragment}
+//           enter="ease-out duration-300"
+//           enterFrom="opacity-0"
+//           enterTo="opacity-100"
+//           leave="ease-in duration-200"
+//           leaveFrom="opacity-100"
+//           leaveTo="opacity-0"
+//         >
+//           <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
+//         </TransitionChild>
+
+//         <div className="fixed inset-0 overflow-y-auto">
+//           <div className="flex min-h-full items-end md:items-center justify-center p-0 md:p-4 text-center">
+            
+//             <TransitionChild
+//               as={Fragment}
+//               enter="ease-out duration-300"
+//               enterFrom="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
+//               enterTo="opacity-100 translate-y-0 md:scale-100"
+//               leave="ease-in duration-200"
+//               leaveFrom="opacity-100 translate-y-0 md:scale-100"
+//               leaveTo="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
+//             >
+//               <DialogPanel 
+//                 className="
+//                   w-full transform text-left align-middle transition-all shadow-2xl
+//                   bg-white dark:bg-gray-900 
+//                   rounded-t-4xl md:rounded-2xl 
+//                   md:w-[90vw] lg:w-full lg:max-w-7xl
+//                   max-h-[90vh] 
+//                   flex flex-col
+//                   overflow-hidden
+//                 "
+//               >
+                
+//                 {/* === 1. HANDLE BAR (MOBILE ONLY) === */}
+//                 {/* Ye sirf mobile par dikhega, md (tablet) aur upar gayab ho jayega */}
+//                 <div 
+//                     className="w-full flex justify-center pt-3 pb-1 md:hidden shrink-0 cursor-pointer bg-white dark:bg-gray-900 z-10" 
+//                     onClick={onClose}
+//                 >
+//                     <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
+//                 </div>
+
+//                 {/* === 2. CLOSE BUTTON (Absolute) === */}
+//                 <div className="absolute top-4 right-4 z-50">
+//                     <button
+//                     onClick={onClose}
+//                     className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-500 transition-colors shadow-sm"
+//                     >
+//                     <X size={24} />
+//                     </button>
+//                 </div>
+
+//                 {/* === 3. CONTENT AREA === */}
+//                 <div className="overflow-y-auto custom-scrollbar p-0 grow">
+//                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0">
+                    
+//                     {/* LEFT: GALLERY */}
+//                     {/* Mobile/Tablet: Edge-to-Edge (No Padding). Desktop: Padding. */}
+//                     <div className="bg-gray-50 dark:bg-gray-800/50 p-6 lg:p-10 flex items-center justify-center">
+//                       <div className="w-full h-full">
+//                           <ProductGallery 
+//                               images={imagesToShow} 
+//                               productTitle={product.title} 
+//                               videoUrl={product.videoUrl}
+//                           />
+//                       </div>
+//                     </div>
+
+//                     {/* RIGHT: INFO */}
+//                     <div className="p-5 md:p-8 lg:p-10">
+//                       <ProductInfo
+//                         key={product._id}
+//                         product={product}
+//                         selectedVariant={selectedVariant}
+//                         onVariantChange={handleVariantChange}
+//                         averageRating={product.rating || 0}
+//                         totalReviews={product.reviewCount || 0}
+//                       />
+//                     </div>
+//                   </div>
+//                 </div>
+
+//               </DialogPanel>
+//             </TransitionChild>
+//           </div>
+//         </div>
+//       </Dialog>
+//     </Transition>
+//   );
+// }
+// // /src/app/components/product/QuickViewModal.tsx (FIXED)
+
+// "use client";
+
+// import { Fragment, useState, useEffect, useMemo } from "react";
+// import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
+// import { X } from "lucide-react";
+// import SanityProduct, { ProductVariant } from "@/sanity/types/product_types";
+// import ProductGallery from "./ProductGallery";
+// import ProductInfo from "./ProductInfo";
+
+// interface QuickViewModalProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   product: SanityProduct | null;
+// }
+
+// export default function QuickViewModal({
+//   isOpen,
+//   onClose,
+//   product,
+// }: QuickViewModalProps) {
+//   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+//   // --- FIX: Prevent Cascading Renders ---
+//   // Pehle yahan '[product]' tha jo object reference change hone par loop banata tha.
+//   // Ab hum 'product._id' use kar rahe hain jo constant rehta hai.
+//   useEffect(() => {
+//     if (isOpen && product) {
+//       setSelectedVariant(product.defaultVariant);
+//     }
+//   }, [isOpen, product?._id]); // Changed dependency to ID (Primitive)
+
+//   const handleVariantChange = (variant: ProductVariant | null) => {
+//     setSelectedVariant(variant);
+//   };
+
+//   const imagesToShow = useMemo(() => {
+//     if (selectedVariant?.images && selectedVariant.images.length > 0) {
+//       return selectedVariant.images;
+//     }
+//     return product?.defaultVariant.images || [];
+//   }, [selectedVariant, product]); // Keeping 'product' here is fine as useMemo is cheap
+
+//   if (!product) return null;
+
+//   return (
+//     <Transition appear show={isOpen} as={Fragment}>
+//       <Dialog as="div" className="relative z-60" onClose={onClose}>
+        
+//         {/* Backdrop */}
+//         <TransitionChild
+//           as={Fragment}
+//           enter="ease-out duration-300"
+//           enterFrom="opacity-0"
+//           enterTo="opacity-100"
+//           leave="ease-in duration-200"
+//           leaveFrom="opacity-100"
+//           leaveTo="opacity-0"
+//         >
+//           <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
+//         </TransitionChild>
+
+//         <div className="fixed inset-0 overflow-y-auto">
+//           <div className="flex min-h-full items-end md:items-center justify-center p-0 md:p-4 text-center">
+            
+//             <TransitionChild
+//               as={Fragment}
+//               enter="ease-out duration-300"
+//               enterFrom="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
+//               enterTo="opacity-100 translate-y-0 md:scale-100"
+//               leave="ease-in duration-200"
+//               leaveFrom="opacity-100 translate-y-0 md:scale-100"
+//               leaveTo="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
+//             >
+//               <DialogPanel 
+//                 className="
+//                   w-full transform text-left align-middle transition-all shadow-2xl
+//                   bg-white dark:bg-gray-900 
+//                   rounded-t-4xl md:rounded-2xl 
+//                   md:w-[90vw] lg:w-full lg:max-w-7xl
+//                   max-h-[90vh] 
+//                   flex flex-col
+//                   overflow-hidden
+//                 "
+//               >
+                
+//                 {/* === 1. HANDLE BAR (MOBILE ONLY) === */}
+//                 <div 
+//                     className="w-full flex justify-center pt-3 pb-1 md:hidden shrink-0 cursor-pointer bg-white dark:bg-gray-900 z-10" 
+//                     onClick={onClose}
+//                 >
+//                     <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
+//                 </div>
+
+//                 {/* === 2. CLOSE BUTTON (Absolute) === */}
+//                 <div className="absolute top-4 right-4 z-50">
+//                     <button
+//                     onClick={onClose}
+//                     className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-500 transition-colors shadow-sm"
+//                     >
+//                     <X size={24} />
+//                     </button>
+//                 </div>
+
+//                 {/* === 3. CONTENT AREA === */}
+//                 <div className="overflow-y-auto custom-scrollbar p-0 grow">
+//                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0">
+                    
+//                     {/* LEFT: GALLERY */}
+//                     <div className="bg-gray-50 dark:bg-gray-800/50 p-6 lg:p-10 flex items-center justify-center">
+//                       <div className="w-full h-full">
+//                           <ProductGallery 
+//                               images={imagesToShow} 
+//                               productTitle={product.title} 
+//                               videoUrl={product.videoUrl}
+//                           />
+//                       </div>
+//                     </div>
+
+//                     {/* RIGHT: INFO */}
+//                     <div className="p-5 md:p-8 lg:p-10">
+//                       <ProductInfo
+//                         key={product._id}
+//                         product={product}
+//                         selectedVariant={selectedVariant}
+//                         onVariantChange={handleVariantChange}
+//                         averageRating={product.rating || 0}
+//                         totalReviews={product.reviewCount || 0}
+//                       />
+//                     </div>
+//                   </div>
+//                 </div>
+
+//               </DialogPanel>
+//             </TransitionChild>
+//           </div>
+//         </div>
+//       </Dialog>
+//     </Transition>
+//   );
+// }
 "use client";
 
 import { Fragment, useState, useEffect, useMemo } from "react";
@@ -20,44 +300,36 @@ export default function QuickViewModal({
   onClose,
   product,
 }: QuickViewModalProps) {
-  // === YAHAN ASAL, NAYI LOGIC SHURU HOTI HAI ===
-  // Hum modal ke andar selected variant ki state manage karenge
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
-  );
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
 
-  // Jab bhi naya product aaye, selected variant ko uske default par reset karein
+  // ✅ FIX: Performance & Infinite Loop
+  // Only update state when the Modal opens or the Product ID changes.
+  // We explicitly ignore 'product' object changes to prevent re-renders from unstable props.
   useEffect(() => {
-    if (product) {
+    if (isOpen && product) {
       setSelectedVariant(product.defaultVariant);
     }
-  }, [product]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, product?._id]);
 
-  // Yeh function ProductInfo se variant change ko handle karega
   const handleVariantChange = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
   };
 
-  // Gallery mein hamesha selected variant ki images dikhayein
   const imagesToShow = useMemo(() => {
-    // Agar variant select hai aur uski apni images hain, to woh dikhayein
     if (selectedVariant?.images && selectedVariant.images.length > 0) {
       return selectedVariant.images;
     }
-    // Warna, product ke default variant ki images dikhayein
-    if (product?.defaultVariant.images) {
-      return product.defaultVariant.images;
-    }
-    // Agar kahin bhi image na mile to khaali array
-    return [];
+    return product?.defaultVariant.images || [];
   }, [selectedVariant, product]);
-  // ===============================================
 
   if (!product) return null;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-60" onClose={onClose}>
+        
+        {/* Backdrop */}
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -67,46 +339,80 @@ export default function QuickViewModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
         </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
+          <div className="flex min-h-full items-end md:items-center justify-center p-0 md:p-4 text-center">
+            
             <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
+              enterTo="opacity-100 translate-y-0 md:scale-100"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100 translate-y-0 md:scale-100"
+              leaveTo="opacity-100 translate-y-full md:opacity-0 md:translate-y-0 md:scale-95"
             >
-              <DialogPanel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-surface-base text-left align-middle shadow-xl transition-all">
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface-base/80 hover:bg-surface-ground"
+              <DialogPanel 
+                className="
+                  w-full transform text-left align-middle transition-all shadow-2xl
+                  bg-white dark:bg-gray-900 
+                  rounded-t-4xl md:rounded-2xl 
+                  md:w-[90vw] lg:w-full lg:max-w-7xl
+                  max-h-[90vh] 
+                  flex flex-col
+                  overflow-hidden
+                "
+              >
+                
+                {/* === 1. HANDLE BAR (MOBILE ONLY) === */}
+                <div 
+                    className="w-full flex justify-center pt-3 pb-1 md:hidden shrink-0 cursor-pointer bg-white dark:bg-gray-900 z-10" 
+                    onClick={onClose}
                 >
-                  <X size={24} className="text-text-primary" />
-                </button>
-                <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="p-4">
-                    {/* Gallery ko ab dynamic 'imagesToShow' mil rahi hain */}
-                    <ProductGallery images={imagesToShow} productTitle={""} />
-                  </div>
-                  <div className="p-6">
-                    {/* ProductInfo ko ab state aur usay update karne wala function mil raha hai */}
-                    {/* Ahem Note: Iske liye ProductInfo.tsx ka update hona zaroori hai */}
-                    <ProductInfo
-                      key={product._id} // Key ab product ki ID hogi taake naye product par reset ho
-                      product={product}
-                      // Naye props jo state manage karenge
-                      selectedVariant={selectedVariant}
-                      onVariantChange={handleVariantChange}
-                      averageRating={product.rating || 0}
-                      totalReviews={product.reviewCount || 0}
-                    />
+                    <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                </div>
+
+                {/* === 2. CLOSE BUTTON (Absolute) === */}
+                <div className="absolute top-4 right-4 z-50">
+                    <button
+                    onClick={onClose}
+                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-500 transition-colors shadow-sm"
+                    >
+                    <X size={24} />
+                    </button>
+                </div>
+
+                {/* === 3. CONTENT AREA === */}
+                <div className="overflow-y-auto custom-scrollbar p-0 grow">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0">
+                    
+                    {/* LEFT: GALLERY */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 p-6 lg:p-10 flex items-center justify-center">
+                      <div className="w-full h-full">
+                          <ProductGallery 
+                              images={imagesToShow} 
+                              productTitle={product.title} 
+                              videoUrl={product.videoUrl}
+                          />
+                      </div>
+                    </div>
+
+                    {/* RIGHT: INFO */}
+                    <div className="p-5 md:p-8 lg:p-10">
+                      <ProductInfo
+                        key={product._id}
+                        product={product}
+                        selectedVariant={selectedVariant}
+                        onVariantChange={handleVariantChange}
+                        averageRating={product.rating || 0}
+                        totalReviews={product.reviewCount || 0}
+                      />
+                    </div>
                   </div>
                 </div>
+
               </DialogPanel>
             </TransitionChild>
           </div>

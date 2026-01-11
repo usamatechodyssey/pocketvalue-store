@@ -1,85 +1,65 @@
-/* src/app/globals.css (FINAL - UPDATED WITH MONTSERRAT FONT) */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-/* Core Tailwind imports */
+/* ✅ Removed @import url(...) - Handled in layout.tsx */
+
+/* Core Tailwind imports (Tailwind v4) */
 @import "tailwindcss";
 @import "./styles/ProductCarousel.css";
 @import "./styles/CategoryCarousel.css";
 
-/* 🔥 STEP 1: Google Fonts se Montserrat (Variable) import karein */
-
-
-
+/* === CUSTOM VARIANTS === */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* === FONTS (UPDATED FOR MONTSERRAT) === */
+/* === NATIVE APP BASE STYLES === */
 @layer base {
-  /* 🔥 STEP 2: Purane @font-face rules (Satoshi, Clash Display) ko hata diya gaya hai */
-  
   :root {
-    /* 🔥 STEP 3: Naya font variable banaya gaya hai */
-    --font-sans: 'Montserrat', sans-serif;
+    /* ✅ Uses the variable defined in layout.tsx */
+    --font-sans: var(--font-sans); 
+    
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+    --safe-left: env(safe-area-inset-left);
+    --safe-right: env(safe-area-inset-right);
   }
+
   html {
     scroll-behavior: smooth;
     font-size: 13px;
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    height: 100%;
   }
+
   body {
-    /* 🔥 STEP 4: Body mein naya font apply kiya gaya hai */
     font-family: var(--font-sans);
     @apply bg-gray-50 text-gray-600 antialiased font-medium dark:bg-gray-950 dark:text-gray-300;
+    -webkit-user-select: none;
+    user-select: none;
+    min-height: 100dvh;
+    padding-top: var(--safe-top); 
+  }
+
+  p, h1, h2, h3, h4, h5, h6, span, input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
   }
   
-  /* === LINK COLOR (No Changes) === */
   a {
     @apply text-brand-primary hover:text-brand-primary-hover transition-colors duration-200;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    /* 🔥 STEP 5: Headings mein bhi naya font apply kiya gaya hai */
-    font-family: var(--font-sans);
-    @apply text-gray-800 font-semibold dark:text-gray-200 tracking-tight;
+    text-decoration: none; 
   }
 }
 
-/* === === === YOUR COLOR THEME (No Changes) === === === */
-@theme {
-  /* Colors */
-  --color-brand-primary: #FF8F32;
-  --color-brand-primary-hover: #E86627;
-  --color-brand-secondary: #10589E;
-  --color-brand-accent: #10589E;
-  --color-brand-danger: #E11D48;
-  --color-brand-success: #16A34A;
-
-  /* Surface colors */
-  --color-surface-base: #FFFFFF;
-  --color-surface-ground: #F9FAFB;
-  --color-surface-input: #F3F4F6;
-  --color-surface-border: #E5E7EB;
-  --color-surface-border-darker: #D1D5DB;
-  --color-surface-footer: #1F2937;
-
-  /* Text colors */
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #4B5563;
-  --color-text-subtle: #6B7280;
-  --color-text-on-primary: #FFFFFF;
-  --color-text-on-accent: #FFFFFF;
-  --color-text-on-dark: #D1D5DB;
-}
-/* === === === END OF COLOR THEME === === === */
-
-
-/* Scrollbar styles (No Changes) */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #F9FAFB; }
-.dark ::-webkit-scrollbar-track { background: #111827; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; border: 2px solid #F9FAFB; }
-.dark ::-webkit-scrollbar-thumb { background: #4b5563; border-color: #111827; }
-::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
-/* Animations (No Changes) */
+/* === UTILITIES & SCROLLBAR HIDING === */
 @layer utilities {
+  /* ✅ GLOBAL SCROLLBAR HIDE (Fixes horizontal bar flash) */
+  .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+  }
+  .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
+
   .brand-gradient-bg {
     background-color: #f9fafb;
     background-image: linear-gradient(180deg, #FFF7ED 0%, #F9FAFB 100%);
@@ -87,25 +67,8 @@
    .dark .brand-gradient-bg {
     background-image: linear-gradient(180deg, #1F2937 0%, #111827 100%);
   }
-}
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-100%); }
-}
-@keyframes marquee2 {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(0%); }
-}
-.animate-marquee {
-  animation: marquee 40s linear infinite;
-}
-.animate-marquee2 {
-  animation: marquee2 40s linear infinite;
-  will-change: transform;
-}
-
-/* Custom Component Styles (No Changes) */
-@layer utilities {
+  
+  /* Hero Carousel Heights */
   .hero-carousel-slider {
     height: 125px; 
   }
@@ -123,7 +86,38 @@
   }
 }
 
-/* Flash Sale Animation (No Changes) */
+/* === YOUR THEME & ANIMATIONS (Kept same) === */
+@theme {
+  --color-brand-primary: #FF8F32;
+  --color-brand-primary-hover: #E86627;
+  --color-brand-secondary: #10589E;
+  --color-brand-accent: #10589E;
+  --color-brand-danger: #E11D48;
+  --color-brand-success: #16A34A;
+
+  --color-surface-base: #FFFFFF;
+  --color-surface-ground: #F9FAFB;
+  --color-surface-input: #F3F4F6;
+  --color-surface-border: #E5E7EB;
+  --color-surface-border-darker: #D1D5DB;
+  --color-surface-footer: #1F2937;
+
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #4B5563;
+  --color-text-subtle: #6B7280;
+  --color-text-on-primary: #FFFFFF;
+  --color-text-on-accent: #FFFFFF;
+  --color-text-on-dark: #D1D5DB;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #F9FAFB; }
+.dark ::-webkit-scrollbar-track { background: #111827; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; border: 2px solid #F9FAFB; }
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; border-color: #111827; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
 @keyframes gradient-flow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -135,7 +129,6 @@
   animation: gradient-flow 15s ease-in-out infinite;
 }
 
-/* Toast Animations (No Changes) */
 @layer utilities {
   @keyframes toast-enter {
     from { opacity: 0; transform: translateY(-20px) scale(0.95); }
@@ -149,7 +142,6 @@
   .animation-toast-leave { animation: toast-leave 0.3s ease-in forwards; }
 }
 
-/* Skeleton Loader Animation (No Changes) */
 @layer utilities {
   @keyframes deep-breath {
     0%, 100% { opacity: 0.4; }
@@ -161,7 +153,6 @@
   }
 }
 
-/* Product Card Swiper Styles (Updated Active Color) */
 .product-card-swiper .swiper-pagination-bullet {
   background-color: #cccccc;
   opacity: 1;
@@ -170,8 +161,44 @@
   transition: background-color 0.3s;
 }
 .product-card-swiper .swiper-pagination-bullet-active {
-  background-color: #FF8F32; /* Active dot ka color aapke brand color se match kar diya */
+  background-color: #FF8F32;
 }
 .product-card-swiper .swiper-pagination {
   bottom: 8px !important;
 }
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* src/app/globals.css (FINAL CURSOR FIX) */
+
+/* 1. HTML tag par clicks aur cursor ko block karein (Most Important) */
+html.nprogress-busy {
+  cursor: wait !important;
+  pointer-events: none !important; 
+}
+
+/* 2. Body/Content ko dim karein (UX Feedback) */
+html.nprogress-busy body {
+  /* 🔴 CHANGE 1: Opacity ko 0.85 karein taake dimming nazar aye */
+  opacity: 0.85 !important; 
+  transition: opacity 0.3s ease;
+  
+  /* 🔴 CHANGE 2 (EXTRA SAFETY): Agar browser body/main ko white de raha ho */
+  background-color: white !important; 
+  
+  /* Z-Index fix */
+  position: relative !important;
+  z-index: 1; 
+}
+
+/* 3. FINAL FIX: Har possible element par 'wait' cursor force karein */
+/* Ye code * har element aur ::before/::after pseudoelements par 'wait' cursor laga dega */
+html.nprogress-busy *,
+html.nprogress-busy *::before,
+html.nprogress-busy *::after {
+    cursor: wait !important;
+}
+
+

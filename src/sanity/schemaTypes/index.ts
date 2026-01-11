@@ -14,11 +14,9 @@ import instagramSection from '../schemas/instagramSection'
 import lifestyleBanner from '../schemas/lifestyleBanner'
 import Information_page from '../schemas/Information_page'
 import faq from '../schemas/faq'
-import dealOfTheDay from '../schemas/dealOfTheDay' // YEH LINE IMPORT KAREIN
 import brand from '../schemas/brand'
 import couponBanner from '../schemas/couponBanner'
 import featuredCategory from '../schemas/featuredCategory'
-import flashSale from '../schemas/flashSale'
 import settings from '../schemas/settings'
 import coupon from '../schemas/coupon'
 import seo from '../schemas/seo'
@@ -34,6 +32,6 @@ import layoutSection from '../schemas/objects/layoutSection'
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,dealOfTheDay,brand,couponBanner,featuredCategory,flashSale,settings,coupon,seo,campaign,dealSection,bannerSection,categoryGrid,categoryShowcase,productShowcase,brandSection,couponSection,layoutSection],
+  types: [product,category,heroCarousel,homepage,productVariant,variantAttribute,review,post,author,blockContent,promoBanner,instagramSection,lifestyleBanner,Information_page,faq,brand,couponBanner,featuredCategory,settings,coupon,seo,campaign,dealSection,bannerSection,categoryGrid,categoryShowcase,productShowcase,brandSection,couponSection,layoutSection],
 }
 

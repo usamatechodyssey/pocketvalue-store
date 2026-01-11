@@ -419,6 +419,57 @@
 //     </main>
 //   );
 // }
+// import { Suspense } from "react";
+// import { client } from "@/sanity/lib/client";
+// import { HOMEPAGE_DATA_QUERY } from "@/sanity/lib/queries";
+
+// // Components
+// import HeroSection from "./components/home/HeroSection"; 
+// import HeroSkeleton from "./components/home/HeroSkeleton";
+// import RenderSection from "./components/home/builder/RenderSection";
+
+// // Metadata
+// import { generateBaseMetadata } from "@/utils/metadata";
+// import type { Metadata } from "next";
+
+// export async function generateMetadata(): Promise<Metadata> {
+//   return generateBaseMetadata({
+//     path: "/", 
+//   });
+// }
+
+// export default async function Home() {
+//   // Fetch Page Builder Data
+//   const homepageData = await client.fetch(HOMEPAGE_DATA_QUERY);
+//   const pageSections = homepageData?.pageSections || [];
+
+//   return (
+//     <main className="w-full flex flex-col items-center bg-white dark:bg-gray-950 min-h-screen">
+      
+//       {/* === 1. HERO SECTION (Priority Loading) === */}
+//       {/* Suspense is good for streaming, ensures User sees skeleton while data fetches */}
+//       <Suspense fallback={<HeroSkeleton />}>
+//         <HeroSection />
+//       </Suspense>
+
+//       {/* === 2. DYNAMIC SECTIONS === */}
+//       {/* Gap hata diya hai kyunke components mein internal padding hai */}
+//       <div className="w-full flex flex-col">
+//           {pageSections.length > 0 ? (
+//              pageSections.map((section: any) => (
+//                 <RenderSection key={section._key} section={section} />
+//              ))
+//           ) : (
+//              // Fallback for empty Sanity setup
+//              <div className="text-center py-32 text-gray-400 bg-gray-50 dark:bg-gray-900 w-full">
+//                 <p>Content not configured in Sanity CMS.</p>
+//              </div>
+//           )}
+//       </div>
+
+//     </main>
+//   );
+// }
 import { Suspense } from "react";
 import { client } from "@/sanity/lib/client";
 import { HOMEPAGE_DATA_QUERY } from "@/sanity/lib/queries";
@@ -454,9 +505,9 @@ export default async function Home() {
 
       {/* === 2. DYNAMIC BUILDER (THE MAGIC) === */}
       {/* Ab aap Sanity se jo chaho jahan chaho laga sakte ho */}
-      <div className="w-full space-y-12 md:space-y-20 pt-6 md:pt-10 pb-20">
+      <div className="w-full">
           {pageSections.length > 0 ? (
-             <div className="flex flex-col gap-12 md:gap-12 w-full">
+             <div className="flex flex-col w-full">
                 {pageSections.map((section: any) => (
                     <RenderSection key={section._key} section={section} />
                 ))}

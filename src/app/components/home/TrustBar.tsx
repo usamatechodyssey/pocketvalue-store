@@ -1,4 +1,102 @@
-// src/components/home/TrustBar.tsx - FINAL TOUCH-UP
+// // src/components/home/TrustBar.tsx (FIXED)
+
+// import {
+//   ShieldCheck,
+//   Rocket,
+//   BadgePercent,
+//   MessagesSquare,
+// } from "lucide-react";
+
+// const features = [
+//   {
+//     icon: ShieldCheck,
+//     title: "Quality Inspected",
+//     description:
+//       "Every product is hand-checked by our team to ensure you get the best. No compromises.",
+//   },
+//   {
+//     icon: Rocket,
+//     title: "Fast Shipping",
+//     description:
+//       "We partner with the best couriers to get your order to your doorstep as quickly as possible.",
+//   },
+//   {
+//     icon: BadgePercent,
+//     title: "Honest Prices",
+//     description:
+//       "By cutting out the middlemen, we bring you premium products at pocket-friendly prices.",
+//   },
+//   {
+//     icon: MessagesSquare,
+//     title: "Real Support",
+//     description:
+//       "Our team is always here to help. Your happiness is our top priority, 24/7.",
+//   },
+// ];
+
+// export default function TrustBar() {
+//   return (
+//     <section className="w-full py-12 md:py-20 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-900">
+//       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+//         {/* === HEADER (Consistent with other sections) === */}
+//         <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+//           <h2 className="text-2xl md:text-4xl font-sans font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+//             Why Choose PocketValue?
+//           </h2>
+//           <div className="w-16 h-1 bg-brand-primary mt-3 rounded-full"></div>
+//           <p className="mt-4 max-w-2xl text-sm md:text-base text-gray-500 dark:text-gray-400">
+//             {/* ✅ FIX: 'We're' -> 'We&apos;re' */}
+//             We&apos;re more than just a store. We&apos;re a promise.
+//           </p>
+//         </div>
+
+//         {/* === FEATURE GRID === */}
+//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+//           {features.map((feature, index) => (
+//             <div
+//               key={index}
+//               className="
+//                 group relative 
+//                 flex flex-col items-center text-center 
+//                 p-8 
+//                 bg-gray-50 dark:bg-white/5 
+//                 rounded-2xl 
+//                 border border-gray-100 dark:border-gray-800 
+//                 hover:border-brand-primary/30 dark:hover:border-brand-primary/30
+//                 hover:shadow-lg hover:-translate-y-1 
+//                 transition-all duration-300 ease-out
+//               "
+//             >
+//               {/* Icon Container with Hover Glow */}
+//               <div className="
+//                 flex items-center justify-center 
+//                 h-16 w-16 mb-6 
+//                 bg-white dark:bg-gray-800 
+//                 text-gray-400 group-hover:text-brand-primary 
+//                 rounded-2xl shadow-sm group-hover:shadow-md
+//                 transition-all duration-300
+//               ">
+//                 <feature.icon size={32} strokeWidth={1.5} />
+//               </div>
+
+//               {/* Title */}
+//               <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3">
+//                 {feature.title}
+//               </h3>
+
+//               {/* Description */}
+//               <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+//                 {feature.description}
+//               </p>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
+// src/components/home/TrustBar.tsx
 
 import {
   ShieldCheck,
@@ -6,61 +104,83 @@ import {
   BadgePercent,
   MessagesSquare,
 } from "lucide-react";
-import React from "react";
 
 const features = [
+  // ... (Features data same) ...
   {
-    icon: <ShieldCheck size={32} className="text-brand-primary" />,
+    icon: ShieldCheck,
     title: "Quality Inspected",
-    description:
-      "Every product is hand-checked by our team to ensure you get the best. No compromises.",
+    description: "Every product is hand-checked by our team to ensure you get the best. No compromises.",
   },
   {
-    icon: <Rocket size={32} className="text-brand-primary" />,
+    icon: Rocket,
     title: "Fast Shipping",
-    description:
-      "We partner with the best couriers to get your order to your doorstep as quickly as possible.",
+    description: "We partner with the best couriers to get your order to your doorstep as quickly as possible.",
   },
   {
-    icon: <BadgePercent size={32} className="text-brand-primary" />,
+    icon: BadgePercent,
     title: "Honest Prices",
-    description:
-      "By cutting out the middlemen, we bring you premium products at pocket-friendly prices.",
+    description: "By cutting out the middlemen, we bring you premium products at pocket-friendly prices.",
   },
   {
-    icon: <MessagesSquare size={32} className="text-brand-primary" />,
+    icon: MessagesSquare,
     title: "Real Support",
-    description:
-      "Our team is always here to help. Your happiness is our top priority, 24/7.",
+    description: "Our team is always here to help. Your happiness is our top priority, 24/7.",
   },
 ];
 
 export default function TrustBar() {
   return (
-    <section className="bg-surface-ground py-12 sm:py-16">
-      <div className="container mx-auto px-4">
-        {/* === YAHAN CLASSES UPDATE HUIN HAIN === */}
-        <div className="text-center mb-10">
-          {/* font-bold aur color ab base se aayega */}
-          <h2 className="text-3xl tracking-tight">Why Choose PocketValue?</h2>
-          <p className="mt-2 text-lg text-text-secondary">
-            We're more than just a store. We're a promise.
+    <section className="w-full py-12 md:py-20 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* HEADER */}
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <h2 className="text-2xl md:text-4xl font-sans font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+            Why Choose PocketValue?
+          </h2>
+          <div className="w-16 h-1 bg-brand-primary mt-3 rounded-full"></div>
+          <p className="mt-4 max-w-2xl text-sm md:text-base text-gray-500 dark:text-gray-400">
+            We&apos;re more than just a store. We&apos;re a promise.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* === FEATURE GRID (Perfect 2x2 on Mobile, 4x1 on Desktop) === */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="text-center p-6 bg-surface-base rounded-lg shadow-md border border-surface-border"
+              className="
+                group relative 
+                flex flex-col items-center text-center 
+                p-6 md:p-8 
+                bg-white dark:bg-gray-800 
+                rounded-2xl 
+                border border-gray-200 dark:border-gray-700 
+                hover:border-brand-primary/50 dark:hover:border-brand-primary/50
+                hover:shadow-lg hover:-translate-y-1 
+                transition-all duration-300 ease-out
+              "
             >
-              {/* bg-teal-100 ko brand-primary/10 se badla hai */}
-              <div className="flex items-center justify-center h-16 w-16 mx-auto mb-4 bg-brand-primary/10 rounded-full">
-                {feature.icon}
+              {/* Icon Container with Primary Color */}
+              <div className="
+                flex items-center justify-center 
+                h-14 w-14 mb-4 
+                bg-brand-primary/10 dark:bg-brand-primary/20 
+                text-brand-primary 
+                rounded-full shadow-sm 
+                transition-all duration-300
+              ">
+                <feature.icon size={28} strokeWidth={2} />
               </div>
-              {/* h3 ab base styles se color aur font-weight le lega */}
-              <h3 className="text-lg mb-2">{feature.title}</h3>
-              <p className="text-sm text-text-secondary">
+
+              {/* Title */}
+              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white mb-2">
+                {feature.title}
+              </h3>
+
+              {/* Description */}
+              <p className="text-xs md:text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                 {feature.description}
               </p>
             </div>

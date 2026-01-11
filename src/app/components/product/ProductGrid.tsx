@@ -1,33 +1,32 @@
-// app/components/product/ProductGrid.tsx (MUKAMMAL FINAL CODE)
-
-"use client";
+// "use client";
 
 import SanityProduct from "@/sanity/types/product_types";
 import { SlidersHorizontal } from "lucide-react";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {
-  products: SanityProduct[]; // Yeh ab hamesha filtered aur paginated products honge
+  products: SanityProduct[];
   onQuickView: (product: SanityProduct) => void;
-  // Is component ko ab sorting se koi lena dena nahi
 }
 
 export default function ProductGrid({
   products,
   onQuickView,
 }: ProductGridProps) {
-  // Sorting logic aur "Sort by" dropdown yahan se poori tarah se HATA diya gaya hai.
-
   return (
     <>
-      {/* Product Grid and "No Results" State */}
       {products.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
+        // ALIGNMENT FIX:
+        // Mobile: gap-2 (Tight spacing like standard apps)
+        // Desktop: gap-5 or gap-6 (Clean spacing)
+        // Columns: Consistent breakpoints (2 -> 3 -> 4 -> 5)
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 ">
           {products.map((product) => (
             <ProductCard
               key={product._id}
               product={product}
               onQuickView={onQuickView}
+              className="h-full" // Ensure cards stretch evenly
             />
           ))}
         </div>

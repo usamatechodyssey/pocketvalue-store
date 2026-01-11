@@ -1,10 +1,17 @@
-// // /src/app/Bismillah786/categories/_components/CategoryFormModal.tsx
+
+// // /app/admin/categories/_components/CategoryFormModal.tsx
+
 // "use client";
 
 // import { useState, useEffect, useTransition, Fragment } from "react";
 // import { toast } from "react-hot-toast";
-// // --- THE FIX IS HERE: Import the new component names ---
-// import { Dialog, Transition, DialogPanel, TransitionChild, DialogTitle } from '@headlessui/react';
+// import {
+//   Dialog,
+//   Transition,
+//   DialogPanel,
+//   TransitionChild,
+//   DialogTitle,
+// } from "@headlessui/react";
 // import { X, Loader2 } from "lucide-react";
 // import {
 //   upsertCategory,
@@ -40,6 +47,10 @@
 //     null
 //   );
 
+//   // --- Hamara mustanad input style ---
+//   const inputStyles =
+//     "appearance-none block w-full rounded-md border-0 py-2.5 px-3.5 text-gray-900 bg-white dark:text-white dark:bg-gray-900 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm";
+
 //   useEffect(() => {
 //     if (isOpen) {
 //       setName(category?.name || "");
@@ -58,14 +69,12 @@
 //   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //     const newName = e.target.value;
 //     setName(newName);
-//     // Only auto-generate slug if it's a NEW category
 //     if (!isEditing) {
 //       setSlug(slugify(newName, { lower: true, strict: true }));
 //     }
 //   };
 
 //   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     // Allow manual editing of the slug, ensuring it's always in the correct format
 //     setSlug(slugify(e.target.value, { lower: true, strict: true }));
 //   };
 
@@ -92,14 +101,22 @@
 //     .filter((c) => c._id !== category?._id)
 //     .map((cat) => ({ value: cat._id, label: cat.name }));
 
+//   // react-select ki styling ab inputStyles se behtar match karegi
 //   const customSelectStyles: StylesConfig<SelectOptionType, false> = {
 //     control: (provided, state) => ({
 //       ...provided,
-//       backgroundColor: theme === "dark" ? "#1f2937" : "white",
-//       borderColor: state.isFocused ? "#f97316" : "#d1d5db",
-//       "&:hover": { borderColor: state.isFocused ? "#f97316" : "#a5b4fc" },
-//       minHeight: "42px",
-//       boxShadow: "none",
+//       backgroundColor: theme === "dark" ? "#1F2937" : "white",
+//       borderColor: state.isFocused
+//         ? "#f97316"
+//         : theme === "dark"
+//           ? "#374151"
+//           : "#d1d5db",
+//       borderRadius: "0.375rem", // rounded-md
+//       padding: "0.1rem", // Consistent height
+//       boxShadow: state.isFocused ? "0 0 0 2px #f97316" : "none", // Consistent focus ring
+//       "&:hover": {
+//         borderColor: state.isFocused ? "#f97316" : "#9CA3AF",
+//       },
 //     }),
 //     menu: (provided) => ({
 //       ...provided,
@@ -122,15 +139,28 @@
 //   return (
 //     <Transition appear show={isOpen} as={Fragment}>
 //       <Dialog as="div" className="relative z-50" onClose={onClose}>
-//         {/* --- THE FIX IS HERE: Use <TransitionChild> --- */}
-//         <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+//         <TransitionChild
+//           as={Fragment}
+//           enter="ease-out duration-300"
+//           enterFrom="opacity-0"
+//           enterTo="opacity-100"
+//           leave="ease-in duration-200"
+//           leaveFrom="opacity-100"
+//           leaveTo="opacity-0"
+//         >
 //           <div className="fixed inset-0 bg-black/50" />
 //         </TransitionChild>
 //         <div className="fixed inset-0 overflow-y-auto">
 //           <div className="flex min-h-full items-center justify-center p-4">
-//             {/* --- THE FIX IS HERE: Use <TransitionChild> --- */}
-//             <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-//               {/* --- THE FIX IS HERE: Use <DialogPanel> --- */}
+//             <TransitionChild
+//               as={Fragment}
+//               enter="ease-out duration-300"
+//               enterFrom="opacity-0 scale-95"
+//               enterTo="opacity-100 scale-100"
+//               leave="ease-in duration-200"
+//               leaveFrom="opacity-100 scale-100"
+//               leaveTo="opacity-0 scale-95"
+//             >
 //               <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
 //                 <form onSubmit={handleSubmit}>
 //                   <div className="flex justify-between items-center pb-4 border-b dark:border-gray-700">
@@ -154,7 +184,7 @@
 //                         type="text"
 //                         value={name}
 //                         onChange={handleNameChange}
-//                         className="w-full p-2 border rounded-md"
+//                         className={inputStyles} // <-- Style apply kiya gaya
 //                         required
 //                       />
 //                     </div>
@@ -166,7 +196,7 @@
 //                         type="text"
 //                         value={slug}
 //                         onChange={handleSlugChange}
-//                         className="w-full p-2 border rounded-md bg-white dark:bg-gray-900"
+//                         className={inputStyles} // <-- Style apply kiya gaya
 //                         required
 //                       />
 //                     </div>
@@ -215,7 +245,7 @@
 //                     </button>
 //                   </div>
 //                 </form>
-//              </DialogPanel>
+//               </DialogPanel>
 //             </TransitionChild>
 //           </div>
 //         </div>
@@ -223,8 +253,10 @@
 //     </Transition>
 //   );
 // }
-// /app/admin/categories/_components/CategoryFormModal.tsx
 
+// // --- SUMMARY OF CHANGES ---
+// // - **UI/UX Consistency (Rule #6):** `Name` aur `Slug` ke `<input>` fields par hamara mustanad `inputStyles` variable apply kar diya gaya hai.
+// // - **Improved UI:** `react-select` component ki styling (`customSelectStyles`) ko thora behtar banaya gaya hai taake woh hamare `inputStyles` se behtar match kare (border radius, focus ring, etc.).
 "use client";
 
 import { useState, useEffect, useTransition, Fragment } from "react";
@@ -263,6 +295,7 @@ export default function CategoryFormModal({
 }: CategoryFormModalProps) {
   const [isPending, startTransition] = useTransition();
   const { theme } = useTheme();
+  // Safe check for ID
   const isEditing = !!category?._id;
 
   const [name, setName] = useState("");
@@ -271,24 +304,37 @@ export default function CategoryFormModal({
     null
   );
 
-  // --- Hamara mustanad input style ---
   const inputStyles =
     "appearance-none block w-full rounded-md border-0 py-2.5 px-3.5 text-gray-900 bg-white dark:text-white dark:bg-gray-900 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary sm:text-sm";
 
+  // ✅ FIX: Performance Optimization
+  // Dependencies are broken down to primitives to avoid object reference loops.
   useEffect(() => {
     if (isOpen) {
-      setName(category?.name || "");
-      setSlug(category?.slug || "");
-      if (category?.parent) {
-        setSelectedParent({
-          value: category.parent._id,
-          label: category.parent.name,
-        });
+      const catName = category?.name || "";
+      const catSlug = category?.slug || "";
+
+      // Only update if different
+      if (name !== catName) setName(catName);
+      if (slug !== catSlug) setSlug(catSlug);
+
+      const parentId = category?.parent?._id;
+      const parentName = category?.parent?.name;
+
+      if (parentId && parentName) {
+        // Only update if different to avoid loop
+        if (selectedParent?.value !== parentId) {
+          setSelectedParent({
+            value: parentId,
+            label: parentName,
+          });
+        }
       } else {
-        setSelectedParent(null);
+        if (selectedParent !== null) setSelectedParent(null);
       }
     }
-  }, [isOpen, category]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, category?._id, category?.name, category?.slug, category?.parent?._id]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -325,7 +371,6 @@ export default function CategoryFormModal({
     .filter((c) => c._id !== category?._id)
     .map((cat) => ({ value: cat._id, label: cat.name }));
 
-  // react-select ki styling ab inputStyles se behtar match karegi
   const customSelectStyles: StylesConfig<SelectOptionType, false> = {
     control: (provided, state) => ({
       ...provided,
@@ -333,11 +378,11 @@ export default function CategoryFormModal({
       borderColor: state.isFocused
         ? "#f97316"
         : theme === "dark"
-          ? "#374151"
-          : "#d1d5db",
-      borderRadius: "0.375rem", // rounded-md
-      padding: "0.1rem", // Consistent height
-      boxShadow: state.isFocused ? "0 0 0 2px #f97316" : "none", // Consistent focus ring
+        ? "#374151"
+        : "#d1d5db",
+      borderRadius: "0.375rem",
+      padding: "0.1rem",
+      boxShadow: state.isFocused ? "0 0 0 2px #f97316" : "none",
       "&:hover": {
         borderColor: state.isFocused ? "#f97316" : "#9CA3AF",
       },
@@ -352,10 +397,10 @@ export default function CategoryFormModal({
       backgroundColor: state.isSelected
         ? "#f97316"
         : state.isFocused
-          ? theme === "dark"
-            ? "#374151"
-            : "#f3f4f6"
-          : "transparent",
+        ? theme === "dark"
+          ? "#374151"
+          : "#f3f4f6"
+        : "transparent",
       color: "inherit",
     }),
   };
@@ -408,7 +453,7 @@ export default function CategoryFormModal({
                         type="text"
                         value={name}
                         onChange={handleNameChange}
-                        className={inputStyles} // <-- Style apply kiya gaya
+                        className={inputStyles}
                         required
                       />
                     </div>
@@ -420,7 +465,7 @@ export default function CategoryFormModal({
                         type="text"
                         value={slug}
                         onChange={handleSlugChange}
-                        className={inputStyles} // <-- Style apply kiya gaya
+                        className={inputStyles}
                         required
                       />
                     </div>
@@ -464,8 +509,8 @@ export default function CategoryFormModal({
                           ? "Updating..."
                           : "Creating..."
                         : isEditing
-                          ? "Update"
-                          : "Create"}
+                        ? "Update"
+                        : "Create"}
                     </button>
                   </div>
                 </form>
@@ -477,7 +522,3 @@ export default function CategoryFormModal({
     </Transition>
   );
 }
-
-// --- SUMMARY OF CHANGES ---
-// - **UI/UX Consistency (Rule #6):** `Name` aur `Slug` ke `<input>` fields par hamara mustanad `inputStyles` variable apply kar diya gaya hai.
-// - **Improved UI:** `react-select` component ki styling (`customSelectStyles`) ko thora behtar banaya gaya hai taake woh hamare `inputStyles` se behtar match kare (border radius, focus ring, etc.).

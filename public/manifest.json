@@ -1,0 +1,24 @@
+{
+  "name": "PocketValue",
+  "short_name": "PocketValue",
+  "description": "Premium Shopping Experience in Pakistan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Logo1.png",
+      "sizes": "666x666",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Logo1.png",
+      "sizes": "666x666",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -6,19 +7,19 @@ import { useStateContext } from "@/app/context/StateContext";
 import CouponInput from "./CouponInput";
 
 export default function CartSummary() {
-  // === THE FIX IS HERE: 'appliedCoupon' ko context se haasil karein ===
   const {
     subtotal,
     totalQuantities,
     shippingDetails,
     grandTotal,
     discountAmount,
-    appliedCoupon, // This was missing
+    appliedCoupon,
   } = useStateContext();
 
   return (
-    <div className="lg:col-span-4">
-      <div className="bg-white dark:bg-gray-800/50 p-6 rounded-xl shadow-sm sticky top-24 border border-gray-200 dark:border-gray-700">
+    // Removed lg:col-span-4 - component is now self-contained
+    // Removed sticky top-24 to let parent control
+    <div className="bg-white dark:bg-gray-800/50 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
         <div className="space-y-4 text-sm">
@@ -39,7 +40,6 @@ export default function CartSummary() {
           <div className="flex justify-between text-gray-600 dark:text-gray-300">
             <span>Shipping</span>
             {shippingDetails ? (
-              // === LOGIC UPDATE: Ab 'appliedCoupon' check hoga ===
               <span
                 className={`font-medium ${
                   appliedCoupon?.type === 'freeShipping' || shippingDetails.isFree
@@ -76,7 +76,6 @@ export default function CartSummary() {
             </button>
           </Link>
         </div>
-      </div>
     </div>
   );
 }

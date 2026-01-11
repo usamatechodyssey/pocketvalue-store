@@ -1,61 +1,29 @@
-// /app/admin/products/_components/RichTextEditor.tsx
+// /app/Bismillah786/products/_components/RichTextEditor.tsx (The Dynamic Wrapper)
 
 "use client";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import "./tiptap-styles.css";
+// ✅ FIX: Dynamic load the heavy content
+const LazyTiptapEditor = dynamic(
+  // ✅ Path RichTextEditorContent ko point kar raha hai
+  () => import('./RichTextEditorContent'), 
+  {
+    ssr: false, // Client side component only
+    loading: () => (
+      <div className="w-full bg-gray-100 dark:bg-gray-700/50 rounded-b-md border border-t-0 border-gray-300 dark:border-gray-600 p-4 min-h-[150px] flex items-center justify-center">
+        <Loader2 className="animate-spin text-brand-primary" size={24} />
+      </div>
+    ),
+  }
+);
 
-// --- UPDATED INTERFACE ---
-// The component now handles JSON, not HTML strings.
 interface RichTextEditorProps {
-  value: any; // Can be Tiptap JSON object or null
+  value: any; 
   onChange: (richTextAsJson: any) => void;
 }
 
-const TiptapEditor = ({ value, onChange }: RichTextEditorProps) => {
-  const editor = useEditor({
-    // === THE FIX IS HERE ===
-    // This setting tells Tiptap to wait for the client to render,
-    // preventing the SSR hydration error.
-    immediatelyRender: false,
-    // =======================
-
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [2, 3, 4],
-        },
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: true,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: true,
-        },
-      }),
-    ],
-    content: value, // Tiptap can handle the JSON object directly
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-sm sm:prose-base dark:prose-invert rounded-b-md border border-t-0 p-4 min-h-[150px] focus:outline-none focus:border-brand-primary dark:border-gray-600 w-full",
-      },
-    },
-    onUpdate({ editor }) {
-      // --- IMPORTANT CHANGE ---
-      // We now output JSON to match the server action's expectation.
-      onChange(editor.getJSON());
-    },
-  });
-
-  return (
-    <div className="rounded-md border border-gray-300 dark:border-gray-600">
-      {/* We can add a simple toolbar here later if needed */}
-      <EditorContent editor={editor} />
-    </div>
-  );
-};
-
-export default TiptapEditor;
+// ✅ Ye component chota hai, aur isay har file direct import karegi
+export default function RichTextEditor(props: RichTextEditorProps) {
+    return <LazyTiptapEditor {...props} />;
+}

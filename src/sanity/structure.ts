@@ -64,9 +64,7 @@ export const structure: StructureResolver = (S) =>
               S.listItem().title('Lifestyle Banners').schemaType('lifestyleBanner').child(S.documentTypeList('lifestyleBanner').title('All Lifestyle Banners')),
               S.listItem().title('Coupon Banners').icon(TicketIcon).schemaType('couponBanner').child(S.documentTypeList('couponBanner').title('All Coupon Banners')),
               
-              // Legacy (To be removed later)
-              S.listItem().title('Deal of the Day (Legacy)').icon(Flame).child( S.document().schemaType('dealOfTheDay').documentId('dealOfTheDay').title('Setup Deal of the Day')),
-              S.listItem().title('Flash Sale (Legacy)').icon(Zap).child( S.document().schemaType('flashSale').documentId('flashSale').title('Setup Flash Sale')),
+              
             ])
         ),
       
@@ -123,8 +121,8 @@ export const structure: StructureResolver = (S) =>
       ...S.documentTypeListItems().filter(
         (listItem) => ![
             'homepage', 'settings', 'instagramFeed', 'promoBanner', 'heroCarousel', 
-            'dealOfTheDay', 'lifestyleBanner', 'page', 'faq', 'review', 'post', 'author', 
-            'category', 'product', 'couponBanner', 'flashSale',
+            'lifestyleBanner', 'page', 'faq', 'review', 'post', 'author', 
+            'category', 'product', 'couponBanner', 
             'coupon', 
             'campaign',
         ].includes(listItem.getId()!)

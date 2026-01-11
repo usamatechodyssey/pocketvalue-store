@@ -1,4 +1,5 @@
-// // /src/app/forgot-password/ForgotPasswordClient.tsx
+
+// // /src/app/forgot-password/ForgotPasswordClient.tsx (VERIFIED - NO CHANGES NEEDED)
 
 // "use client";
 
@@ -8,10 +9,7 @@
 // import { Mail, Loader2, KeyRound } from "lucide-react";
 // import { requestPasswordReset } from "@/app/actions/authActions";
 
-// // METADATA EXPORT HAS BEEN REMOVED FROM THIS FILE
-
 // export default function ForgotPasswordClient() {
-//   // Renamed from ForgotPasswordPage
 //   const [email, setEmail] = useState("");
 //   const [isLoading, setIsLoading] = useState(false);
 //   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -22,12 +20,16 @@
 //   const handleSubmit = async (e: React.FormEvent) => {
 //     e.preventDefault();
 //     setIsLoading(true);
+//     // Calls the Server Action
 //     const result = await requestPasswordReset(email);
 //     setIsLoading(false);
 
+//     // The server action always returns success to prevent user enumeration,
+//     // so we can always show the success state.
 //     if (result.success) {
 //       setIsSubmitted(true);
 //     } else {
+//       // This will only show if there's a critical server error (e.g., mail server down)
 //       toast.error(result.message);
 //     }
 //   };
@@ -55,7 +57,7 @@
 //     );
 //   }
 //   return (
-//     <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-screen py-12 px-4">
+//     <main className="w-full bg-gray-50 dark:bg-gray-900 flex min-h-[80vh] justify-center items-center  py-12 px-4">
 //       <div className="w-full max-w-md p-8 sm:p-10 space-y-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
 //         <div className="text-center">
 //           <KeyRound size={40} className="mx-auto text-brand-primary mb-4" />
@@ -87,7 +89,7 @@
 //           <button
 //             type="submit"
 //             disabled={isLoading}
-//             className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed transition-colors"
+//             className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-white font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed transition-colors"
 //           >
 //             {isLoading && <Loader2 className="animate-spin" size={20} />}
 //             {isLoading ? "Sending Link..." : "Send Reset Link"}
@@ -106,8 +108,9 @@
 //     </main>
 //   );
 // }
-// /src/app/forgot-password/ForgotPasswordClient.tsx (VERIFIED - NO CHANGES NEEDED)
 
+// // --- SUMMARY OF CHANGES ---
+// // - No changes were required. The component correctly handles form state, calls the appropriate Server Action, and provides clear user feedback.
 "use client";
 
 import { useState } from "react";
@@ -127,16 +130,12 @@ export default function ForgotPasswordClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Calls the Server Action
     const result = await requestPasswordReset(email);
     setIsLoading(false);
 
-    // The server action always returns success to prevent user enumeration,
-    // so we can always show the success state.
     if (result.success) {
       setIsSubmitted(true);
     } else {
-      // This will only show if there's a critical server error (e.g., mail server down)
       toast.error(result.message);
     }
   };
@@ -150,8 +149,9 @@ export default function ForgotPasswordClient() {
             Check Your Email
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            If an account with that email exists, we've sent a link to reset
-            your password.
+            {/* ✅ FIX: 'we've' -> 'we&apos;ve' */}
+            If an account with that email exists, we&apos;ve sent a link to
+            reset your password.
           </p>
           <Link
             href="/login"
@@ -164,7 +164,7 @@ export default function ForgotPasswordClient() {
     );
   }
   return (
-    <main className="w-full bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-screen py-12 px-4">
+    <main className="w-full bg-gray-50 dark:bg-gray-900 flex min-h-[80vh] justify-center items-center  py-12 px-4">
       <div className="w-full max-w-md p-8 sm:p-10 space-y-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
         <div className="text-center">
           <KeyRound size={40} className="mx-auto text-brand-primary mb-4" />
@@ -172,7 +172,8 @@ export default function ForgotPasswordClient() {
             Forgot Your Password?
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            No problem. Enter your email and we'll send you a reset link.
+            {/* ✅ FIX: 'we'll' -> 'we&apos;ll' */}
+            No problem. Enter your email and we&apos;ll send you a reset link.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -196,7 +197,7 @@ export default function ForgotPasswordClient() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-on-primary font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-primary text-white font-bold rounded-lg shadow-md hover:bg-brand-primary-hover disabled:bg-opacity-70 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading && <Loader2 className="animate-spin" size={20} />}
             {isLoading ? "Sending Link..." : "Send Reset Link"}
@@ -215,6 +216,3 @@ export default function ForgotPasswordClient() {
     </main>
   );
 }
-
-// --- SUMMARY OF CHANGES ---
-// - No changes were required. The component correctly handles form state, calls the appropriate Server Action, and provides clear user feedback.

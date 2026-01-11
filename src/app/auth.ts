@@ -265,7 +265,7 @@ export const authOptions: NextAuthConfig = {
             
             try {
                 await connectMongoose();
-                let existingUser = await User.findOne({ email });
+                const existingUser = await User.findOne({ email });
 
                 if (existingUser) {
                     // Update image if changed

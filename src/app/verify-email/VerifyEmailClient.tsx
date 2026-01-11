@@ -1,4 +1,5 @@
-// // /src/app/verify-email/VerifyEmailClient.tsx
+
+// // /src/app/verify-email/VerifyEmailClient.tsx (IMPROVED REDIRECT LOGIC)
 
 // "use client";
 
@@ -10,8 +11,6 @@
 //   verifyUserEmail,
 //   resendVerificationEmail,
 // } from "@/app/actions/authActions";
-
-// // METADATA EXPORT HAS BEEN REMOVED
 
 // const VerifyEmailForm = () => {
 //   const router = useRouter();
@@ -27,12 +26,14 @@
 //   const otpInputStyles =
 //     "w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-semibold rounded-lg bg-gray-50 dark:bg-gray-900 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary transition-all";
 
+//   // Focus the first input on component mount
 //   useEffect(() => {
 //     if (inputRefs.current[0]) {
 //       inputRefs.current[0].focus();
 //     }
 //   }, []);
 
+//   // Redirect if email is missing from URL params
 //   useEffect(() => {
 //     if (!emailToVerify) {
 //       toast.error("Invalid session. Redirecting...");
@@ -40,6 +41,7 @@
 //     }
 //   }, [emailToVerify, router]);
 
+//   // Cooldown timer for the "resend" button
 //   useEffect(() => {
 //     let timer: NodeJS.Timeout;
 //     if (cooldown > 0) {
@@ -48,6 +50,7 @@
 //     return () => clearTimeout(timer);
 //   }, [cooldown]);
 
+//   // Loading state while waiting for email param
 //   if (!emailToVerify) {
 //     return (
 //       <div className="flex justify-center items-center h-screen">
@@ -61,10 +64,11 @@
 //     index: number
 //   ) => {
 //     const { value } = e.target;
-//     if (isNaN(Number(value))) return;
+//     if (isNaN(Number(value))) return; // Only allow numbers
 //     const newOtp = [...otp];
 //     newOtp[index] = value.substring(value.length - 1);
 //     setOtp(newOtp);
+//     // Move to next input if a value is entered
 //     if (value && index < 5 && inputRefs.current[index + 1]) {
 //       inputRefs.current[index + 1]!.focus();
 //     }
@@ -74,6 +78,7 @@
 //     e: React.KeyboardEvent<HTMLInputElement>,
 //     index: number
 //   ) => {
+//     // Move to previous input on backspace if current input is empty
 //     if (
 //       e.key === "Backspace" &&
 //       !otp[index] &&
@@ -95,7 +100,9 @@
 //     const result = await verifyUserEmail(emailToVerify, fullOtp);
 //     if (result.success) {
 //       toast.success(result.message);
-//       window.location.href = `/login?email=${encodeURIComponent(emailToVerify)}`;
+//       // --- THE FIX IS HERE ---
+//       // Use router.push for a smoother, client-side navigation instead of a full page reload.
+//       router.push(`/login?email=${encodeURIComponent(emailToVerify)}`);
 //     } else {
 //       toast.error(result.message);
 //       setIsLoading(false);
@@ -108,7 +115,7 @@
 //     const result = await resendVerificationEmail(emailToVerify);
 //     if (result.success) {
 //       toast.success(result.message);
-//       setCooldown(60);
+//       setCooldown(60); // Start 60-second cooldown
 //     } else {
 //       toast.error(result.message);
 //     }
@@ -176,7 +183,7 @@
 //               ? "Sending..."
 //               : cooldown > 0
 //                 ? `Resend in ${cooldown}s`
-//                 : "resend code"}
+//                 : "Resend Code"}
 //           </button>
 //         </p>
 //       </div>
@@ -185,12 +192,12 @@
 // };
 
 // export default function VerifyEmailClient() {
-//   // Renamed from VerifyEmailPage
-//   // The Suspense logic was moved to the parent Server Component
 //   return <VerifyEmailForm />;
 // }
-// /src/app/verify-email/VerifyEmailClient.tsx (IMPROVED REDIRECT LOGIC)
 
+// // --- SUMMARY OF CHANGES ---
+// // - **Improved Redirect Logic:** Replaced `window.location.href` with Next.js's `router.push()`. This provides a faster, smoother Single-Page Application (SPA) style navigation to the login page after successful verification, instead of forcing a full page reload.
+// // - **Code Cleanup:** Added comments and slightly improved the "Resend Code" button text for better clarity. No other logical changes were needed.
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -290,8 +297,6 @@ const VerifyEmailForm = () => {
     const result = await verifyUserEmail(emailToVerify, fullOtp);
     if (result.success) {
       toast.success(result.message);
-      // --- THE FIX IS HERE ---
-      // Use router.push for a smoother, client-side navigation instead of a full page reload.
       router.push(`/login?email=${encodeURIComponent(emailToVerify)}`);
     } else {
       toast.error(result.message);
@@ -321,7 +326,8 @@ const VerifyEmailForm = () => {
             Verify Your Email
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            We've sent a 6-digit code to <br />
+            {/* ✅ FIX: 'We've' -> 'We&apos;ve' */}
+            We&apos;ve sent a 6-digit code to <br />
             <span className="font-semibold text-gray-800 dark:text-gray-200">
               {emailToVerify}
             </span>
@@ -362,7 +368,8 @@ const VerifyEmailForm = () => {
           </button>
         </form>
         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          Didn't receive the email?{" "}
+          {/* ✅ FIX: 'Didn't' -> 'Didn&apos;t' */}
+          Didn&apos;t receive the email?{" "}
           <button
             type="button"
             onClick={handleResendCode}
@@ -384,7 +391,3 @@ const VerifyEmailForm = () => {
 export default function VerifyEmailClient() {
   return <VerifyEmailForm />;
 }
-
-// --- SUMMARY OF CHANGES ---
-// - **Improved Redirect Logic:** Replaced `window.location.href` with Next.js's `router.push()`. This provides a faster, smoother Single-Page Application (SPA) style navigation to the login page after successful verification, instead of forcing a full page reload.
-// - **Code Cleanup:** Added comments and slightly improved the "Resend Code" button text for better clarity. No other logical changes were needed.

@@ -132,12 +132,156 @@
 //       return null;
 //   }
 // }
-"use client";
+// "use client";
+
+// import dynamic from "next/dynamic";
+
+// // Imports
+// const MasterBannerGrid = dynamic(() => import("./MasterBannerGrid"));
+// const UniversalDealSection = dynamic(() => import("./UniversalDealSection"));
+// const ProductCarousel = dynamic(() => import("../ProductCarousel"));
+// const CategoryCarousel = dynamic(() => import("../CategoryCarousel"));
+// const MobileCategoryList = dynamic(() => import("../MobileCategoryList"));
+// const FeaturedCategoryGrid = dynamic(() => import("../FeaturedCategoryGrid"));
+// const BrandShowcase = dynamic(() => import("../BrandShowcase"));
+// const Coupon = dynamic(() => import("../../ui/Coupon"));
+// const TrustBar = dynamic(() => import("../TrustBar"));
+// const FeaturesSection = dynamic(() => import("../FeaturesSection"));
+// const InfiniteProductGrid = dynamic(() => import("../InfiniteProductGrid"));
+
+// interface RenderSectionProps {
+//   section: any;
+// }
+
+// export default function RenderSection({ section }: RenderSectionProps) {
+//   if (!section || !section._type) return null;
+
+//   switch (section._type) {
+//     // === 1. BANNER GRID ===
+//     case "bannerSection":
+//       return <MasterBannerGrid {...section} />;
+
+//     // === 2. DEAL SECTION (SMART SWITCH) ===
+//     case "dealSection":
+//       // 🔥 LOGIC: Agar Side Banner ON hai, to 'ProductCarousel' use karo (Zero Spacing wala)
+//       if (section.showSideBanner) {
+//         return (
+//           <ProductCarousel
+//             title={section.title}
+//             products={section.products}
+//             banner={{
+//               tag: "custom",
+//               bannerImage: section.sideBanner?.image,
+//               link: section.sideBanner?.link,
+//             }}
+//             // Agar deal timer hai to wo header mein dikhane ke liye extra logic yahan ja sakti hai
+//           />
+//         );
+//       }
+//       // Warna Normal Grid/Slider wala use karo
+//       return <UniversalDealSection data={section} />;
+
+//     // === 3. PRODUCT SHOWCASE (SMART SWITCH) ===
+//     case "productShowcase":
+//       // 🔥 LOGIC: Agar Side Banner ON hai, to 'ProductCarousel'
+//       if (section.showSideBanner) {
+//         return (
+//           <ProductCarousel
+//             title={section.title}
+//             products={section.products || section.manualProducts}
+//             banner={{
+//               tag: "custom",
+//               bannerImage: section.sideBanner?.image,
+//               link: section.sideBanner?.link,
+//             }}
+//           />
+//         );
+//       }
+//       // Agar Side Banner nahi hai, to hum isay bhi 'UniversalDealSection' ke through dikha sakte hain
+//       // taake Grid/Slider ka option mil jaye aur spacing achi ho.
+//       // HACK: Data shape match karne ke liye thoda transform kar rahe hain.
+//       return (
+//         <UniversalDealSection
+//           data={{
+//             ...section,
+//             fetchStrategy: "manual", // Just to satisfy type
+//             viewType: "slider", // Default to slider if no banner
+//             backgroundStyle: "white",
+//             products: section.products || section.manualProducts,
+//           }}
+//         />
+//       );
+
+//     // ... (Baaki cases same rahenge) ...
+//     case "categoryShowcase":
+//       return (
+//         <section className="w-full">
+//           {/* 🔥 FIX: Desktop Title ko center kiya gaya hai */}
+//           <div className="hidden md:block text-center  mb-8 px-8 max-w-[1920px] mx-auto">
+//              {/* 🔥 FIX: text-3xl ko text-[90px] se badal diya gaya hai */}
+//               <h2 className="text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-none">
+//                 {section.title || "SHOP BY CATEGORY"}
+//               </h2>
+//           </div>
+//           <div className="md:hidden">
+//             <MobileCategoryList categories={section.categories} />
+//           </div>
+//           <div className="hidden md:block">
+//             <CategoryCarousel categories={section.categories} title="" />
+//           </div>
+//         </section>
+//       );
+
+//     case "categoryGrid":
+//       return (
+//         <FeaturedCategoryGrid
+//           title={section.title}
+//           categories={section.items}
+//         />
+//       );
+
+//     case "couponSection":
+//       return (
+//         <div
+//           className={
+//             section.fullWidth
+//               ? "w-full"
+//               : "px-4 md:px-8 pt-8 w-full max-w-[1920px] mx-auto"
+//           }
+//         >
+//           <Coupon data={section} />
+//         </div>
+//       );
+
+//     case "brandSection":
+//       return <BrandShowcase brands={section.manualBrands} />;
+
+//     case "layoutSection":
+//       if (section.type === "trust") return <TrustBar />;
+//       if (section.type === "newsletter") return <FeaturesSection />;
+//       if (section.type === "infiniteGrid") {
+//         return (
+//           <div className="px-0 md:px-8 w-full max-w-[1920px] mx-auto pb-20">
+//             <InfiniteProductGrid
+//               initialProducts={section.initialProducts || []}
+//             />
+//           </div>
+//         );
+//       }
+//       return null;
+
+//     default:
+//       return null;
+//   }
+// }
+// "use client";
 
 import dynamic from "next/dynamic";
 
-// Imports
-const MasterBannerGrid = dynamic(() => import("./MasterBannerGrid"));
+// 🔥 PERFORMANCE FIX 1: MasterBannerGrid ko Direct Import karein (For LCP Speed)
+import MasterBannerGrid from "./MasterBannerGrid";
+
+// Baaki sections lazy load hi rahenge (Performance Bachane ke liye)
 const UniversalDealSection = dynamic(() => import("./UniversalDealSection"));
 const ProductCarousel = dynamic(() => import("../ProductCarousel"));
 const CategoryCarousel = dynamic(() => import("../CategoryCarousel"));
@@ -159,11 +303,11 @@ export default function RenderSection({ section }: RenderSectionProps) {
   switch (section._type) {
     // === 1. BANNER GRID ===
     case "bannerSection":
+      // Yeh ab foran render hoga bina delay ke
       return <MasterBannerGrid {...section} />;
 
     // === 2. DEAL SECTION (SMART SWITCH) ===
     case "dealSection":
-      // 🔥 LOGIC: Agar Side Banner ON hai, to 'ProductCarousel' use karo (Zero Spacing wala)
       if (section.showSideBanner) {
         return (
           <ProductCarousel
@@ -174,16 +318,13 @@ export default function RenderSection({ section }: RenderSectionProps) {
               bannerImage: section.sideBanner?.image,
               link: section.sideBanner?.link,
             }}
-            // Agar deal timer hai to wo header mein dikhane ke liye extra logic yahan ja sakti hai
           />
         );
       }
-      // Warna Normal Grid/Slider wala use karo
       return <UniversalDealSection data={section} />;
 
     // === 3. PRODUCT SHOWCASE (SMART SWITCH) ===
     case "productShowcase":
-      // 🔥 LOGIC: Agar Side Banner ON hai, to 'ProductCarousel'
       if (section.showSideBanner) {
         return (
           <ProductCarousel
@@ -197,28 +338,22 @@ export default function RenderSection({ section }: RenderSectionProps) {
           />
         );
       }
-      // Agar Side Banner nahi hai, to hum isay bhi 'UniversalDealSection' ke through dikha sakte hain
-      // taake Grid/Slider ka option mil jaye aur spacing achi ho.
-      // HACK: Data shape match karne ke liye thoda transform kar rahe hain.
       return (
         <UniversalDealSection
           data={{
             ...section,
-            fetchStrategy: "manual", // Just to satisfy type
-            viewType: "slider", // Default to slider if no banner
+            fetchStrategy: "manual",
+            viewType: "slider",
             backgroundStyle: "white",
             products: section.products || section.manualProducts,
           }}
         />
       );
 
-    // ... (Baaki cases same rahenge) ...
     case "categoryShowcase":
       return (
         <section className="w-full">
-          {/* 🔥 FIX: Desktop Title ko center kiya gaya hai */}
-          <div className="hidden md:block text-center  mb-8 px-8 max-w-[1920px] mx-auto">
-             {/* 🔥 FIX: text-3xl ko text-[90px] se badal diya gaya hai */}
+          <div className="hidden md:block text-center mb-8 px-8 max-w-[1920px] mx-auto">
               <h2 className="text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-none">
                 {section.title || "SHOP BY CATEGORY"}
               </h2>
@@ -249,7 +384,7 @@ export default function RenderSection({ section }: RenderSectionProps) {
               : "px-4 md:px-8 pt-8 w-full max-w-[1920px] mx-auto"
           }
         >
-          <Coupon data={section} />
+           <Coupon/>
         </div>
       );
 

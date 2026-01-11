@@ -361,8 +361,8 @@ export const searchProducts = async (
   // // --------------------------------------------------------------------------------
 
   const params: { [key: string]: any } = {};
-  let conditions: string[] = [`_type == "product"`, `count(variants) > 0`];
-  let variantConditions: string[] = [];
+  const conditions: string[] = [`_type == "product"`, `count(variants) > 0`];
+  const variantConditions: string[] = [];
 
 
    // Logic Add karein:
@@ -825,7 +825,7 @@ export const GET_FILTER_DATA_FOR_PLP = async (
     const { searchTerm, categorySlug, sortOrder, isFeatured } = options;
 
     const params: { [key: string]: any } = {};
-    let conditions: string[] = [`_type == "product"`, `count(variants) > 0`];
+    const conditions: string[] = [`_type == "product"`, `count(variants) > 0`];
 
     // Bilkul wahi conditions jo searchProducts mein hain
     if (sortOrder === 'newest') conditions.push(`isNewArrival == true`);

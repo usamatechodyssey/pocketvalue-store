@@ -176,7 +176,7 @@ export default function ProductVariantsForm({
       prevVariants.map((v) => {
         if (v._key !== key) return v;
 
-        let updatedVariant = { ...v };
+        const updatedVariant = { ...v };
         const isNumericField = [
           "price",
           "salePrice",
