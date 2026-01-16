@@ -1,63 +1,260 @@
 
-// app/components/ui/PaginationControls.tsx (MUKAMMAL FINAL CODE)
+// // app/components/ui/PaginationControls.tsx (MUKAMMAL FINAL CODE)
 
+// "use client";
+
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+
+// interface PaginationControlsProps {
+//   currentPage: number;
+//   totalPages: number;
+//   onPageChange: (page: number) => void;
+// }
+
+// export default function PaginationControls({
+//   currentPage,
+//   totalPages,
+//   onPageChange,
+// }: PaginationControlsProps) {
+//   const handlePrev = () => {
+//     if (currentPage > 1) {
+//       onPageChange(currentPage - 1);
+//     }
+//   };
+
+//   const handleNext = () => {
+//     if (currentPage < totalPages) {
+//       onPageChange(currentPage + 1);
+//     }
+//   };
+
+//   // Agar sirf 1 page ho to kuch na dikhayein
+//   if (totalPages <= 1) {
+//     return null;
+//   }
+
+//   return (
+//     <div className="flex items-center justify-center gap-4 mt-12">
+//       <button
+//         onClick={handlePrev}
+//         disabled={currentPage === 1}
+//         className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+//         aria-label="Go to previous page"
+//       >
+//         <ChevronLeft size={16} />
+//         Previous
+//       </button>
+
+//       <span className="text-sm font-medium text-text-secondary dark:text-gray-400">
+//         Page {currentPage} of {totalPages}
+//       </span>
+
+//       <button
+//         onClick={handleNext}
+//         disabled={currentPage === totalPages}
+//         className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+//         aria-label="Go to next page"
+//       >
+//         Next
+//         <ChevronRight size={16} />
+//       </button>
+//     </div>
+//   );
+// }
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation"; // ✅ URL hooks yahan use honge
+import { ChevronLeft, ChevronRight, MoreHorizontal, ArrowRight, Hash } from "lucide-react";
 
 interface PaginationControlsProps {
-  currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
+  paramName?: string; // Optional: Agar "page" ke bajaye kuch aur naam use karna ho
 }
 
 export default function PaginationControls({
-  currentPage,
   totalPages,
-  onPageChange,
+  paramName = "page",
 }: PaginationControlsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // ✅ Current Page ab direct URL se ayega (Parent se lene ki zarurat nahi)
+  const currentPage = Number(searchParams.get(paramName)) || 1;
+
+  const [jumpPage, setJumpPage] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+
+  // ✅ Magic Function: Ye URL update karega aur purane filters (category, sort) ko kharab nahi karega
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(paramName, page.toString());
+    
+    // Scroll to top optional hai, agar smooth chahiye to { scroll: true } rakho
+    router.push(`${pathname}?${params.toString()}`, { scroll: true });
+  };
+
   const handlePrev = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
-    }
+    if (currentPage > 1) handlePageChange(currentPage - 1);
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
+    if (currentPage < totalPages) handlePageChange(currentPage + 1);
+  };
+
+  const handleJumpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const pageNum = parseInt(jumpPage);
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      handlePageChange(pageNum);
+      setJumpPage("");
+      (document.activeElement as HTMLElement)?.blur();
     }
   };
 
-  // Agar sirf 1 page ho to kuch na dikhayein
-  if (totalPages <= 1) {
-    return null;
-  }
+  if (totalPages <= 1) return null;
+
+  // Logic: 1 ... 4 5 6 ... 20
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const startRange = Math.max(2, currentPage - 1);
+      const endRange = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = startRange; i <= endRange; i++) {
+        if (i > 1 && i < totalPages) pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-12">
-      <button
-        onClick={handlePrev}
-        disabled={currentPage === 1}
-        className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        aria-label="Go to previous page"
-      >
-        <ChevronLeft size={16} />
-        Previous
-      </button>
+    <div className="flex flex-col items-center gap-8 mt-14 mb-10 select-none">
+      
+      {/* 1. Main Pagination Bar (Same Next-Gen UI) */}
+      <div className="flex flex-wrap items-center justify-center p-1.5 gap-2 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/20 dark:border-gray-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
+        
+        {/* PREVIOUS */}
+        <button
+          onClick={handlePrev}
+          disabled={currentPage === 1}
+          className="group flex items-center gap-1.5 pl-2 pr-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300
+            hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary dark:hover:text-brand-primary
+            disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:shadow-none disabled:hover:text-gray-600"
+        >
+          <div className="p-1 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-brand-primary/10 transition-colors">
+            <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
+          </div>
+          <span className="hidden sm:inline">Prev</span>
+        </button>
 
-      <span className="text-sm font-medium text-text-secondary dark:text-gray-400">
-        Page {currentPage} of {totalPages}
-      </span>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
 
-      <button
-        onClick={handleNext}
-        disabled={currentPage === totalPages}
-        className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        aria-label="Go to next page"
-      >
-        Next
-        <ChevronRight size={16} />
-      </button>
+        {/* Page Numbers */}
+        <div className="flex items-center gap-1 mx-1">
+          {pageNumbers.map((page, index) => {
+            if (page === "...") {
+              return (
+                <span key={`ellipsis-${index}`} className="w-9 h-9 flex items-center justify-center text-gray-400">
+                  <MoreHorizontal size={16} />
+                </span>
+              );
+            }
+            const isActive = currentPage === page;
+            return (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page as number)}
+                className={`
+                  relative w-9 h-9 rounded-xl text-sm font-bold flex items-center justify-center transition-all duration-300
+                  ${
+                    isActive
+                      ? "text-white shadow-lg shadow-brand-primary/30 scale-100" 
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-brand-primary hover:scale-105"
+                  }
+                `}
+              >
+                {isActive && (
+                   <span className="absolute inset-0 bg-brand-primary rounded-xl -z-10 animate-in zoom-in-50 duration-300" />
+                )}
+                {page}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
+
+        {/* NEXT */}
+        <button
+          onClick={handleNext}
+          disabled={currentPage === totalPages}
+          className="group flex items-center gap-1.5 pl-4 pr-2 py-2 rounded-xl text-sm font-semibold transition-all duration-300
+            hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary dark:hover:text-brand-primary
+            disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:shadow-none disabled:hover:text-gray-600"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <div className="p-1 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-brand-primary/10 transition-colors">
+             <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform duration-300" />
+          </div>
+        </button>
+      </div>
+
+      {/* 2. Jump to Page Capsule */}
+      {totalPages > 5 && (
+        <form 
+          onSubmit={handleJumpSubmit} 
+          className={`
+            relative flex items-center gap-2 px-1.5 py-1.5 rounded-full transition-all duration-500 ease-out border
+            ${isFocused 
+              ? "bg-white dark:bg-gray-800 shadow-[0_4px_20px_rgba(255,143,50,0.15)] border-brand-primary/30 translate-y-0" 
+              : "bg-gray-50 dark:bg-gray-900/50 border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-800"
+            }
+          `}
+        >
+          <div className={`
+            flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300
+            ${isFocused ? "bg-brand-primary/10 text-brand-primary" : "bg-gray-200 dark:bg-gray-800 text-gray-500"}
+          `}>
+            <Hash size={14} />
+          </div>
+          <div className="relative">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={jumpPage}
+              onChange={(e) => setJumpPage(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => !jumpPage && setIsFocused(false)}
+              placeholder="Jump to..."
+              className="w-20 bg-transparent text-sm font-medium text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none 
+              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all"
+            />
+            <span className={`absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none transition-opacity duration-300 ${jumpPage ? 'opacity-0' : 'opacity-100'}`}>
+              / {totalPages}
+            </span>
+          </div>
+          <button 
+            type="submit"
+            disabled={!jumpPage}
+            className={`
+              flex items-center justify-center w-8 h-8 rounded-full bg-brand-primary text-white shadow-md transition-all duration-300
+              ${jumpPage ? "opacity-100 scale-100 rotate-0 ml-1" : "opacity-0 scale-50 -rotate-90 w-0 ml-0 overflow-hidden"}
+            `}
+          >
+            <ArrowRight size={14} />
+          </button>
+        </form>
+      )}
     </div>
   );
 }

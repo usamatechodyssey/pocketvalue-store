@@ -189,8 +189,8 @@
 
 //   return (
 //     <>
-//       {/* 
-//          ALIGNMENT FIX 1: 
+//       {/*
+//          ALIGNMENT FIX 1:
 //          - Changed 'lg:gap-12' to 'lg:gap-8' (Reduced gap between sidebar and products).
 //          - This gives more width to the product grid, making cards larger and consistent.
 //       */}
@@ -209,8 +209,8 @@
 //           dealCategories={dealCategories}
 //         />
 
-//         {/* 
-//            ALIGNMENT FIX 2: 
+//         {/*
+//            ALIGNMENT FIX 2:
 //            - Added 'min-w-0'. This is crucial for CSS Grid inside Flexbox.
 //            - Without this, the grid can overflow or shrink cards unexpectedly.
 //         */}
@@ -248,16 +248,16 @@
 //               </div>
 //             </div>
 //           </div>
-          
+
 //           <div className="relative min-h-[50vh]">
 //             {isLoading && (
 //               <div className="absolute inset-0 flex items-center justify-center z-10 rounded-lg bg-white/60 dark:bg-gray-900/60 backdrop-blur-[1px]">
 //                 <Loader2 className="w-12 h-12 animate-spin text-brand-primary" />
 //               </div>
 //             )}
-            
-//             {/* 
-//                ALIGNMENT FIX 3: 
+
+//             {/*
+//                ALIGNMENT FIX 3:
 //                ProductGrid ab 'h-full' cards render karega jo humne ProductGrid.tsx me set kiya tha.
 //                Container ki width ab sahi se adjust hogi.
 //             */}
@@ -279,7 +279,7 @@
 //               )}
 //             </div>
 //           </div>
-          
+
 //           {totalPages > 1 && (
 //             <div className="mt-8">
 //               <PaginationControls
@@ -291,7 +291,324 @@
 //           )}
 //         </main>
 //       </div>
-      
+
+//       <QuickViewModal
+//         product={quickViewProduct}
+//         isOpen={!!quickViewProduct}
+//         onClose={() => setQuickViewProduct(null)}
+//       />
+//     </>
+//   );
+// }
+// "use client";
+
+// import { useState, useEffect, useMemo, useRef } from "react";
+// import SanityProduct, {
+//   SanityBrand,
+//   SanityCategory,
+// } from "@/sanity/types/product_types";
+// import FilterSidebar from "./FilterSidebar";
+// import ProductGrid from "../product/ProductGrid";
+// import QuickViewModal from "../product/QuickViewModal";
+// import PaginationControls from "../ui/PaginationControls";
+// import ListingHeader from "./ListingHeader"; // <--- Imported New Component
+// import { Loader2 } from "lucide-react";
+// import { debounce } from "lodash";
+
+// const PRODUCTS_PER_PAGE = 12;
+
+// interface AppliedFilters {
+//   brands: string[];
+//   categories?: string[];
+//   isFeatured?: boolean;
+//   [key: string]: any;
+//   isOnSale?: boolean; // ✨ ADDED
+//   minRating?: number; // ✨ ADDED
+//   availability?: string[]; // ✨ ADDED
+// }
+// interface FilterData {
+//   brands: (SanityBrand | null)[];
+//   attributes: { name: string; value: string }[];
+//   priceRange: { min: number; max: number };
+// }
+// interface PLPProps {
+//   initialProducts: SanityProduct[];
+//   filterData: FilterData;
+//   categoryTree?: SanityCategory;
+//   dealCategories?: SanityCategory[];
+//   context: {
+//     type: "category" | "search" | "deals";
+//     value?: string;
+//     sort?: string;
+//     filter?: string;
+//   };
+//   totalCount: number;
+// }
+
+// export default function ProductListingClient({
+//   initialProducts,
+//   filterData,
+//   categoryTree,
+//   dealCategories,
+//   context,
+//   totalCount,
+// }: PLPProps) {
+//   const [products, setProducts] = useState(initialProducts);
+//   const [totalProducts, setTotalProducts] = useState(totalCount);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//   const [quickViewProduct, setQuickViewProduct] =
+//     useState<SanityProduct | null>(null);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [sortOrder, setSortOrder] = useState(context.sort || "best-match");
+
+//   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({
+//     brands: [],
+//     categories: [],
+//     isFeatured: context.filter === "isFeatured",
+//   });
+//   const [appliedPriceRange, setAppliedPriceRange] = useState({
+//     min: 0,
+//     max: Infinity,
+//   });
+
+//   const isInitialMount = useRef(true);
+
+//   // === Event Listener for Sidebar ===
+//   useEffect(() => {
+//     const handleCloseSidebar = () => setIsSidebarOpen(false);
+//     window.addEventListener("CLOSE_FILTER_SIDEBAR", handleCloseSidebar);
+//     return () =>
+//       window.removeEventListener("CLOSE_FILTER_SIDEBAR", handleCloseSidebar);
+//   }, []);
+
+//   // === PERFORMANCE FIX: Debounced Fetcher using useMemo ===
+//   // This ensures the debounce function is created ONCE and reused.
+//   const debouncedFetch = useMemo(
+//     () =>
+//       debounce(async (params: any) => {
+//         setIsLoading(true);
+//         try {
+//           const response = await fetch("/api/filter", {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify(params),
+//           });
+
+//           if (!response.ok) throw new Error("API request failed");
+
+//           const data = await response.json();
+//           setProducts(data.products);
+//           setTotalProducts(data.totalCount);
+//         } catch (error) {
+//           console.error("Failed to fetch products:", error);
+//           setProducts([]);
+//           setTotalProducts(0);
+//         } finally {
+//           setIsLoading(false);
+//         }
+//       }, 500), // Slightly increased delay for better performance
+//     []
+//   );
+
+//   // Cleanup debounce on unmount
+//   useEffect(() => {
+//     return () => {
+//       debouncedFetch.cancel();
+//     };
+//   }, [debouncedFetch]);
+
+//   // === UNIFIED EFFECT FOR FETCHING ===
+//   // This single effect handles Page, Sort, Filter, and Price changes
+//   useEffect(() => {
+//     if (isInitialMount.current) {
+//       isInitialMount.current = false;
+//       return;
+//     }
+
+//     const payload = {
+//       page: currentPage,
+//       sortOrder,
+//       filters: appliedFilters,
+//       priceRange: {
+//         min: appliedPriceRange.min,
+//         max:
+//           appliedPriceRange.max === Infinity
+//             ? undefined
+//             : appliedPriceRange.max,
+//       },
+//       context,
+//     };
+
+//     debouncedFetch(payload);
+//   }, [
+//     currentPage,
+//     sortOrder,
+//     appliedFilters,
+//     appliedPriceRange,
+//     context,
+//     debouncedFetch,
+//   ]);
+
+//   // Reset page when filters change (but not when sorting/paging)
+//   useEffect(() => {
+//     if (!isInitialMount.current) {
+//       setCurrentPage(1);
+//     }
+//   }, [appliedFilters, appliedPriceRange]);
+
+//   // // === HANDLERS ===
+//   // const handleFilterChange = (group: string, value: string) => {
+//   //   setAppliedFilters((prev) => ({
+//   //     ...prev,
+//   //     [group]: (prev[group] || []).includes(value)
+//   //       ? (prev[group] || []).filter((v: string) => v !== value)
+//   //       : [...(prev[group] || []), value],
+//   //   }));
+//   // };
+//   // 2. Update handleFilterChange Function
+//   const handleFilterChange = (group: string, value: any) => {
+//     setAppliedFilters((prev) => {
+//       // 1. Boolean Toggles (Sale)
+//       if (group === "isOnSale") {
+//         return { ...prev, isOnSale: value };
+//       }
+
+//       // 2. Single Value Fields (Rating)
+//       if (group === "minRating") {
+//         return { ...prev, minRating: value };
+//       }
+
+//       // 3. Array Logic (Brands, Availability, Attributes)
+//       // FIX: Hum ensure kar rahe hain ke 'prev[group]' hamesha ek array ho
+//       const currentList: string[] = Array.isArray(prev[group])
+//         ? prev[group]
+//         : [];
+
+//       const newList = currentList.includes(value)
+//         ? currentList.filter((v: string) => v !== value) // Remove
+//         : [...currentList, value]; // Add
+
+//       return { ...prev, [group]: newList };
+//     });
+//   };
+
+//   const handlePriceApply = (price: { min: string; max: string }) => {
+//     setAppliedPriceRange({
+//       min: Number(price.min) || 0,
+//       max: Number(price.max) || Infinity,
+//     });
+//   };
+
+//   // 3. Update handleClearFilters
+//   const handleClearFilters = () => {
+//     setAppliedFilters({
+//       brands: [],
+//       categories: [],
+//       isFeatured: false,
+//       isOnSale: false, // Clear sale
+//       minRating: undefined, // Clear rating
+//       availability: [], // Clear stock
+//     });
+//     setAppliedPriceRange({ min: 0, max: Infinity });
+//     setSortOrder("best-match");
+//     setCurrentPage(1);
+//   };
+
+//   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+
+//   // Memoize Sidebar Data
+//   const uniqueBrandsForSidebar = useMemo(
+//     () => (filterData?.brands?.filter(Boolean) as SanityBrand[]) || [],
+//     [filterData]
+//   );
+
+//   const uniqueAttributes = useMemo(() => {
+//     const attrs: Record<string, Set<string>> = {};
+//     if (filterData?.attributes) {
+//       filterData.attributes.forEach(({ name, value }) => {
+//         if (!name || !value) return;
+//         if (!attrs[name]) attrs[name] = new Set();
+//         attrs[name].add(value);
+//       });
+//     }
+//     return Object.entries(attrs).map(([name, valuesSet]) => ({
+//       name,
+//       values: Array.from(valuesSet).sort(),
+//     }));
+//   }, [filterData]);
+
+//   return (
+//     <>
+//       <div className="flex flex-col lg:flex-row gap-4 items-start">
+//         <FilterSidebar
+//           isOpen={isSidebarOpen}
+//           onClose={() => setIsSidebarOpen(false)}
+//           brands={uniqueBrandsForSidebar}
+//           attributes={uniqueAttributes}
+//           priceRange={filterData.priceRange}
+//           appliedFilters={appliedFilters}
+//           onFilterChange={handleFilterChange}
+//           onPriceApply={handlePriceApply}
+//           onClearFilters={handleClearFilters}
+//           categoryTree={categoryTree}
+//           dealCategories={dealCategories}
+//         />
+
+//         <main className="flex-1 w-full min-w-0">
+//           {/* REPLACED HUGE CODE BLOCK WITH COMPONENT */}
+//           <ListingHeader
+//             productsCount={products.length}
+//             totalCount={totalProducts}
+//             sortOrder={sortOrder}
+//             onSortChange={setSortOrder}
+//             onMobileFilterClick={() => setIsSidebarOpen(true)}
+//             // 👇 Ye 3 naye props add karo
+//             appliedFilters={appliedFilters}
+//             onRemoveFilter={handleFilterChange} // Hamara existing function hi reuse hoga!
+//             onClearAll={handleClearFilters}
+//           />
+
+//           <div className="relative min-h-[50vh]">
+//             {isLoading && (
+//               <div className="absolute inset-0 flex items-center justify-center z-10 rounded-lg bg-white/60 dark:bg-gray-900/60 backdrop-blur-[1px]">
+//                 <Loader2 className="w-12 h-12 animate-spin text-brand-primary" />
+//               </div>
+//             )}
+
+//             <div>
+//               {products.length > 0 ? (
+//                 <ProductGrid
+//                   products={products}
+//                   onQuickView={setQuickViewProduct}
+//                 />
+//               ) : (
+//                 !isLoading && (
+//                   <div className="text-center py-20 px-6 bg-white dark:bg-gray-900 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+//                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+//                       No Products Found
+//                     </h3>
+//                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+//                       Try adjusting your filters or clearing them.
+//                     </p>
+//                   </div>
+//                 )
+//               )}
+//             </div>
+//           </div>
+
+//           {totalPages > 1 && (
+//             <div className="mt-8">
+//               <PaginationControls
+//                 // currentPage={currentPage}
+//                 totalPages={totalPages}
+//                 // onPageChange={setCurrentPage}
+//               />
+//             </div>
+//           )}
+//         </main>
+//       </div>
+
 //       <QuickViewModal
 //         product={quickViewProduct}
 //         isOpen={!!quickViewProduct}
@@ -303,6 +620,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation"; // ✅ URL hooks add kiye
 import SanityProduct, {
   SanityBrand,
   SanityCategory,
@@ -311,23 +629,29 @@ import FilterSidebar from "./FilterSidebar";
 import ProductGrid from "../product/ProductGrid";
 import QuickViewModal from "../product/QuickViewModal";
 import PaginationControls from "../ui/PaginationControls";
-import ListingHeader from "./ListingHeader"; // <--- Imported New Component
+import ListingHeader from "./ListingHeader"; 
 import { Loader2 } from "lucide-react";
 import { debounce } from "lodash";
 
-const PRODUCTS_PER_PAGE = 12;
+// ✅ 1. Product count barha kar 24 kar diya
+const PRODUCTS_PER_PAGE = 40;
 
 interface AppliedFilters {
   brands: string[];
   categories?: string[];
   isFeatured?: boolean;
   [key: string]: any;
+  isOnSale?: boolean; 
+  minRating?: number; 
+  availability?: string[]; 
 }
+
 interface FilterData {
   brands: (SanityBrand | null)[];
   attributes: { name: string; value: string }[];
   priceRange: { min: number; max: number };
 }
+
 interface PLPProps {
   initialProducts: SanityProduct[];
   filterData: FilterData;
@@ -350,19 +674,26 @@ export default function ProductListingClient({
   context,
   totalCount,
 }: PLPProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // ✅ 2. Current Page ab direct URL se ayega (Local state khatam)
+  const currentPage = Number(searchParams.get("page")) || 1;
+
   const [products, setProducts] = useState(initialProducts);
   const [totalProducts, setTotalProducts] = useState(totalCount);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<SanityProduct | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState(context.sort || "best-match");
-  
+
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({
     brands: [],
     categories: [],
     isFeatured: context.filter === "isFeatured",
   });
+  
   const [appliedPriceRange, setAppliedPriceRange] = useState({
     min: 0,
     max: Infinity,
@@ -370,15 +701,14 @@ export default function ProductListingClient({
 
   const isInitialMount = useRef(true);
 
-  // === Event Listener for Sidebar ===
+  // === Sidebar Close Event ===
   useEffect(() => {
     const handleCloseSidebar = () => setIsSidebarOpen(false);
-    window.addEventListener('CLOSE_FILTER_SIDEBAR', handleCloseSidebar);
-    return () => window.removeEventListener('CLOSE_FILTER_SIDEBAR', handleCloseSidebar);
+    window.addEventListener("CLOSE_FILTER_SIDEBAR", handleCloseSidebar);
+    return () => window.removeEventListener("CLOSE_FILTER_SIDEBAR", handleCloseSidebar);
   }, []);
 
-  // === PERFORMANCE FIX: Debounced Fetcher using useMemo ===
-  // This ensures the debounce function is created ONCE and reused.
+  // === Performance Debounce ===
   const debouncedFetch = useMemo(
     () =>
       debounce(async (params: any) => {
@@ -402,19 +732,18 @@ export default function ProductListingClient({
         } finally {
           setIsLoading(false);
         }
-      }, 500), // Slightly increased delay for better performance
+      }, 500),
     []
   );
 
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       debouncedFetch.cancel();
     };
   }, [debouncedFetch]);
 
-  // === UNIFIED EFFECT FOR FETCHING ===
-  // This single effect handles Page, Sort, Filter, and Price changes
+  // === Unified Fetch Effect ===
+  // Jab bhi Page (URL se), Sort, Filters ya Price badlay ga, ye chalay ga
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -422,7 +751,7 @@ export default function ProductListingClient({
     }
 
     const payload = {
-      page: currentPage,
+      page: currentPage, // ✅ URL wala page
       sortOrder,
       filters: appliedFilters,
       priceRange: {
@@ -434,30 +763,36 @@ export default function ProductListingClient({
 
     debouncedFetch(payload);
   }, [
-    currentPage, 
-    sortOrder, 
-    appliedFilters, 
-    appliedPriceRange, 
-    context, 
-    debouncedFetch
+    currentPage, // Triggered when URL changes
+    sortOrder,
+    appliedFilters,
+    appliedPriceRange,
+    context,
+    debouncedFetch,
   ]);
 
-  // Reset page when filters change (but not when sorting/paging)
+  // ✅ 3. URL reset logic: Jab user filter badle, page=1 kar do URL mein
   useEffect(() => {
-    if (!isInitialMount.current) {
-        setCurrentPage(1);
+    if (!isInitialMount.current && currentPage !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", "1");
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, [appliedFilters, appliedPriceRange]);
 
+  // === Filter Handlers ===
+  const handleFilterChange = (group: string, value: any) => {
+    setAppliedFilters((prev) => {
+      if (group === "isOnSale") return { ...prev, isOnSale: value };
+      if (group === "minRating") return { ...prev, minRating: value };
 
-  // === HANDLERS ===
-  const handleFilterChange = (group: string, value: string) => {
-    setAppliedFilters((prev) => ({
-      ...prev,
-      [group]: (prev[group] || []).includes(value)
-        ? (prev[group] || []).filter((v: string) => v !== value)
-        : [...(prev[group] || []), value],
-    }));
+      const currentList: string[] = Array.isArray(prev[group]) ? prev[group] : [];
+      const newList = currentList.includes(value)
+        ? currentList.filter((v: string) => v !== value)
+        : [...currentList, value];
+
+      return { ...prev, [group]: newList };
+    });
   };
 
   const handlePriceApply = (price: { min: string; max: string }) => {
@@ -468,10 +803,16 @@ export default function ProductListingClient({
   };
 
   const handleClearFilters = () => {
-    setAppliedFilters({ brands: [], categories: [], isFeatured: false });
+    setAppliedFilters({
+      brands: [],
+      categories: [],
+      isFeatured: false,
+      isOnSale: false,
+      minRating: undefined,
+      availability: [],
+    });
     setAppliedPriceRange({ min: 0, max: Infinity });
     setSortOrder("best-match");
-    setCurrentPage(1);
   };
 
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
@@ -481,7 +822,7 @@ export default function ProductListingClient({
     () => (filterData?.brands?.filter(Boolean) as SanityBrand[]) || [],
     [filterData]
   );
-  
+
   const uniqueAttributes = useMemo(() => {
     const attrs: Record<string, Set<string>> = {};
     if (filterData?.attributes) {
@@ -500,7 +841,6 @@ export default function ProductListingClient({
   return (
     <>
       <div className="flex flex-col lg:flex-row gap-4 items-start">
-        
         <FilterSidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
@@ -516,22 +856,24 @@ export default function ProductListingClient({
         />
 
         <main className="flex-1 w-full min-w-0">
-          {/* REPLACED HUGE CODE BLOCK WITH COMPONENT */}
-          <ListingHeader 
+          <ListingHeader
             productsCount={products.length}
             totalCount={totalProducts}
             sortOrder={sortOrder}
             onSortChange={setSortOrder}
             onMobileFilterClick={() => setIsSidebarOpen(true)}
+            appliedFilters={appliedFilters}
+            onRemoveFilter={handleFilterChange} 
+            onClearAll={handleClearFilters}
           />
-          
+
           <div className="relative min-h-[50vh]">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center z-10 rounded-lg bg-white/60 dark:bg-gray-900/60 backdrop-blur-[1px]">
                 <Loader2 className="w-12 h-12 animate-spin text-brand-primary" />
               </div>
             )}
-            
+
             <div>
               {products.length > 0 ? (
                 <ProductGrid
@@ -541,7 +883,9 @@ export default function ProductListingClient({
               ) : (
                 !isLoading && (
                   <div className="text-center py-20 px-6 bg-white dark:bg-gray-900 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">No Products Found</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      No Products Found
+                    </h3>
                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                       Try adjusting your filters or clearing them.
                     </p>
@@ -550,19 +894,16 @@ export default function ProductListingClient({
               )}
             </div>
           </div>
-          
+
+          {/* ✅ 4. Pagination: Ab sirf totalPages pass karna hai */}
           {totalPages > 1 && (
             <div className="mt-8">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              <PaginationControls totalPages={totalPages} />
             </div>
           )}
         </main>
       </div>
-      
+
       <QuickViewModal
         product={quickViewProduct}
         isOpen={!!quickViewProduct}

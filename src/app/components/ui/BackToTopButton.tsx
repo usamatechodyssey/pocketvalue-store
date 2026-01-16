@@ -1,3 +1,5 @@
+// src/app/components/ui/BackToTopButton.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,45 +8,84 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export default function BackToTopButton() {
   const [isVisible, setIsVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const toggleVisibility = () => {
-      // 300px se zyada scroll hone par dikhega
-      if (window.scrollY > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsVisible(scrollTop > 300);
+
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+      setProgress(scrollPercent);
     };
 
-    window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // ✅ Calculation Fix for Perfect Alignment
+  const size = 44; // Button size
+  const strokeWidth = 3; 
+  const center = size / 2;
+  const radius = (size - strokeWidth) / 2 - 2; // Thoda padding (2px) taake kate nahi
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.5, y: 20 }}
           onClick={scrollToTop}
-          className="group relative p-3 rounded-xl hover:bg-brand-primary/10 text-gray-400 hover:text-brand-primary transition-all duration-300"
+          // ✅ Padding removed (p-0), Flex Center use kiya alignment ke liye
+          className="group fixed bottom-44 lg:bottom-26 right-4 lg:right-1 z-50 flex items-center justify-center w-11 h-11 rounded-full bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 hover:-translate-y-1 transition-all duration-300 p-0"
           aria-label="Back to Top"
         >
-          <ArrowUp size={24} strokeWidth={1.5} />
+          {/* Progress Ring */}
+          <svg 
+            className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" 
+            viewBox={`0 0 ${size} ${size}`}
+          >
+            {/* 1. Track Circle (Halka Gray) */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              className="text-gray-100 dark:text-gray-700"
+            />
+            {/* 2. Progress Circle (Neutral Black/White - NO CONFLICT) */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              // 🔥 Color Changed: Text-Gray-800 (Dark Mode me White)
+              className="text-gray-800 dark:text-white transition-all duration-100 ease-out"
+            />
+          </svg>
 
-          {/* Tooltip */}
-          <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Back to Top
-          </span>
+          {/* Arrow Icon */}
+          <ArrowUp 
+            size={18} 
+            strokeWidth={2.5}
+            // Icon color matches the ring
+            className="text-gray-800 dark:text-white z-10" 
+          />
         </motion.button>
       )}
     </AnimatePresence>

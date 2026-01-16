@@ -366,9 +366,12 @@ export default function ProductCard({
 
       {/* === TOP SECTION: IMAGE & BUTTONS === */}
       <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-50 dark:bg-gray-800 z-0">
-        
         {/* 1. CLICKABLE IMAGE AREA */}
-        <Link href={`/product/${product.slug}`} className="block w-full h-full" aria-label={`View product ${product.title}`}>
+        <Link
+          href={`/product/${product.slug}`}
+          className="block w-full h-full"
+          aria-label={`View product ${product.title}`}
+        >
           {hasMultipleImages ? (
             <Swiper
               modules={[Autoplay, Pagination, EffectFade]}
@@ -385,15 +388,15 @@ export default function ProductCard({
                 clickable: true,
                 dynamicBullets: true,
                 renderBullet: function (index, className) {
-                    return `<span class="${className}" aria-label="Go to image ${index + 1}"></span>`;
-                }
+                  return `<span class="${className}" aria-label="Go to image ${index + 1}"></span>`;
+                },
               }}
               onSwiper={(swiper) => {
                 swiperRef.current = swiper;
                 swiper.autoplay.stop();
               }}
               className="w-full h-full"
-              role="region" 
+              role="region"
               aria-label={`Carousel for ${product.title} images`}
             >
               {images.map((image: any, index) => (
@@ -434,7 +437,7 @@ export default function ProductCard({
         {/* 2. BADGES (Pointer events none allows clicking through to image) */}
         <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 pointer-events-none">
           {isOnSale && (
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider shadow-sm">
+            <span className="bg-brand-danger text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider shadow-sm">
               - {discount}%
             </span>
           )}
@@ -459,7 +462,9 @@ export default function ProductCard({
           )}
           <button
             type="button"
-            onClick={() => handleActionClick(() => handleAddToWishlist(product))}
+            onClick={() =>
+              handleActionClick(() => handleAddToWishlist(product))
+            }
             aria-label={`Add ${product.title} to wishlist`}
             className="p-2 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-red-500 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all rounded-full lg:rounded-none cursor-pointer"
           >
@@ -470,7 +475,10 @@ export default function ProductCard({
         {/* 4. ADD TO CART - MOBILE */}
         <button
           type="button"
-          onClick={() => isAvailable && handleActionClick(() => onAdd(product, defaultVariant, 1))}
+          onClick={() =>
+            isAvailable &&
+            handleActionClick(() => onAdd(product, defaultVariant, 1))
+          }
           disabled={!isAvailable}
           aria-label={isAvailable ? "Add to cart" : "Sold out"}
           className={`lg:hidden absolute bottom-3 right-3 p-3 rounded-full shadow-lg z-30 transition-transform active:scale-90 cursor-pointer ${isAvailable ? "bg-brand-primary text-white" : "bg-gray-400 cursor-not-allowed"}`}
@@ -481,7 +489,10 @@ export default function ProductCard({
         {/* 5. ADD TO CART - DESKTOP */}
         <button
           type="button"
-          onClick={() => isAvailable && handleActionClick(() => onAdd(product, defaultVariant, 1))}
+          onClick={() =>
+            isAvailable &&
+            handleActionClick(() => onAdd(product, defaultVariant, 1))
+          }
           disabled={!isAvailable}
           aria-label={isAvailable ? `Add ${product.title} to cart` : "Sold out"}
           className={`hidden lg:flex absolute bottom-0 left-0 w-full py-3 items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-white z-20 transition-transform duration-300 transform-gpu will-change-transform translate-y-full group-hover:translate-y-0 cursor-pointer ${isAvailable ? "bg-brand-primary hover:bg-brand-primary-hover" : "bg-gray-500 cursor-not-allowed"}`}
@@ -492,7 +503,10 @@ export default function ProductCard({
       </div>
 
       {/* === BOTTOM SECTION: INFO (WRAPPED IN LINK) === */}
-      <Link href={`/product/${product.slug}`} className="flex flex-col grow p-4 gap-1 relative z-10 bg-white dark:bg-gray-900">
+      <Link
+        href={`/product/${product.slug}`}
+        className="flex flex-col grow p-4 gap-1 relative z-10 bg-white dark:bg-gray-900"
+      >
         <div className="flex items-center gap-1 mb-1">
           {product.rating ? (
             <>

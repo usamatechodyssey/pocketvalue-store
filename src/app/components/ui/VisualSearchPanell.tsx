@@ -431,7 +431,7 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
     formData.append("file", file);
 
     try {
-      const aiResponse = await fetch(`${API_URL}/search`, {
+      const aiResponse = await fetch(API_URL, {
         method: "POST",
         headers: { "x-api-key": API_KEY },
         body: formData,
@@ -510,7 +510,7 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-2  xl:grid-cols-3 gap-8">
         <div className="md:col-span-1">
           <label
             className={`relative flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 overflow-hidden

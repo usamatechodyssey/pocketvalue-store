@@ -221,7 +221,7 @@ import QuickViewModal from "@/app/components/product/QuickViewModal";
 import { BeatLoader } from "react-spinners";
 import { FiPlus } from "react-icons/fi";
 
-const BATCH_SIZE = 12;
+const BATCH_SIZE = 40;
 
 export default function InfiniteProductGrid({
   initialProducts,

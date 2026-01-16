@@ -135,7 +135,7 @@ const PostCard = ({ post }: { post: Post }) => (
   </Link>
 );
 
-const POSTS_PER_PAGE = 9;
+const POSTS_PER_PAGE = 16;
 
 export default async function BlogPage({
   searchParams: searchParamsPromise,
