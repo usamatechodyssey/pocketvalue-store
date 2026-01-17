@@ -578,8 +578,6 @@
 // });
 
 // export default FilterSidebar;
-// src/app/components/category/FilterSidebar.tsx
-
 "use client";
 
 import { memo } from "react";
@@ -630,16 +628,23 @@ const FilterSidebar = memo(function FilterSidebar({
   categoryTree,
   dealCategories,
 }: FilterSidebarProps) {
-  const currentMinPrice =
-    Number(appliedFilters.minPrice) || priceRange.min || 0;
-  const currentMaxPrice =
-    Number(appliedFilters.maxPrice) || priceRange.max || 10000;
+  
+  // 🔥 FIX 1: Price Reset Logic (Handle 0 correctly)
+  // Agar value defined hai (bhale 0 ho) to wo use karo, warna default range.
+  const currentMinPrice = 
+    appliedFilters.minPrice !== undefined && appliedFilters.minPrice !== null 
+      ? Number(appliedFilters.minPrice) 
+      : (priceRange.min ?? 0);
+
+  const currentMaxPrice = 
+    appliedFilters.maxPrice !== undefined && appliedFilters.maxPrice !== null 
+      ? Number(appliedFilters.maxPrice) 
+      : (priceRange.max ?? 10000);
 
   // --- INTERNAL CONTENT ---
-  // Note: Is div par 'h-full' nahi lagaya taake ye Desktop par content ke hisab se shrink ho sake
   const sidebarContentJsx = (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden">
-      {/* 1. HEADER (Fixed at Top) */}
+      {/* 1. HEADER */}
       <div className="shrink-0 p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 z-10">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-brand-primary/10 rounded-lg text-brand-primary">
@@ -658,7 +663,6 @@ const FilterSidebar = memo(function FilterSidebar({
       </div>
 
       {/* 2. SCROLLABLE MIDDLE SECTION */}
-      {/* 'overflow-y-auto' yahan lagaya hai taake sirf ye hissa scroll ho, header/footer nahi */}
       <div className="px-5 pt-2 pb-4 overflow-y-auto custom-scrollbar grow">
         {categoryTree && (
           <FilterSection title="Categories">
@@ -675,9 +679,7 @@ const FilterSidebar = memo(function FilterSidebar({
                 <FilterCheckboxRow
                   key={cat._id}
                   label={cat.name}
-                  checked={
-                    appliedFilters.categories?.includes(cat.slug) || false
-                  }
+                  checked={appliedFilters.categories?.includes(cat.slug) || false}
                   onChange={() => onFilterChange("categories", cat.slug)}
                 />
               ))}
@@ -703,9 +705,7 @@ const FilterSidebar = memo(function FilterSidebar({
               <input
                 type="checkbox"
                 checked={!!appliedFilters.isOnSale}
-                onChange={() =>
-                  onFilterChange("isOnSale", !appliedFilters.isOnSale)
-                }
+                onChange={() => onFilterChange("isOnSale", !appliedFilters.isOnSale)}
                 className="hidden"
               />
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -715,10 +715,12 @@ const FilterSidebar = memo(function FilterSidebar({
           </div>
         </FilterSection>
 
+        {/* PRICE RANGE SLIDER - Key prop added to force re-render if needed */}
         <FilterSection title="Price Range" defaultOpen={true}>
           <DualRangeSlider
-            min={priceRange.min || 0}
-            max={priceRange.max || 10000}
+            key={`${currentMinPrice}-${currentMaxPrice}`} // Ensures slider updates when props change
+            min={priceRange.min ?? 0}
+            max={priceRange.max ?? 10000}
             currentMin={currentMinPrice}
             currentMax={currentMaxPrice}
             onChange={(min, max) => onPriceApply({ min, max })}
@@ -743,11 +745,7 @@ const FilterSidebar = memo(function FilterSidebar({
         {brands.length > 0 && (
           <FilterSection title="Brands">
             <SearchableFilterList
-              items={brands.map((b) => ({
-                id: b._id,
-                name: b.name,
-                value: b.slug,
-              }))}
+              items={brands.map((b) => ({ id: b._id, name: b.name, value: b.slug }))}
               selectedValues={appliedFilters.brands || []}
               onChange={(val) => onFilterChange("brands", val)}
               placeholder="Find a brand..."
@@ -767,7 +765,7 @@ const FilterSidebar = memo(function FilterSidebar({
         ))}
       </div>
 
-      {/* 3. FOOTER (Fixed at Bottom) */}
+      {/* 3. FOOTER */}
       <div className="shrink-0 p-5 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-10 mt-auto">
         <button
           onClick={onClearFilters}
@@ -782,38 +780,24 @@ const FilterSidebar = memo(function FilterSidebar({
 
   return (
     <>
-      {/* 
-        -------------------------------------------
-        DESKTOP SIDEBAR 
-        -------------------------------------------
-      */}
+      {/* DESKTOP SIDEBAR */}
       <aside className="hidden lg:block w-72 shrink-0 sticky top-28 h-fit self-start">
-        {/* 
-           🔥 Logic Explained:
-           - max-h-[calc(100vh-130px)]: Height kabhi bhi screen se bahar nahi jayegi.
-           - agar content kam hai, to ye container khud shrink ho jayega.
-           - overflow-hidden: Container par scroll band, sirf andar wala middle part scroll karega.
-        */}
-        <div className="flex flex-col  rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="flex flex-col rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden max-h-[calc(100vh-130px)]">
           {sidebarContentJsx}
         </div>
       </aside>
 
-    
-      {/* 
-        -------------------------------------------
-        MOBILE SIDEBAR 
-        -------------------------------------------
-      */}
+      {/* MOBILE SIDEBAR */}
       <AnimatePresence>
         {isOpen && (
           <>
+            {/* 🔥 FIX 2: Z-Index lowered to z-20 (Behind Nav) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"
             />
             <motion.div
               initial={{ x: "-100%" }}
@@ -821,11 +805,11 @@ const FilterSidebar = memo(function FilterSidebar({
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               
-              // 🔥 UPDATED HEIGHT LOGIC HERE:
-              // Mobile: Calculate height to respect bottom nav
-              // md (Tablet): Full 100dvh because no bottom nav exists
-              className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-50 flex flex-col lg:hidden shadow-2xl overflow-hidden
-                         h-[calc(100dvh-60px-env(safe-area-inset-bottom))] md:h-dvh"
+              // 🔥 FIX 2 & 3: 
+              // - z-30: Keeps it behind standard bottom nav (usually z-40 or z-50)
+              // - pb-20: Adds padding at bottom so Reset Button isn't hidden by nav
+              className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-30 flex flex-col lg:hidden shadow-2xl overflow-hidden
+                         h-dvh pb-20 md:pb-0"
             >
               <div className="h-full flex flex-col">{sidebarContentJsx}</div>
             </motion.div>
