@@ -149,60 +149,59 @@ type ProductDetailPageProps = {
 };
 
 // =====================================================
-// 🔥 FIXED: Added 'await' to generateBaseMetadata
+// 🔥 FIXED METADATA GENERATION
 // =====================================================
 export async function generateMetadata({
   params: paramsPromise,
 }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await paramsPromise;
   
-  // Product fetch karein
   const product = await getSingleProduct(slug);
 
   if (!product) {
     return {};
   }
 
-  // 1. Data Extract karein
   const title = product.seo?.metaTitle || product.title;
   const description = product.seo?.metaDescription || product.description ? portableTextToString(product.description).substring(0, 160) : "";
   
-  // Image URL
-  const imageUrl = product.seo?.ogImage 
-    ? urlFor(product.seo.ogImage).width(1200).height(630).url()
-    : product.defaultVariant?.images?.[0]
-      ? urlFor(product.defaultVariant.images[0]).width(1200).height(630).url()
-      : "";
+  // 🔥 FIX 1: Raw Image Object alag nikalo (Metadata utility ke liye)
+  const rawImage = product.seo?.ogImage || product.defaultVariant?.images?.[0];
+
+  // 🔥 FIX 2: String URL alag nikalo (Sirf API aur manual OG tags ke liye)
+  const imageUrlString = rawImage 
+    ? urlFor(rawImage).width(1200).height(630).url() 
+    : "";
 
   const price = product.defaultVariant?.salePrice || product.defaultVariant?.price || 0;
   const brand = product.brand?.name || "PocketValue";
 
-  // 2. Dynamic OG Image URL
+  // Dynamic OG Image URL Construct
   const ogEndpoint = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.pocketvalue.pk'}/api/og`;
   const ogUrl = new URL(ogEndpoint);
   
   ogUrl.searchParams.set('title', title);
   ogUrl.searchParams.set('price', price.toLocaleString());
   ogUrl.searchParams.set('brand', brand);
-  if (imageUrl) ogUrl.searchParams.set('image', imageUrl);
+  if (imageUrlString) ogUrl.searchParams.set('image', imageUrlString);
 
-  // 🔥 FIX: Added 'await' here
+  // 🔥 FIX 3: generateBaseMetadata ko Raw Image Object pass karo (String nahi)
   const baseMetadata = await generateBaseMetadata({
     title,
     description,
-    image: imageUrl,
+    image: rawImage, // ✅ Correct: Passing Object
     path: `/product/${product.slug}`,
   });
 
   return {
     ...baseMetadata,
     openGraph: {
-      ...baseMetadata.openGraph, // Ab ye error nahi dega
+      ...baseMetadata.openGraph,
       title: title,
       description: description,
       images: [
         {
-          url: ogUrl.toString(),
+          url: ogUrl.toString(), // Generated Card Image
           width: 1200,
           height: 630,
           alt: title,
@@ -218,27 +217,24 @@ export async function generateMetadata({
 }
 
 // =====================================================
-// 🛒 PRODUCT PAGE COMPONENT
+// 🛒 PRODUCT PAGE COMPONENT (NO CHANGES HERE)
 // =====================================================
 export default async function ProductDetailPage({
   params: paramsPromise,
 }: ProductDetailPageProps) {
   const { slug } = await paramsPromise;
 
-  // 1. Pehle Product Fetch karein (Kyunke Related Products ko ID chahiye)
   const product = await getSingleProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  // 2. Baaki Data Parallel Fetch karein (Faster Performance)
   const [relatedProducts, breadcrumbs] = await Promise.all([
     getRelatedProducts(product._id, product.categoryIds || []),
     getBreadcrumbs("product", slug),
   ]);
 
-  // 3. JSON-LD Schema (Google SEO ke liye)
   const jsonLd = {
     "@context": "https://schema.org/",
     "@type": "Product",
@@ -272,24 +268,12 @@ export default async function ProductDetailPage({
 
   return (
     <>
-      {/* Schema Injection */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 
-        MAIN WRAPPER:
-        - Padding hata di gayi hai taake design clean rahe.
-        - Background color handle kiya gaya hai.
-      */}
       <main className="w-full bg-gray-50 dark:bg-gray-950 pb-20">
-        
-        {/* 
-           SECTION 1: Product Details (Breadcrumbs + Gallery + Info)
-           - Max Width 1920px (Ultra Wide Screens ke liye)
-           - Centered Content
-        */}
         <div className="max-w-[1920px] mx-auto px-4 md:px-8 py-8 md:py-12">
           <div className="mb-6 md:mb-8">
             <Breadcrumbs crumbs={breadcrumbs} />
@@ -298,11 +282,6 @@ export default async function ProductDetailPage({
           <ProductClientManager product={product} />
         </div>
 
-        {/* 
-           SECTION 2: Related Products Slider
-           - Full Width (Edge-to-Edge)
-           - White Background for Separation
-        */}
         {relatedProducts && relatedProducts.length > 0 && (
           <div className="w-full mt-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
             <ProductSectionWithBanner
