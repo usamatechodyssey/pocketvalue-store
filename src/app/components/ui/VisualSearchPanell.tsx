@@ -29,7 +29,6 @@
 
 // const PLACEHOLDER_IMAGE_URL = "/placeholder.png";
 
-// // === ENVIRONMENT VARIABLES CONFIGURATION ===
 // const API_URL = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_URL;
 // const API_KEY = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_KEY;
 
@@ -44,7 +43,6 @@
 //   const [loaded, setLoaded] = useState(false);
 //   const [currentSlide, setCurrentSlide] = useState(0);
 
-//   // KeenSlider Hook
 //   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
 //     initial: 0,
 //     slides: { perView: "auto", spacing: 16 },
@@ -52,12 +50,10 @@
 //     created: () => setLoaded(true),
 //   });
 
-//   // Handle File Selection
 //   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 //     const file = event.target.files?.[0];
 //     if (file) {
 //       if (file.size > 5 * 1024 * 1024) {
-//         // 5MB Limit
 //         setError("Image size should be less than 5MB.");
 //         return;
 //       }
@@ -65,7 +61,6 @@
 //     }
 //   };
 
-//   // API Call Logic
 //   const handleSearch = useCallback(async (file: File) => {
 //     if (!API_URL || !API_KEY) {
 //       setError("Visual Search API is not configured.");
@@ -83,7 +78,7 @@
 //     formData.append("file", file);
 
 //     try {
-//       const aiResponse = await fetch(`${API_URL}/search`, {
+//       const aiResponse = await fetch(API_URL, {
 //         method: "POST",
 //         headers: { "x-api-key": API_KEY },
 //         body: formData,
@@ -97,32 +92,33 @@
 //       const aiData: { results: { slug: string; similarity: number }[] } =
 //         await aiResponse.json();
 
-//       // Extract valid slugs
 //       const slugs = aiData.results.map((item) => item.slug).filter(Boolean);
 
 //       if (slugs.length > 0) {
-//         // Fetch full product data from Sanity using slugs
 //         const products = await getProductsBySlugs(slugs);
 //         setResults(products);
 //       } else {
 //         setResults([]);
 //       }
-//     } catch (err: any) {
-//       setError(err.message || "Search failed. Please try again.");
-//       console.error("Visual Search Error:", err);
+//     } catch (err: unknown) {
+//       if (err instanceof Error) {
+//         setError(err.message);
+//         console.error("Visual Search Error:", err.message);
+//       } else {
+//          setError("Search failed. Please try again.");
+//          console.error("Visual Search Error:", err);
+//       }
 //     } finally {
 //       setIsLoading(false);
 //     }
 //   }, []);
 
-//   // Auto-trigger search when file is selected
 //   useEffect(() => {
 //     if (selectedFile) {
 //       const objectUrl = URL.createObjectURL(selectedFile);
 //       setPreviewUrl(objectUrl);
 //       handleSearch(selectedFile);
 
-//       // Cleanup memory
 //       return () => URL.revokeObjectURL(objectUrl);
 //     }
 //   }, [selectedFile, handleSearch]);
@@ -144,7 +140,6 @@
 //       exit={{ opacity: 0, y: -10 }}
 //       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 z-50"
 //     >
-//       {/* Header */}
 //       <div className="flex justify-between items-center mb-6">
 //         <div className="flex items-center gap-2 text-brand-primary">
 //           <div className="p-2 bg-brand-primary/10 rounded-lg">
@@ -162,8 +157,7 @@
 //         </button>
 //       </div>
 
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-//         {/* 1. UPLOAD AREA */}
+//       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-2  xl:grid-cols-3 gap-8">
 //         <div className="md:col-span-1">
 //           <label
 //             className={`relative flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 overflow-hidden
@@ -220,7 +214,6 @@
 //           </label>
 //         </div>
 
-//         {/* 2. RESULTS AREA */}
 //         <div className="md:col-span-2 flex flex-col h-64">
 //           {isLoading ? (
 //             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
@@ -256,7 +249,7 @@
 //                           e.stopPropagation();
 //                           instanceRef.current?.next();
 //                         }}
-//                         // @ts-ignore - track.details might be null initially
+//                         // ✅ FIX: Replaced @ts-ignore with safe optional chaining
 //                         disabled={
 //                           currentSlide >=
 //                           (instanceRef.current.track.details?.slides.length ||
@@ -320,7 +313,6 @@
 //               </div>
 //             </div>
 //           ) : (
-//             // EMPTY STATE
 //             <div className="grow flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 text-gray-400">
 //               {selectedFile ? (
 //                 <>
@@ -371,7 +363,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-// Sanity Imports
 import SanityProduct from "@/sanity/types/product_types";
 import { getProductsBySlugs } from "@/sanity/lib/queries";
 import { urlFor } from "@/sanity/lib/image";
@@ -381,9 +372,6 @@ interface VisualSearchPanelProps {
 }
 
 const PLACEHOLDER_IMAGE_URL = "/placeholder.png";
-
-const API_URL = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_URL;
-const API_KEY = process.env.NEXT_PUBLIC_VISUAL_SEARCH_API_KEY;
 
 export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -415,14 +403,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
   };
 
   const handleSearch = useCallback(async (file: File) => {
-    if (!API_URL || !API_KEY) {
-      setError("Visual Search API is not configured.");
-      console.error(
-        "Missing Env Variables: NEXT_PUBLIC_VISUAL_SEARCH_API_URL or KEY"
-      );
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     setResults([]);
@@ -431,19 +411,20 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
     formData.append("file", file);
 
     try {
-      const aiResponse = await fetch(API_URL, {
+      // 🔥 CHANGE: Ab request hamare apne Next.js API Route pe jayegi
+      const response = await fetch("/api/visual-search", {
         method: "POST",
-        headers: { "x-api-key": API_KEY },
+        // Headers mein API KEY nahi bhejni, server khud lagayega
         body: formData,
       });
 
-      if (!aiResponse.ok) {
-        const errorData = await aiResponse.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Could not connect to AI server.");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Could not connect to AI server.");
       }
 
       const aiData: { results: { slug: string; similarity: number }[] } =
-        await aiResponse.json();
+        await response.json();
 
       const slugs = aiData.results.map((item) => item.slug).filter(Boolean);
 
@@ -602,7 +583,6 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
                           e.stopPropagation();
                           instanceRef.current?.next();
                         }}
-                        // ✅ FIX: Replaced @ts-ignore with safe optional chaining
                         disabled={
                           currentSlide >=
                           (instanceRef.current.track.details?.slides.length ||
