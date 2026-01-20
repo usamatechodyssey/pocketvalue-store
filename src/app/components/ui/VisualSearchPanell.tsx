@@ -623,7 +623,9 @@ export default function VisualSearchPanel({ onClose }: VisualSearchPanelProps) {
                               fill
                               className="object-contain group-hover:scale-105 transition-transform duration-300"
                               sizes="150px"
+                              unoptimized // 👈 Ye zaroori hai local images (SVG/PNG) ke liye
                             />
+
                           </div>
                           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight group-hover:text-brand-primary">
                             {product.title}

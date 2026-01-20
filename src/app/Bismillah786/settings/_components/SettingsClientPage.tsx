@@ -68,9 +68,22 @@ export default function SettingsClientPage({ initialSanitySettings, initialPayme
       
       if (activeTab === 'shipping') {
         const hasBaseRule = shippingRules.some(rule => rule.minAmount === 0);
-        if (!hasBaseRule) { toast.dismiss(); toast.error('You must have a fallback rule with a "Minimum Subtotal" of 0.'); return; }
-        const preparedRules = shippingRules.map(({ _id, ...rest }) => ({ ...rest, _key: _id.startsWith('new_') ? _id : undefined }));
+        if (!hasBaseRule) { 
+            toast.dismiss(); 
+            toast.error('You must have a fallback rule with a "Minimum Subtotal" of 0.'); 
+            return; 
+        }
+
+        // ✅ FIX IS HERE: Added check (_id && _id.startsWith...)
+        const preparedRules = shippingRules.map(({ _id, ...rest }) => ({ 
+            ...rest, 
+            // Agar _id exist karta hai AUR wo 'new_' se shuru hota hai, tabhi use karo.
+            // Warna undefined rehne do (Sanity khud handle karega).
+            _key: (_id && _id.startsWith('new_')) ? _id : undefined 
+        }));
+
         result = await updateSanitySettings({ shippingRules: preparedRules as any });
+
       } else if (activeTab === 'payment') {
         result = await updatePaymentGateways(paymentGateways);
       } else if (activeTab === 'general') {
@@ -82,7 +95,6 @@ export default function SettingsClientPage({ initialSanitySettings, initialPayme
       else { toast.error(result?.message || "An unknown error occurred."); }
     });
   };
-
   return (
     <div>
       <div className="flex border-b border-gray-200 dark:border-gray-700">

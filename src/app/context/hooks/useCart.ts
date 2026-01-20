@@ -1,66 +1,208 @@
-// // /src/app/context/hooks/useCart.ts
+// // // /src/app/context/hooks/useCart.ts
 
+// // "use client";
+
+// // import { useState, useEffect } from 'react';
+// // import { useSession } from 'next-auth/react';
+// // import { useRouter } from 'next/navigation';
+// // import SanityProduct, { CleanCartItem, ProductVariant, SanityImageObject } from '@/sanity/types/product_types';
+// // import { toastSuccess, toastError } from '@/app/_components/shared/CustomToasts';
+
+// // // === THE FIX IS HERE: `export` keyword is on the function declaration ===
+// // export function useCart() {
+// //   const { data: session } = useSession();
+// //   const router = useRouter();
+
+// //   const [cartItems, setCartItems] = useState<CleanCartItem[]>([]);
+// //   const [subtotal, setSubtotal] = useState(0);
+// //   const [totalQuantities, setTotalQuantities] = useState(0);
+
+// //   // Load cart from localStorage on initial render
+// //   useEffect(() => {
+// //     try {
+// //       const cartData = localStorage.getItem("PocketValue_cart");
+// //       if (cartData) {
+// //         const parsedCart = JSON.parse(cartData);
+// //         setCartItems(parsedCart.items || []);
+// //         // Subtotal and quantities will be recalculated by the other useEffect
+// //       }
+// //     } catch (error) {
+// //       console.error("Failed to parse cart data from localStorage", error);
+// //     }
+// //   }, []);
+
+// //   // Persist cart to localStorage whenever it changes
+// //   useEffect(() => {
+// //     localStorage.setItem(
+// //       "PocketValue_cart",
+// //       JSON.stringify({ items: cartItems, subtotal, totalQuantities })
+// //     );
+// //   }, [cartItems, subtotal, totalQuantities]);
+
+// //   // Centralized recalculation logic for robustness
+// //   useEffect(() => {
+// //     if (cartItems.length === 0) {
+// //       if (subtotal !== 0 || totalQuantities !== 0) {
+// //         setSubtotal(0);
+// //         setTotalQuantities(0);
+// //       }
+// //       return;
+// //     }
+    
+// //     const { newSubtotal, newTotalQuantities } = cartItems.reduce(
+// //       (acc, item) => {
+// //         acc.newSubtotal += item.price * item.quantity;
+// //         acc.newTotalQuantities += item.quantity;
+// //         return acc;
+// //       },
+// //       { newSubtotal: 0, newTotalQuantities: 0 }
+// //     );
+
+// //     setSubtotal(newSubtotal);
+// //     setTotalQuantities(newTotalQuantities);
+// //   }, [cartItems]);
+
+// //   const onAdd = (product: SanityProduct, variant: ProductVariant, quantity: number): boolean => {
+// //     if (!session) {
+// //       toastError("Please log in to add items to your cart.");
+// //       router.push("/login?callbackUrl=" + window.location.pathname);
+// //       return false;
+// //     }
+
+// //     const cartItemId = `${product._id}-${variant._key}`;
+// //     const checkProductInCart = cartItems.find(item => item.cartItemId === cartItemId);
+    
+// //     if (checkProductInCart) {
+// //       setCartItems(cartItems.map(item => 
+// //         item.cartItemId === cartItemId 
+// //           ? { ...item, quantity: item.quantity + quantity } 
+// //           : item
+// //       ));
+// //     } else {
+// //       const effectivePrice = variant.salePrice ?? variant.price;
+// //       const effectiveImage = (variant.images?.[0] || product.defaultVariant.images?.[0]) as SanityImageObject;
+// //       const effectiveName = `${product.title} (${variant.name})`;
+      
+// //       const newCartItem: CleanCartItem = {
+// //         _id: product._id, cartItemId, name: effectiveName, price: effectivePrice,
+// //         quantity, slug: product.slug, image: effectiveImage,
+// //         variant: { _key: variant._key, name: variant.name }, categoryIds: product.categoryIds,
+// //       };
+// //       setCartItems(prevItems => [...prevItems, newCartItem]);
+// //     }
+    
+// //     const effectiveName = `${product.title} (${variant.name})`;
+// //     toastSuccess(`${quantity} x ${effectiveName} added to cart.`, "Item Added");
+// //     return true;
+// //   };
+
+// //   const onRemove = (itemToRemove: CleanCartItem) => {
+// //     setCartItems(prevItems => prevItems.filter(item => item.cartItemId !== itemToRemove.cartItemId));
+// //     toastError(`${itemToRemove.name} removed from cart.`, "Item Removed");
+// //   };
+
+// //   const toggleCartItemQuantity = (cartItemId: string, value: "inc" | "dec") => {
+// //     const foundProduct = cartItems.find((item) => item.cartItemId === cartItemId);
+// //     if (!foundProduct) return;
+
+// //     if (value === "dec" && foundProduct.quantity <= 1) {
+// //       onRemove(foundProduct);
+// //       return;
+// //     }
+
+// //     setCartItems(cartItems.map(item =>
+// //       item.cartItemId === cartItemId
+// //         ? { ...item, quantity: value === "inc" ? item.quantity + 1 : item.quantity - 1 }
+// //         : item
+// //     ));
+// //   };
+
+// //   const clearCart = () => {
+// //     setCartItems([]);
+// //   };
+  
+// //   const buyNow = (product: SanityProduct, variant: ProductVariant, quantity: number) => {
+// //     if (!session) {
+// //       toastError("Please log in to buy this item.");
+// //       router.push("/login?callbackUrl=" + window.location.pathname);
+// //       return;
+// //     }
+// //     clearCart();
+// //     setTimeout(() => {
+// //       const success = onAdd(product, variant, quantity);
+// //       if (success) {
+// //         router.push('/checkout');
+// //       }
+// //     }, 100);
+// //   };
+
+// //   return {
+// //     cartItems,
+// //     subtotal,
+// //     totalQuantities,
+// //     onAdd,
+// //     onRemove,
+// //     toggleCartItemQuantity,
+// //     clearCart,
+// //     buyNow,
+// //   };
+// // }
 // "use client";
 
-// import { useState, useEffect } from 'react';
+// import { useState, useEffect, useMemo } from 'react';
 // import { useSession } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 // import SanityProduct, { CleanCartItem, ProductVariant, SanityImageObject } from '@/sanity/types/product_types';
 // import { toastSuccess, toastError } from '@/app/_components/shared/CustomToasts';
 
-// // === THE FIX IS HERE: `export` keyword is on the function declaration ===
 // export function useCart() {
 //   const { data: session } = useSession();
 //   const router = useRouter();
 
 //   const [cartItems, setCartItems] = useState<CleanCartItem[]>([]);
-//   const [subtotal, setSubtotal] = useState(0);
-//   const [totalQuantities, setTotalQuantities] = useState(0);
+//   // Flag to prevent overwriting LocalStorage before initial load finishes
+//   const [isLoaded, setIsLoaded] = useState(false);
 
-//   // Load cart from localStorage on initial render
+//   // ✅ FIX: Performance Optimization (Derived State)
+//   // Instead of using a separate useEffect to calculate totals (which causes a re-render),
+//   // we calculate them on-the-fly using useMemo. This eliminates the "Cascading Render".
+//   const { subtotal, totalQuantities } = useMemo(() => {
+//     return cartItems.reduce(
+//       (acc, item) => ({
+//         subtotal: acc.subtotal + item.price * item.quantity,
+//         totalQuantities: acc.totalQuantities + item.quantity,
+//       }),
+//       { subtotal: 0, totalQuantities: 0 }
+//     );
+//   }, [cartItems]);
+
+//   // 1. Load cart from localStorage on initial render
 //   useEffect(() => {
-//     try {
-//       const cartData = localStorage.getItem("PocketValue_cart");
-//       if (cartData) {
-//         const parsedCart = JSON.parse(cartData);
-//         setCartItems(parsedCart.items || []);
-//         // Subtotal and quantities will be recalculated by the other useEffect
+//     if (typeof window !== "undefined") {
+//       try {
+//         const cartData = localStorage.getItem("PocketValue_cart");
+//         if (cartData) {
+//           const parsedCart = JSON.parse(cartData);
+//           setCartItems(parsedCart.items || []);
+//         }
+//       } catch (error) {
+//         console.error("Failed to parse cart data", error);
+//       } finally {
+//         setIsLoaded(true); // Mark as loaded to enable saving
 //       }
-//     } catch (error) {
-//       console.error("Failed to parse cart data from localStorage", error);
 //     }
 //   }, []);
 
-//   // Persist cart to localStorage whenever it changes
+//   // 2. Persist cart to localStorage whenever it changes
+//   // Only runs if data has been initially loaded to prevent saving empty array on mount
 //   useEffect(() => {
-//     localStorage.setItem(
-//       "PocketValue_cart",
-//       JSON.stringify({ items: cartItems, subtotal, totalQuantities })
-//     );
-//   }, [cartItems, subtotal, totalQuantities]);
-
-//   // Centralized recalculation logic for robustness
-//   useEffect(() => {
-//     if (cartItems.length === 0) {
-//       if (subtotal !== 0 || totalQuantities !== 0) {
-//         setSubtotal(0);
-//         setTotalQuantities(0);
-//       }
-//       return;
+//     if (isLoaded) {
+//       localStorage.setItem(
+//         "PocketValue_cart",
+//         JSON.stringify({ items: cartItems, subtotal, totalQuantities })
+//       );
 //     }
-    
-//     const { newSubtotal, newTotalQuantities } = cartItems.reduce(
-//       (acc, item) => {
-//         acc.newSubtotal += item.price * item.quantity;
-//         acc.newTotalQuantities += item.quantity;
-//         return acc;
-//       },
-//       { newSubtotal: 0, newTotalQuantities: 0 }
-//     );
-
-//     setSubtotal(newSubtotal);
-//     setTotalQuantities(newTotalQuantities);
-//   }, [cartItems]);
+//   }, [cartItems, subtotal, totalQuantities, isLoaded]);
 
 //   const onAdd = (product: SanityProduct, variant: ProductVariant, quantity: number): boolean => {
 //     if (!session) {
@@ -73,7 +215,7 @@
 //     const checkProductInCart = cartItems.find(item => item.cartItemId === cartItemId);
     
 //     if (checkProductInCart) {
-//       setCartItems(cartItems.map(item => 
+//       setCartItems(prev => prev.map(item => 
 //         item.cartItemId === cartItemId 
 //           ? { ...item, quantity: item.quantity + quantity } 
 //           : item
@@ -88,7 +230,7 @@
 //         quantity, slug: product.slug, image: effectiveImage,
 //         variant: { _key: variant._key, name: variant.name }, categoryIds: product.categoryIds,
 //       };
-//       setCartItems(prevItems => [...prevItems, newCartItem]);
+//       setCartItems(prev => [...prev, newCartItem]);
 //     }
     
 //     const effectiveName = `${product.title} (${variant.name})`;
@@ -97,7 +239,7 @@
 //   };
 
 //   const onRemove = (itemToRemove: CleanCartItem) => {
-//     setCartItems(prevItems => prevItems.filter(item => item.cartItemId !== itemToRemove.cartItemId));
+//     setCartItems(prev => prev.filter(item => item.cartItemId !== itemToRemove.cartItemId));
 //     toastError(`${itemToRemove.name} removed from cart.`, "Item Removed");
 //   };
 
@@ -110,7 +252,7 @@
 //       return;
 //     }
 
-//     setCartItems(cartItems.map(item =>
+//     setCartItems(prev => prev.map(item =>
 //       item.cartItemId === cartItemId
 //         ? { ...item, quantity: value === "inc" ? item.quantity + 1 : item.quantity - 1 }
 //         : item
@@ -127,13 +269,17 @@
 //       router.push("/login?callbackUrl=" + window.location.pathname);
 //       return;
 //     }
-//     clearCart();
+//     // Optimization: Clear and Add in one batch if possible, but for now logic is kept similar
+//     // to ensure user flow.
+//     setCartItems([]); 
+    
+//     // Using setTimeout 0 to allow state to clear before adding (Microtask queue)
 //     setTimeout(() => {
-//       const success = onAdd(product, variant, quantity);
-//       if (success) {
-//         router.push('/checkout');
-//       }
-//     }, 100);
+//         const success = onAdd(product, variant, quantity);
+//         if (success) {
+//             router.push('/checkout');
+//         }
+//     }, 0);
 //   };
 
 //   return {
@@ -149,62 +295,152 @@
 // }
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import SanityProduct, { CleanCartItem, ProductVariant, SanityImageObject } from '@/sanity/types/product_types';
 import { toastSuccess, toastError } from '@/app/_components/shared/CustomToasts';
 
 export function useCart() {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
-  const [cartItems, setCartItems] = useState<CleanCartItem[]>([]);
-  // Flag to prevent overwriting LocalStorage before initial load finishes
-  const [isLoaded, setIsLoaded] = useState(false);
+  // --- STATES ---
+  const [mainCartItems, setMainCartItems] = useState<CleanCartItem[]>([]);
+  const [buyNowItem, setBuyNowItem] = useState<CleanCartItem | null>(null);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false); 
+  const isNavigatingToCheckout = useRef(false);
 
-  // ✅ FIX: Performance Optimization (Derived State)
-  // Instead of using a separate useEffect to calculate totals (which causes a re-render),
-  // we calculate them on-the-fly using useMemo. This eliminates the "Cascading Render".
-  const { subtotal, totalQuantities } = useMemo(() => {
-    return cartItems.reduce(
-      (acc, item) => ({
-        subtotal: acc.subtotal + item.price * item.quantity,
-        totalQuantities: acc.totalQuantities + item.quantity,
-      }),
-      { subtotal: 0, totalQuantities: 0 }
-    );
-  }, [cartItems]);
-
-  // 1. Load cart from localStorage on initial render
+  // === 1. LOAD DATA ===
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
         const cartData = localStorage.getItem("PocketValue_cart");
         if (cartData) {
           const parsedCart = JSON.parse(cartData);
-          setCartItems(parsedCart.items || []);
+          setMainCartItems(parsedCart.items || []);
         }
+
+        const buyNowData = localStorage.getItem("PocketValue_buyNow");
+        const buyNowFlag = localStorage.getItem("PocketValue_isBuyNowMode") === "true";
+        
+        if (buyNowData && buyNowFlag) {
+          setBuyNowItem(JSON.parse(buyNowData));
+          setIsBuyNowMode(true);
+        }
+
       } catch (error) {
         console.error("Failed to parse cart data", error);
       } finally {
-        setIsLoaded(true); // Mark as loaded to enable saving
+        setIsCartLoaded(true);
       }
     }
   }, []);
 
-  // 2. Persist cart to localStorage whenever it changes
-  // Only runs if data has been initially loaded to prevent saving empty array on mount
+  // === 2. SAVE MAIN CART ===
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(
-        "PocketValue_cart",
-        JSON.stringify({ items: cartItems, subtotal, totalQuantities })
+    if (isCartLoaded) {
+      const mainTotals = mainCartItems.reduce(
+        (acc, item) => ({
+          sub: acc.sub + item.price * item.quantity,
+          qty: acc.qty + item.quantity
+        }), 
+        { sub: 0, qty: 0 }
       );
+
+      localStorage.setItem("PocketValue_cart", JSON.stringify({ 
+          items: mainCartItems, 
+          subtotal: mainTotals.sub, 
+          totalQuantities: mainTotals.qty 
+      }));
     }
-  }, [cartItems, subtotal, totalQuantities, isLoaded]);
+  }, [mainCartItems, isCartLoaded]);
+
+  // === 3. SAVE BUY NOW ITEM ===
+  useEffect(() => {
+    if (isCartLoaded) {
+      if (buyNowItem) {
+        localStorage.setItem("PocketValue_buyNow", JSON.stringify(buyNowItem));
+      } else {
+        localStorage.removeItem("PocketValue_buyNow");
+      }
+    }
+  }, [buyNowItem, isCartLoaded]);
+
+  // === 4. CHECKOUT TYPE TRACKER ===
+  useEffect(() => {
+    if (!isCartLoaded) return;
+
+    if (pathname === '/checkout' || pathname.startsWith('/checkout/')) {
+        if (!isBuyNowMode) {
+            localStorage.setItem("PocketValue_isMainCartCheckout", "true");
+        }
+    }
+
+    // CLEANUP LOGIC
+    const isCheckoutFlow = 
+      pathname === '/checkout' || 
+      pathname.startsWith('/checkout/') || 
+      pathname === '/payment' ||           
+      pathname.startsWith('/order-success');
+
+    // 🔥 FIX STARTS HERE: Explicitly check for Cart Page
+    const isCartPage = pathname === '/cart';
+
+    if (isCheckoutFlow) {
+        // Agar hum checkout flow mein hain, to reset ref
+        isNavigatingToCheckout.current = false;
+    } 
+    
+    // Agar hum Checkout Flow se bahar hain OR hum Cart Page par hain
+    if ((!isCheckoutFlow || isCartPage) && !isNavigatingToCheckout.current) {
+        
+        // Agar user Cart Page par hai ya bahar nikal gaya hai, Buy Now Mode khatam karo
+        if (buyNowItem || isBuyNowMode) {
+            setBuyNowItem(null);
+            setIsBuyNowMode(false);
+            localStorage.removeItem("PocketValue_isBuyNowMode");
+        }
+        
+        // Main Cart Flag bhi hata do
+        localStorage.removeItem("PocketValue_isMainCartCheckout");
+    }
+
+  }, [pathname, isBuyNowMode, buyNowItem, isCartLoaded]);
+
+  // === 5. DECIDE WHICH CART TO SHOW (UI LOGIC FIX) ===
+  
+  // 🔥 IMPORTANT FIX: 
+  // Agar user '/cart' page par hai, to hum Buy Now items dikhana 'Forcefully' band kar denge.
+  // Chahe flag true bhi ho, Cart Page sirf Main Cart ke liye hai.
+  const showBuyNow = isBuyNowMode && pathname !== '/cart';
+
+  const activeCartItems = showBuyNow
+    ? (buyNowItem ? [buyNowItem] : []) 
+    : mainCartItems;
+
+  const { subtotal, totalQuantities } = useMemo(() => {
+    return activeCartItems.reduce(
+      (acc, item) => ({
+        subtotal: acc.subtotal + item.price * item.quantity,
+        totalQuantities: acc.totalQuantities + item.quantity,
+      }),
+      { subtotal: 0, totalQuantities: 0 }
+    );
+  }, [activeCartItems]);
+
+  // === ACTIONS ===
 
   const onAdd = (product: SanityProduct, variant: ProductVariant, quantity: number): boolean => {
+    if (buyNowItem || isBuyNowMode) {
+        setBuyNowItem(null);
+        setIsBuyNowMode(false);
+        localStorage.removeItem("PocketValue_isBuyNowMode");
+        localStorage.removeItem("PocketValue_isMainCartCheckout");
+    }
+
     if (!session) {
       toastError("Please log in to add items to your cart.");
       router.push("/login?callbackUrl=" + window.location.pathname);
@@ -212,10 +448,10 @@ export function useCart() {
     }
 
     const cartItemId = `${product._id}-${variant._key}`;
-    const checkProductInCart = cartItems.find(item => item.cartItemId === cartItemId);
+    const checkProductInCart = mainCartItems.find(item => item.cartItemId === cartItemId);
     
     if (checkProductInCart) {
-      setCartItems(prev => prev.map(item => 
+      setMainCartItems(prev => prev.map(item => 
         item.cartItemId === cartItemId 
           ? { ...item, quantity: item.quantity + quantity } 
           : item
@@ -230,21 +466,42 @@ export function useCart() {
         quantity, slug: product.slug, image: effectiveImage,
         variant: { _key: variant._key, name: variant.name }, categoryIds: product.categoryIds,
       };
-      setCartItems(prev => [...prev, newCartItem]);
+      setMainCartItems(prev => [...prev, newCartItem]);
     }
-    
     const effectiveName = `${product.title} (${variant.name})`;
     toastSuccess(`${quantity} x ${effectiveName} added to cart.`, "Item Added");
     return true;
   };
 
   const onRemove = (itemToRemove: CleanCartItem) => {
-    setCartItems(prev => prev.filter(item => item.cartItemId !== itemToRemove.cartItemId));
+    if (isBuyNowMode || (buyNowItem && buyNowItem.cartItemId === itemToRemove.cartItemId)) {
+        setBuyNowItem(null);
+        setIsBuyNowMode(false);
+        localStorage.removeItem("PocketValue_isBuyNowMode");
+        localStorage.removeItem("PocketValue_isMainCartCheckout");
+        return;
+    }
+    setMainCartItems(prev => prev.filter(item => item.cartItemId !== itemToRemove.cartItemId));
     toastError(`${itemToRemove.name} removed from cart.`, "Item Removed");
   };
 
   const toggleCartItemQuantity = (cartItemId: string, value: "inc" | "dec") => {
-    const foundProduct = cartItems.find((item) => item.cartItemId === cartItemId);
+    if (isBuyNowMode && buyNowItem && buyNowItem.cartItemId === cartItemId) {
+        if (value === "dec" && buyNowItem.quantity <= 1) {
+            setBuyNowItem(null); 
+            setIsBuyNowMode(false);
+            localStorage.removeItem("PocketValue_isBuyNowMode");
+            localStorage.removeItem("PocketValue_isMainCartCheckout");
+            return;
+        }
+        setBuyNowItem(prev => prev ? ({
+            ...prev,
+            quantity: value === "inc" ? prev.quantity + 1 : prev.quantity - 1
+        }) : null);
+        return;
+    }
+
+    const foundProduct = mainCartItems.find((item) => item.cartItemId === cartItemId);
     if (!foundProduct) return;
 
     if (value === "dec" && foundProduct.quantity <= 1) {
@@ -252,7 +509,7 @@ export function useCart() {
       return;
     }
 
-    setCartItems(prev => prev.map(item =>
+    setMainCartItems(prev => prev.map(item =>
       item.cartItemId === cartItemId
         ? { ...item, quantity: value === "inc" ? item.quantity + 1 : item.quantity - 1 }
         : item
@@ -260,7 +517,23 @@ export function useCart() {
   };
 
   const clearCart = () => {
-    setCartItems([]);
+    if (!isCartLoaded) return;
+
+    const isBuyNow = localStorage.getItem("PocketValue_isBuyNowMode") === "true";
+    const isMainCheckout = localStorage.getItem("PocketValue_isMainCartCheckout") === "true";
+
+    if (isBuyNow) {
+        setBuyNowItem(null);
+        setIsBuyNowMode(false);
+        localStorage.removeItem("PocketValue_isBuyNowMode");
+        localStorage.removeItem("PocketValue_isMainCartCheckout");
+    } else if (isMainCheckout) {
+        setMainCartItems([]);
+        localStorage.removeItem("PocketValue_isMainCartCheckout");
+        localStorage.removeItem("PocketValue_isBuyNowMode");
+    } else {
+        console.log("No active checkout flags found. Preserving cart data on reload.");
+    }
   };
   
   const buyNow = (product: SanityProduct, variant: ProductVariant, quantity: number) => {
@@ -269,21 +542,30 @@ export function useCart() {
       router.push("/login?callbackUrl=" + window.location.pathname);
       return;
     }
-    // Optimization: Clear and Add in one batch if possible, but for now logic is kept similar
-    // to ensure user flow.
-    setCartItems([]); 
+
+    const effectivePrice = variant.salePrice ?? variant.price;
+    const effectiveImage = (variant.images?.[0] || product.defaultVariant.images?.[0]) as SanityImageObject;
+    const effectiveName = `${product.title} (${variant.name})`;
+    const cartItemId = `${product._id}-${variant._key}`;
+
+    const tempItem: CleanCartItem = {
+        _id: product._id, cartItemId, name: effectiveName, price: effectivePrice,
+        quantity, slug: product.slug, image: effectiveImage,
+        variant: { _key: variant._key, name: variant.name }, categoryIds: product.categoryIds,
+    };
+
+    setBuyNowItem(tempItem);
+    setIsBuyNowMode(true);
     
-    // Using setTimeout 0 to allow state to clear before adding (Microtask queue)
-    setTimeout(() => {
-        const success = onAdd(product, variant, quantity);
-        if (success) {
-            router.push('/checkout');
-        }
-    }, 0);
+    localStorage.setItem("PocketValue_isBuyNowMode", "true");
+    localStorage.removeItem("PocketValue_isMainCartCheckout");
+
+    isNavigatingToCheckout.current = true;
+    router.push('/checkout');
   };
 
   return {
-    cartItems,
+    cartItems: activeCartItems,
     subtotal,
     totalQuantities,
     onAdd,
@@ -291,5 +573,7 @@ export function useCart() {
     toggleCartItemQuantity,
     clearCart,
     buyNow,
+    isBuyNowMode: showBuyNow, // Return the calculated value, not just state
+    isCartLoaded 
   };
 }

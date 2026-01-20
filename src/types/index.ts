@@ -9,4 +9,6 @@ export interface ShippingRule {
   name: string;     // e.g., "Standard Delivery", "Free Shipping"
   minAmount: number; // The minimum cart subtotal for this rule to apply
   cost: number;     // The shipping cost for this rule
+  // ✅ ADDED: Optional boolean field for "Shipping on Call"
+  isOnCall?: boolean;
 }

@@ -189,6 +189,7 @@ export const getTopBrands = async () => {
 
 // === WISHLIST KE LIYE NAYI, POWERFUL QUERY ===
 // Yeh query na sirf rating, balke live price aur stock bhi layegi
+// === WISHLIST KE LIYE NAYI, POWERFUL QUERY (FINAL FIX) ===
 export const getLiveProductDataForCards = async (productIds: string[]): Promise<SanityProduct[]> => {
     if (!productIds || productIds.length === 0) {
         return [];
@@ -198,18 +199,28 @@ export const getLiveProductDataForCards = async (productIds: string[]): Promise<
         _id,
         title,
         "slug": slug.current,
-        // Nayi, calculated rating
+        description,
+        brand->{ _id, name, "slug": slug.current, logo },
+        
+        // Rating calculation
         "rating": coalesce(math::avg(*[_type == "review" && product._ref == ^._id && isApproved == true].rating), rating, 0),
         "reviewCount": count(*[_type == "review" && product._ref == ^._id && isApproved == true]),
-        // Live variant data
+        
+        // Variants full data
+        "variants": variants[]{
+            _key, name, sku, price, salePrice, stock, inStock, images, weight, dimensions,
+            attributes[]{ _key, name, value }
+        },
+        
+        // 🔥 FIX: Default variant mein 'attributes' add kiye hain taaki selector crash na ho
         "defaultVariant": variants[0]{
-          _key, name, price, salePrice, inStock, images
+          _key, name, price, salePrice, inStock, images,
+          attributes[]{ _key, name, value } 
         }
       }
     `;
     return await client.fetch(query, { productIds });
 };
-
 
 export async function getSingleProduct(slug: string) {
   const query = groq`*[_type == "product" && slug.current == $slug][0] { 
@@ -1030,7 +1041,8 @@ export const GET_SHIPPING_RULES = groq`
       "_id": _key,
       name,
       minAmount,
-      cost
+      cost,
+      isOnCall  
     }
   }
 `;

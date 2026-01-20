@@ -80,6 +80,7 @@ export default function LogoSpinner({ size = "lg" }: LogoSpinnerProps) {
             fill
             className="object-contain"
             priority
+            unoptimized // 👈 Ye zaroori hai local images (SVG/PNG) ke liye
           />
         </div>
       </motion.div>

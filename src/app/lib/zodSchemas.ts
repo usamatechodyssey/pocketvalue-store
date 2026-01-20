@@ -676,17 +676,22 @@ export const ProductGroupSchema = z.array(z.any())
 // ====================================================================
 
 const ShippingRuleSchema = z.object({
-  _id: z.string(),
+   _id: z.string().optional(),
+    _key: z.string().optional(), 
   name: z.string().min(1, { message: "Rule name is required." }),
   minAmount: z.number().min(0),
   cost: z.number().min(0),
+  // ✅ NEW: Boolean flag add kiya
+  isOnCall: z.boolean().optional(),
 });
 
 export const SanitySettingsSchema = z.object({
-  shippingRules: z.array(ShippingRuleSchema).optional(),
+
+  shippingRules: z.array(ShippingRuleSchema).optional().or(z.literal('')),
   storeContactEmail: z.email().optional().or(z.literal('')),
-  storePhoneNumber: z.string().optional(),
-  storeAddress: z.string().optional(),
+  storePhoneNumber: z.string().optional().or(z.literal('')),
+  storeAddress: z.string().optional().or(z.literal('')),
+
   socialLinks: z.object({
     facebook: z.url().optional().or(z.literal('')),
     instagram: z.url().optional().or(z.literal('')),
@@ -710,7 +715,7 @@ const GatewaySchema = z.object({
   key: z.string(),
   name: z.string(),
   enabled: z.boolean(),
-  credentials: GatewayCredentialsSchema,
+  credentials: GatewayCredentialsSchema.optional(),
 });
 
 export const UpdatePaymentGatewaysSchema = z.array(GatewaySchema);

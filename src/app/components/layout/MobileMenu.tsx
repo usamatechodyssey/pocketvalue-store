@@ -531,11 +531,10 @@ export default function MobileMenu({ categories, isOpen, onClose }: MobileMenuPr
             
             // 🔥 NATIVE APP FIX: Height Calculation
             // 100dvh (Full Screen) - 65px (Bottom Nav Height) - Safe Area (iPhone Home Bar)
-            style={{ 
-                height: "calc(100dvh - 60px - env(safe-area-inset-bottom))" 
-            }}
+             className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-40 flex flex-col lg:hidden shadow-2xl overflow-hidden
+                         h-dvh pb-20 md:pb-0"
             
-            className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-50 flex flex-col shadow-2xl overflow-hidden "
+          
           >
             {/* HEADER */}
             <div className="p-5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 shrink-0">

@@ -44,7 +44,7 @@
 // };
 
 // // --- SUMMARY OF CHANGES ---
-// // - No changes were required. This file correctly sets up a React Context to provide server-fetched `savedAddresses` to client components within the checkout layout, which is an excellent and performant pattern.
+// // - No changes were required. This file correctly sets up a React Context to provide server-fetched `savedAddresses` to client zcomponents within the checkout layout, which is an excellent and performant pattern.
 
 "use client";
 

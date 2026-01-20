@@ -169,6 +169,15 @@ export default defineType({
             defineField({ name: 'name', title: 'Rule Name', type: 'string', validation: Rule => Rule.required() }),
             defineField({ name: 'minAmount', title: 'Minimum Subtotal (Rs.)', type: 'number', initialValue: 0, validation: Rule => Rule.required().min(0) }),
             defineField({ name: 'cost', title: 'Shipping Cost (Rs.)', type: 'number', validation: Rule => Rule.required().min(0) }),
+              
+  // ✅ NEW FIELD HERE
+  defineField({
+    name: 'isOnCall',
+    title: 'Shipping on Call?',
+    type: 'boolean',
+    initialValue: false,
+    description: 'Check this if shipping cost will be decided on phone.'
+  }),
           ],
           preview: {
             select: { name: 'name', minAmount: 'minAmount', cost: 'cost' },

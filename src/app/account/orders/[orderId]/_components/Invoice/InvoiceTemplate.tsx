@@ -1,7 +1,9 @@
-// // /src/app/account/orders/[orderId]/_components/InvoiceTemplate.tsx
+
+// // /src/app/account/orders/[orderId]/_components/InvoiceTemplate.tsx (FINAL & OPTIMIZED)
 
 // import { Page, Document, StyleSheet, Font } from "@react-pdf/renderer";
 // import { IOrder } from "@/models/Order";
+// import path from "path";
 
 // // Naye, chotay components ko import karein (usi folder se)
 // import { InvoiceHeader } from "./InvoiceHeader";
@@ -10,18 +12,40 @@
 // import { InvoiceSummary } from "./InvoiceSummary";
 // import { InvoiceFooter } from "./InvoiceFooter";
 
-// // Fonts aur styles yahin define honge
-// Font.register({
-//   family: "Inter",
-//   fonts: [
-//     { src: `${process.cwd()}/public/fonts/Inter-Regular.otf` },
-//     { src: `${process.cwd()}/public/fonts/Inter-Bold.otf`, fontWeight: "bold" },
-//   ],
-// });
+// // --- PERFORMANCE FIX: FONT REGISTRATION KO MEMOIZE KAREIN ---
+// // Ye code Font ko sirf ek baar register karega jab file load hogi, na ke har PDF request par.
+// const registerFonts = (() => {
+//   let isRegistered = false;
+//   return () => {
+//     if (!isRegistered) {
+//       // Vercel Compatible Path Function
+//       const getFontPath = (fontFile: string) => {
+//         // path.join(process.cwd(), ...) is the correct way to get a build-time file path in Vercel.
+//         return path.join(process.cwd(), 'public', 'fonts', fontFile);
+//       };
+
+//       Font.register({
+//         family: "Inter",
+//         fonts: [
+//           // FIX APPLIED: Path is correct AND Font is registered ONLY ONCE
+//           { src: getFontPath("Inter-Regular.otf") }, 
+//           { src: getFontPath("Inter-Bold.otf"), fontWeight: "bold" },
+//         ],
+//       });
+//       isRegistered = true;
+//       console.log('Fonts registered for React-PDF.');
+//     }
+//   };
+// })();
+
+// // Font Registration ko yahan call karein taake woh file load hote hi run ho jaye
+// registerFonts(); 
+// // ----------------------------------------------------------------------
+
 
 // const BRAND_COLOR = "#f97316";
 
-// // Styles ko ek hi jagah rakhein taake tamam child components mein pass kiya ja sake
+// // Styles ko ek hi jagah rakhein (Aapne already theek kiya hua hai)
 // const styles = StyleSheet.create({
 //   page: { fontFamily: "Inter", fontSize: 10, padding: 40, color: "#1f2937" },
 //   header: {
@@ -133,53 +157,41 @@
 //     </Document>
 //   );
 // };
-// /src/app/account/orders/[orderId]/_components/InvoiceTemplate.tsx (FINAL & OPTIMIZED)
-
 import { Page, Document, StyleSheet, Font } from "@react-pdf/renderer";
 import { IOrder } from "@/models/Order";
 import path from "path";
 
-// Naye, chotay components ko import karein (usi folder se)
 import { InvoiceHeader } from "./InvoiceHeader";
 import { InvoiceAddress } from "./InvoiceAddress";
 import { InvoiceItemsTable } from "./InvoiceItemsTable";
 import { InvoiceSummary } from "./InvoiceSummary";
 import { InvoiceFooter } from "./InvoiceFooter";
 
-// --- PERFORMANCE FIX: FONT REGISTRATION KO MEMOIZE KAREIN ---
-// Ye code Font ko sirf ek baar register karega jab file load hogi, na ke har PDF request par.
+// --- FONT REGISTRATION (SAME AS BEFORE) ---
 const registerFonts = (() => {
   let isRegistered = false;
   return () => {
     if (!isRegistered) {
-      // Vercel Compatible Path Function
       const getFontPath = (fontFile: string) => {
-        // path.join(process.cwd(), ...) is the correct way to get a build-time file path in Vercel.
         return path.join(process.cwd(), 'public', 'fonts', fontFile);
       };
 
       Font.register({
         family: "Inter",
         fonts: [
-          // FIX APPLIED: Path is correct AND Font is registered ONLY ONCE
           { src: getFontPath("Inter-Regular.otf") }, 
           { src: getFontPath("Inter-Bold.otf"), fontWeight: "bold" },
         ],
       });
       isRegistered = true;
-      console.log('Fonts registered for React-PDF.');
     }
   };
 })();
-
-// Font Registration ko yahan call karein taake woh file load hote hi run ho jaye
 registerFonts(); 
-// ----------------------------------------------------------------------
-
+// ------------------------------------------------
 
 const BRAND_COLOR = "#f97316";
 
-// Styles ko ek hi jagah rakhein (Aapne already theek kiya hua hai)
 const styles = StyleSheet.create({
   page: { fontFamily: "Inter", fontSize: 10, padding: 40, color: "#1f2937" },
   header: {
@@ -261,6 +273,8 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 14, fontWeight: "bold", color: BRAND_COLOR },
   totalValue: { fontSize: 14, fontWeight: "bold", color: BRAND_COLOR },
+  
+  // ✅ UPDATE: Footer styles updated to handle View
   footer: {
     position: "absolute",
     bottom: 30,
@@ -270,12 +284,18 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#9ca3af",
   },
+  
+  // ✅ NEW STYLE: Verification Note ke liye
+  verificationNote: {
+    marginTop: 4,      // Thoda gap diya
+    fontSize: 8,       // Font thoda chota kiya taake alag lage
+    color: "#d1d5db",  // Thoda halka color (Light Gray)
+  },
 });
 
-// Ab IOrder type istemal karein
 export const InvoiceTemplate = ({ order }: { order: IOrder }) => {
   return (
-    <Document author="PocketValue" title={`Invoice ${order.orderId}`}>
+    <Document author="PocketValue" title={`Order Summary ${order.orderId}`}>
       <Page size="A4" style={styles.page}>
         <InvoiceHeader order={order} styles={styles} />
         <InvoiceAddress order={order} styles={styles} />
@@ -286,7 +306,10 @@ export const InvoiceTemplate = ({ order }: { order: IOrder }) => {
           grandTotal={order.totalPrice}
           styles={styles}
         />
-        <InvoiceFooter styles={styles} />
+        
+        {/* ✅ UPDATE: Order pass kiya */}
+        <InvoiceFooter order={order} styles={styles} />
+        
       </Page>
     </Document>
   );

@@ -1,5 +1,3 @@
-// /src/app/lib/shipping-calculator.ts
-
 import { ShippingRule } from '@/types';
 import { getShippingRules } from '@/sanity/lib/queries';
 
@@ -8,14 +6,10 @@ export interface ShippingCalculation {
   displayText: string;
   isFree: boolean;
   ruleName?: string;
+  // ✅ NEW: Frontend ko batane ke liye ke ye OnCall hai
+  isOnCall?: boolean; 
 }
 
-/**
- * (CLIENT-SIDE & SERVER-SIDE) - A ROBUST, UNIFIED FUNCTION
- * Calculates shipping cost by finding the best matching rule.
- * The best match is the rule with the highest minimum amount that is still
- * less than or equal to the subtotal. This is not dependent on array sort order.
- */
 export function calculateShipping(subtotal: number, rules: ShippingRule[]): ShippingCalculation {
     if (!rules || rules.length === 0) {
         return { cost: 0, displayText: "FREE", isFree: true, ruleName: 'fallback_free' };
@@ -24,9 +18,7 @@ export function calculateShipping(subtotal: number, rules: ShippingRule[]): Ship
     let bestMatch: ShippingRule | null = null;
 
     for (const rule of rules) {
-        // Check if this rule is applicable
         if (subtotal >= rule.minAmount) {
-            // Check if this rule is a "better" match than our current best match
             if (!bestMatch || rule.minAmount > bestMatch.minAmount) {
                 bestMatch = rule;
             }
@@ -34,23 +26,36 @@ export function calculateShipping(subtotal: number, rules: ShippingRule[]): Ship
     }
 
     if (bestMatch) {
-        const { cost, name } = bestMatch;
-        return { cost: cost, displayText: cost > 0 ? `Rs. ${cost.toLocaleString()}` : "FREE", isFree: cost === 0, ruleName: name };
+        const { cost, name, isOnCall } = bestMatch;
+
+        // ✅ LOGIC 1: Agar 'On Call' true hai
+        if (isOnCall) {
+            return { 
+                cost: 0, // Total mein 0 add hoga
+                displayText: "Calculated on Call", // User ko ye text dikhega
+                isFree: false, 
+                ruleName: name,
+                isOnCall: true // Flag set kiya
+            };
+        }
+
+        // ✅ LOGIC 2: Normal Cost Logic
+        return { 
+            cost: cost, 
+            displayText: cost > 0 ? `Rs. ${cost.toLocaleString()}` : "FREE", 
+            isFree: cost === 0, 
+            ruleName: name,
+            isOnCall: false
+        };
     }
 
-    // Fallback if no rules apply (should be rare if a 0-cost rule exists)
+    // Fallback
     return { cost: 0, displayText: "FREE", isFree: true, ruleName: 'fallback_no_rule_found' };
 }
 
-
-/**
- * (SERVER-SIDE ONLY)
- * Fetches the latest rules from Sanity and calculates the shipping cost.
- */
 export async function calculateShippingCostServer(subtotal: number): Promise<ShippingCalculation> {
     try {
         const rules = await getShippingRules();
-        // Uses the same robust client-side logic with freshly fetched rules
         return calculateShipping(subtotal, rules);
     } catch (error) {
         console.error("Error in calculateShippingCostServer:", error);

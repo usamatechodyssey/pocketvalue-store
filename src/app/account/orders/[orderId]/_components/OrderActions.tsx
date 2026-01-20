@@ -85,7 +85,7 @@ export default function OrderActions({
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 text-sm font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 <Download size={16} />
-                Download Invoice
+               Download Order Summary 
               </Link>
             )}
           </div>

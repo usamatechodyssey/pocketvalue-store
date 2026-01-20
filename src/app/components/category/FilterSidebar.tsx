@@ -782,7 +782,7 @@ const FilterSidebar = memo(function FilterSidebar({
     <>
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden lg:block w-72 shrink-0 sticky top-28 h-fit self-start">
-        <div className="flex flex-col rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden max-h-[calc(100vh-130px)]">
+        <div className="flex flex-col rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden ">
           {sidebarContentJsx}
         </div>
       </aside>
@@ -808,7 +808,7 @@ const FilterSidebar = memo(function FilterSidebar({
               // 🔥 FIX 2 & 3: 
               // - z-30: Keeps it behind standard bottom nav (usually z-40 or z-50)
               // - pb-20: Adds padding at bottom so Reset Button isn't hidden by nav
-              className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-30 flex flex-col lg:hidden shadow-2xl overflow-hidden
+              className="fixed top-0 left-0 w-[85vw] max-w-[320px] bg-white dark:bg-gray-900 z-40 flex flex-col lg:hidden shadow-2xl overflow-hidden
                          h-dvh pb-20 md:pb-0"
             >
               <div className="h-full flex flex-col">{sidebarContentJsx}</div>

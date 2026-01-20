@@ -187,8 +187,8 @@ const nextConfig: NextConfig = {
 
   // 7. Images Configuration (Sanity Loader)
   images: {
-    loader: 'custom',
-    loaderFile: './src/sanity/lib/image-loader.ts',
+  
+    loaderFile: './image-loader.ts',
 
     formats: ['image/avif', 'image/webp'],
     qualities: [75, 85, 90, 95], 
